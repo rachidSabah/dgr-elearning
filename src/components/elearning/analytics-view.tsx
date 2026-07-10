@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
@@ -49,6 +49,7 @@ ChartJS.register(
 
 export function AnalyticsView() {
   const { progress, language } = useAppStore();
+  const courseData = useCurrentCourse();
   const lang = language || "en";
 
   const totalLessons = courseData.modules.reduce((acc, m) => acc + m.lessons.length, 0);

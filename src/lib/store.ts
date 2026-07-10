@@ -11,6 +11,7 @@ interface AppState {
   selectedModuleId: string | null;
   selectedQuizType: "lesson" | "module" | "final" | null;
   selectedQuizId: string | null;
+  selectedCourseId: string; // which course the user is viewing
 
   // UI State
   theme: "light" | "dark";
@@ -31,6 +32,7 @@ interface AppState {
   setView: (view: ViewType) => void;
   setSelectedLesson: (lessonId: string) => void;
   setSelectedModule: (moduleId: string) => void;
+  setSelectedCourse: (courseId: string) => void;
   startQuiz: (type: "lesson" | "module" | "final", id: string) => void;
   setTheme: (theme: "light" | "dark") => void;
   setLanguage: (lang: "en" | "fr" | "ar") => void;
@@ -77,6 +79,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       currentView: "landing",
+      selectedCourseId: "dangerous-goods-regulations",
       selectedLessonId: null,
       selectedModuleId: null,
       selectedQuizType: null,
@@ -96,6 +99,7 @@ export const useAppStore = create<AppState>()(
       setView: (view) => set({ currentView: view }),
       setSelectedLesson: (lessonId) => set({ selectedLessonId: lessonId, currentView: "lesson" }),
       setSelectedModule: (moduleId) => set({ selectedModuleId: moduleId }),
+      setSelectedCourse: (courseId) => set({ selectedCourseId: courseId, selectedLessonId: null, selectedModuleId: null }),
       startQuiz: (type, id) =>
         set({ selectedQuizType: type, selectedQuizId: id, currentView: "quiz" }),
       setTheme: (theme) => set({ theme }),

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -37,6 +37,8 @@ export function QuizView() {
     language,
   } = useAppStore();
 
+  const courseData = useCurrentCourse();
+
   const lang = language || "en";
 
   // Get questions based on quiz type
@@ -46,7 +48,7 @@ export function QuizView() {
     if (selectedQuizType === "module") return courseData.moduleQuizzes[selectedQuizId] || [];
     if (selectedQuizType === "final") return courseData.finalExam;
     return [];
-  }, [selectedQuizId, selectedQuizType]);
+  }, [selectedQuizId, selectedQuizType, courseData]);
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number | number[]>>({});

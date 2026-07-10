@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, Send, User, Sparkles, BookOpen, RefreshCw } from "lucide-react";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import type { CourseData } from "@/lib/types";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -20,7 +21,7 @@ interface ChatMessage {
 }
 
 // Build a knowledge base from course content for local AI responses
-function buildKnowledgeBase(): string {
+function buildKnowledgeBase(courseData: CourseData): string {
   let kb = "";
   courseData.modules.forEach((module) => {
     kb += `\n## Module ${module.code}: ${module.title}\n${module.description}\n`;
@@ -51,8 +52,6 @@ function buildKnowledgeBase(): string {
   return kb;
 }
 
-const knowledgeBase = buildKnowledgeBase();
-
 // Enhanced search that returns content with lesson citations
 interface SearchResult {
   text: string;
@@ -62,7 +61,7 @@ interface SearchResult {
   moduleCode?: string;
 }
 
-function findRelevantContentWithCitations(query: string): SearchResult[] {
+function findRelevantContentWithCitations(courseData: CourseData, query: string): SearchResult[] {
   const queryLower = query.toLowerCase();
   const keywords = queryLower.split(/\s+/).filter((w) => w.length > 3);
 
@@ -142,13 +141,13 @@ function findRelevantContentWithCitations(query: string): SearchResult[] {
 }
 
 // Simple keyword-based search to find relevant content (legacy, kept for compat)
-function findRelevantContent(query: string): string {
-  const results = findRelevantContentWithCitations(query);
+function findRelevantContent(courseData: CourseData, query: string): string {
+  const results = findRelevantContentWithCitations(courseData, query);
   return results.map(r => r.text).join("\n\n") || "";
 }
 
 // Weak area analysis based on quiz performance
-function analyzeWeakAreas(progress: any): string {
+function analyzeWeakAreas(courseData: CourseData, progress: any): string {
   if (!progress || !progress.quizScores) return "";
 
   const topicScores: Record<string, { correct: number; total: number }> = {};
@@ -184,12 +183,12 @@ function analyzeWeakAreas(progress: any): string {
   return `Based on your quiz performance, your weakest area is **${weakest.topic}** (${Math.round(weakest.pct)}% average score). I recommend reviewing the related lessons and retaking the quizzes. Would you like me to suggest specific lessons to review?`;
 }
 
-function generateResponse(query: string, progress?: any): string {
+function generateResponse(courseData: CourseData, query: string, progress?: any): string {
   const queryLower = query.toLowerCase();
 
   // Weak areas analysis request
   if (/weak|improve|struggle|difficult|recommend|review|where.*focus|what.*study/i.test(query)) {
-    const analysis = analyzeWeakAreas(progress);
+    const analysis = analyzeWeakAreas(courseData, progress);
     if (analysis) {
       return analysis;
     }
@@ -198,7 +197,7 @@ function generateResponse(query: string, progress?: any): string {
 
   // Greeting
   if (/^(hi|hello|hey|bonjour|salut|salam|مرحبا|Bonjour)/i.test(query.trim())) {
-    return `Hello! I'm your AI Learning Coach for Dangerous Goods Regulations training. I'm trained exclusively on your course content and can help you with:
+    return `Hello! I'm your AI Learning Coach for ${courseData.title}. I'm trained exclusively on your course content and can help you with:
 
 **Core Topics:**
 - The nine hazard classes and their IATA codes (RFL, RCM, RRW, etc.)
@@ -220,7 +219,7 @@ What would you like to learn about?`;
   }
 
   // Find relevant content with citations
-  const results = findRelevantContentWithCitations(query);
+  const results = findRelevantContentWithCitations(courseData, query);
 
   if (results.length === 0) {
     return `I don't have specific information about that in the course content. Here are some topics I can help with:
@@ -238,7 +237,7 @@ Try rephrasing your question or ask about one of these topics.`;
   }
 
   // Format response with citations
-  let response = "Based on the Dangerous Goods Regulations training material:\n\n";
+  let response = `Based on the ${courseData.title} training material:\n\n`;
   response += results.map((r) => r.text).join("\n\n");
 
   // Add citations
@@ -266,6 +265,14 @@ const suggestedQuestions = [
 
 export function AITutorView() {
   const { language, progress } = useAppStore();
+  const courseData = useCurrentCourse();
+
+  // Knowledge base built from the current course content (kept for future AI features)
+  const knowledgeBase = useMemo(() => buildKnowledgeBase(courseData), [courseData]);
+  // Reference knowledgeBase so it stays in sync with the selected course without
+  // being flagged as unused by the compiler.
+  void knowledgeBase;
+
   const lang = language || "en";
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -299,7 +306,7 @@ export function AITutorView() {
 
     // Simulate AI response with delay
     setTimeout(() => {
-      const response = generateResponse(message, progress);
+      const response = generateResponse(courseData, message, progress);
       setMessages((prev) => [
         ...prev,
         {

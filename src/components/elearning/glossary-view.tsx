@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import { BookMarked, Search, Volume2, BookOpen } from "lucide-react";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 
 export function GlossaryView() {
   const { language } = useAppStore();
+  const courseData = useCurrentCourse();
   const lang = language || "en";
   const [searchQuery, setSearchQuery] = useState("");
   const [speakingTerm, setSpeakingTerm] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export function GlossaryView() {
         g.term.toLowerCase().includes(q) ||
         g.definition.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, courseData]);
 
   const handleSpeak = (term: string, definition: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;

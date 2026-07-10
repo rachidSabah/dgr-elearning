@@ -1,0 +1,978 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useState, useEffect, useRef, useMemo } from "react";
+     4→     4→import { useAppStore } from "@/lib/store";
+     5→     5→import { courseData } from "@/lib/course-data";
+     6→     6→import { getEnhancedContent } from "@/lib/lesson-enhancements";
+     7→     7→import { t } from "@/lib/i18n";
+     8→     8→import { motion, AnimatePresence } from "framer-motion";
+     9→     9→import {
+    10→    10→  ChevronLeft,
+    11→    11→  ChevronRight,
+    12→    12→  Clock,
+    13→    13→  CheckCircle2,
+    14→    14→  Bookmark,
+    15→    15→  BookmarkCheck,
+    16→    16→  Play,
+    17→    17→  Pause,
+    18→    18→  Volume2,
+    19→    19→  VolumeX,
+    20→    20→  RotateCcw,
+    21→    21→  FastForward,
+    22→    22→  Rewind,
+    23→    23→  BookOpen,
+    24→    24→  Target,
+    25→    25→  ListChecks,
+    26→    26→  StickyNote,
+    27→    27→  Search,
+    28→    28→  X,
+    29→    29→  Info,
+    30→    30→  AlertTriangle,
+    31→    31→  AlertCircle,
+    32→    32→  Lightbulb,
+    33→    33→  NotebookPen,
+    34→    34→  ZoomIn,
+    35→    35→  Plane,
+    36→    36→  GraduationCap,
+    37→    37→  ClipboardList,
+    38→    38→  CheckCheck,
+    39→    39→} from "lucide-react";
+    40→    40→import { Button } from "@/components/ui/button";
+    41→    41→import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+    42→    42→import { Badge } from "@/components/ui/badge";
+    43→    43→import { Progress } from "@/components/ui/progress";
+    44→    44→import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+    45→    45→import { Input } from "@/components/ui/input";
+    46→    46→import { ScrollArea } from "@/components/ui/scroll-area";
+    47→    47→import {
+    48→    48→  Dialog,
+    49→    49→  DialogContent,
+    50→    50→  DialogHeader,
+    51→    51→  DialogTitle,
+    52→    52→  DialogTrigger,
+    53→    53→} from "@/components/ui/dialog";
+    54→    54→import { Textarea } from "@/components/ui/textarea";
+    55→    55→import { cn } from "@/lib/utils";
+    56→    56→import type { ContentBlock, Lesson } from "@/lib/types";
+    57→    57→import { ProfessionalNarrator } from "./professional-narrator";
+    58→    58→import {
+    59→    59→  ClickToReveal,
+    60→    60→  KnowledgeCheck,
+    61→    61→  DragDropMatching,
+    62→    62→  SequenceOrdering,
+    63→    63→  InlineFlashcard,
+    64→    64→  InteractiveTimeline,
+    65→    65→} from "./interactive-components";
+    66→    66→import { HazardClassExplorer } from "./hazard-class-explorer";
+    67→    67→import { CabinLayoutExplorer } from "./cabin-layout-explorer";
+    68→    68→import {
+    69→    69→  AnimatedDoorArming,
+    70→    70→  AnimatedEvacuationFlow,
+    71→    71→  AnimatedFireFighting,
+    72→    72→} from "./animated-procedures";
+    73→    73→
+    74→    74→const calloutStyles = {
+    75→    75→  info: { icon: Info, className: "border-blue-500/30 bg-blue-500/5 text-blue-900 dark:text-blue-100", iconClass: "text-blue-500" },
+    76→    76→  warning: { icon: AlertTriangle, className: "border-yellow-500/30 bg-yellow-500/5 text-yellow-900 dark:text-yellow-100", iconClass: "text-yellow-500" },
+    77→    77→  danger: { icon: AlertCircle, className: "border-red-500/30 bg-red-500/5 text-red-900 dark:text-red-100", iconClass: "text-red-500" },
+    78→    78→  tip: { icon: Lightbulb, className: "border-green-500/30 bg-green-500/5 text-green-900 dark:text-green-100", iconClass: "text-green-500" },
+    79→    79→  note: { icon: NotebookPen, className: "border-purple-500/30 bg-purple-500/5 text-purple-900 dark:text-purple-100", iconClass: "text-purple-500" },
+    80→    80→};
+    81→    81→
+    82→    82→function findLesson(lessonId: string | null): { lesson: Lesson | null; moduleIndex: number; lessonIndex: number } {
+    83→    83→  if (!lessonId) return { lesson: null, moduleIndex: 0, lessonIndex: 0 };
+    84→    84→  for (let mi = 0; mi < courseData.modules.length; mi++) {
+    85→    85→    for (let li = 0; li < courseData.modules[mi].lessons.length; li++) {
+    86→    86→      if (courseData.modules[mi].lessons[li].id === lessonId) {
+    87→    87→        return { lesson: courseData.modules[mi].lessons[li], moduleIndex: mi, lessonIndex: li };
+    88→    88→      }
+    89→    89→    }
+    90→    90→  }
+    91→    91→  return { lesson: null, moduleIndex: 0, lessonIndex: 0 };
+    92→    92→}
+    93→    93→
+    94→    94→function getAllLessons() {
+    95→    95→  const all: { lesson: Lesson; moduleIndex: number; lessonIndex: number }[] = [];
+    96→    96→  courseData.modules.forEach((m, mi) => {
+    97→    97→    m.lessons.forEach((l, li) => {
+    98→    98→      all.push({ lesson: l, moduleIndex: mi, lessonIndex: li });
+    99→    99→    });
+   100→   100→  });
+   101→   101→  return all;
+   102→   102→}
+   103→   103→
+   104→   104→export function LessonView() {
+   105→   105→  const {
+   106→   106→    selectedLessonId,
+   107→   107→    setSelectedLesson,
+   108→   108→    completeLesson,
+   109→   109→    progress,
+   110→   110→    addBookmark,
+   111→   111→    removeBookmark,
+   112→   112→    addNote,
+   113→   113→    updateLessonProgress,
+   114→   114→    updateVoiceProgress,
+   115→   115→    startQuiz,
+   116→   116→    language,
+   117→   117→    updateStreak,
+   118→   118→    addTimeSpent,
+   119→   119→  } = useAppStore();
+   120→   120→
+   121→   121→  const lang = language || "en";
+   122→   122→  const { lesson, moduleIndex, lessonIndex } = findLesson(selectedLessonId);
+   123→   123→  const allLessons = useMemo(() => getAllLessons(), []);
+   124→   124→  const currentGlobalIndex = allLessons.findIndex((l) => l.lesson.id === selectedLessonId);
+   125→   125→
+   126→   126→  const [readingProgress, setReadingProgress] = useState(0);
+   127→   127→  const [showNotes, setShowNotes] = useState(false);
+   128→   128→  const [noteText, setNoteText] = useState("");
+   129→   129→  const [highlightText, setHighlightText] = useState("");
+   130→   130→  const [showSearch, setShowSearch] = useState(false);
+   131→   131→  const [searchQuery, setSearchQuery] = useState("");
+   132→   132→  const [imageZoom, setImageZoom] = useState<string | null>(null);
+   133→   133→
+   134→   134→  // Voice narration state
+   135→   135→  const [isNarrating, setIsNarrating] = useState(false);
+   136→   136→  const [isPaused, setIsPaused] = useState(false);
+   137→   137→  const [narrationRate, setNarrationRate] = useState(1);
+   138→   138→  const [currentParagraphIdx, setCurrentParagraphIdx] = useState(-1);
+   139→   139→  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+   140→   140→
+   141→   141→  // Auto-select first lesson if none selected (prevents crash on "Lessons" tab click)
+   142→   142→  useEffect(() => {
+   143→   143→    if (!selectedLessonId && courseData.modules.length > 0 && courseData.modules[0].lessons.length > 0) {
+   144→   144→      setSelectedLesson(courseData.modules[0].lessons[0].id);
+   145→   145→    }
+   146→   146→  }, [selectedLessonId, setSelectedLesson]);
+   147→   147→
+   148→   148→  // Update streak on lesson view
+   149→   149→  useEffect(() => {
+   150→   150→    updateStreak();
+   151→   151→  }, [updateStreak]);
+   152→   152→
+   153→   153→  // Track scroll progress
+   154→   154→  useEffect(() => {
+   155→   155→    const handleScroll = () => {
+   156→   156→      const scrollTop = window.scrollY;
+   157→   157→      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+   158→   158→      if (docHeight > 0) {
+   159→   159→        const pct = Math.min(100, Math.round((scrollTop / docHeight) * 100));
+   160→   160→        setReadingProgress(pct);
+   161→   161→        if (lesson) {
+   162→   162→          updateLessonProgress(lesson.id, pct);
+   163→   163→          addTimeSpent(1);
+   164→   164→        }
+   165→   165→      }
+   166→   166→    };
+   167→   167→    window.addEventListener("scroll", handleScroll);
+   168→   168→    return () => window.removeEventListener("scroll", handleScroll);
+   169→   169→  }, [lesson, updateLessonProgress, addTimeSpent]);
+   170→   170→
+   171→   171→  // Cleanup narration on lesson change
+   172→   172→  useEffect(() => {
+   173→   173→    // Inline cleanup to avoid referencing stopNarration before it's defined
+   174→   174→    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   175→   175→      window.speechSynthesis.cancel();
+   176→   176→    }
+   177→   177→    setIsNarrating(false);
+   178→   178→    setIsPaused(false);
+   179→   179→    setCurrentParagraphIdx(-1);
+   180→   180→    // eslint-disable-next-line react-hooks/exhaustive-deps
+   181→   181→  }, [selectedLessonId]);
+   182→   182→
+   183→   183→  // Cleanup on unmount
+   184→   184→  useEffect(() => {
+   185→   185→    return () => {
+   186→   186→      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   187→   187→        window.speechSynthesis.cancel();
+   188→   188→      }
+   189→   189→    };
+   190→   190→  }, []);
+   191→   191→
+   192→   192→  if (!lesson) {
+   193→   193→    return (
+   194→   194→      <div className="container mx-auto px-4 py-16 text-center">
+   195→   195→        <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+   196→   196→        <h2 className="text-2xl font-bold mb-2">No lesson selected</h2>
+   197→   197→        <p className="text-muted-foreground mb-6">Choose a lesson from the course modules to start learning</p>
+   198→   198→        <Button onClick={() => setSelectedLesson(courseData.modules[0].lessons[0].id)}>
+   199→   199→          Start First Lesson
+   200→   200→        </Button>
+   201→   201→      </div>
+   202→   202→    );
+   203→   203→  }
+   204→   204→
+   205→   205→  const isCompleted = progress.completedLessons.includes(lesson.id);
+   206→   206→  const isBookmarked = progress.bookmarks.includes(lesson.id);
+   207→   207→  const courseModule = courseData.modules[moduleIndex];
+   208→   208→
+   209→   209→  // Get all text blocks for narration
+   210→   210→  const textBlocks = lesson.content.filter(
+   211→   211→    (b): b is Extract<ContentBlock, { type: "paragraph" }> => b.type === "paragraph"
+   212→   212→  );
+   213→   213→
+   214→   214→  const startNarration = () => {
+   215→   215→    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+   216→   216→      alert("Voice narration is not supported in your browser");
+   217→   217→      return;
+   218→   218→    }
+   219→   219→    window.speechSynthesis.cancel();
+   220→   220→
+   221→   221→    let startIdx = 0;
+   222→   222→    if (isPaused && currentParagraphIdx >= 0) {
+   223→   223→      startIdx = currentParagraphIdx;
+   224→   224→      setIsPaused(false);
+   225→   225→    } else {
+   226→   226→      setCurrentParagraphIdx(0);
+   227→   227→    }
+   228→   228→
+   229→   229→    const speakNext = (idx: number) => {
+   230→   230→      if (idx >= textBlocks.length) {
+   231→   231→        setIsNarrating(false);
+   232→   232→        setCurrentParagraphIdx(-1);
+   233→   233→        if (lesson) updateVoiceProgress(lesson.id, 100);
+   234→   234→        return;
+   235→   235→      }
+   236→   236→      setCurrentParagraphIdx(idx);
+   237→   237→      const utterance = new SpeechSynthesisUtterance(textBlocks[idx].text);
+   238→   238→      utterance.rate = narrationRate;
+   239→   239→      utterance.lang = lang === "fr" ? "fr-FR" : lang === "ar" ? "ar-SA" : "en-US";
+   240→   240→
+   241→   241→      // Try to find a matching voice
+   242→   242→      const voices = window.speechSynthesis.getVoices();
+   243→   243→      const matchingVoice = voices.find((v) => v.lang.startsWith(lang === "fr" ? "fr" : lang === "ar" ? "ar" : "en"));
+   244→   244→      if (matchingVoice) utterance.voice = matchingVoice;
+   245→   245→
+   246→   246→      utterance.onend = () => speakNext(idx + 1);
+   247→   247→      utterance.onerror = () => {
+   248→   248→        setIsNarrating(false);
+   249→   249→        setCurrentParagraphIdx(-1);
+   250→   250→      };
+   251→   251→      utteranceRef.current = utterance;
+   252→   252→      window.speechSynthesis.speak(utterance);
+   253→   253→
+   254→   254→      if (lesson) {
+   255→   255→        updateVoiceProgress(lesson.id, Math.round(((idx + 1) / textBlocks.length) * 100));
+   256→   256→      }
+   257→   257→    };
+   258→   258→
+   259→   259→    setIsNarrating(true);
+   260→   260→    speakNext(startIdx);
+   261→   261→  };
+   262→   262→
+   263→   263→  const pauseNarration = () => {
+   264→   264→    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   265→   265→      window.speechSynthesis.cancel();
+   266→   266→    }
+   267→   267→    setIsPaused(true);
+   268→   268→    setIsNarrating(false);
+   269→   269→  };
+   270→   270→
+   271→   271→  const stopNarration = () => {
+   272→   272→    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   273→   273→      window.speechSynthesis.cancel();
+   274→   274→    }
+   275→   275→    setIsNarrating(false);
+   276→   276→    setIsPaused(false);
+   277→   277→    setCurrentParagraphIdx(-1);
+   278→   278→  };
+   279→   279→
+   280→   280→  const handleComplete = () => {
+   281→   281→    completeLesson(lesson.id, lesson.duration * 60);
+   282→   282→  };
+   283→   283→
+   284→   284→  const handleBookmark = () => {
+   285→   285→    if (isBookmarked) {
+   286→   286→      removeBookmark(lesson.id);
+   287→   287→    } else {
+   288→   288→      addBookmark(lesson.id);
+   289→   289→    }
+   290→   290→  };
+   291→   291→
+   292→   292→  const handleSaveNote = () => {
+   293→   293→    if (noteText.trim()) {
+   294→   294→      addNote(lesson.id, highlightText || "Manual note", noteText);
+   295→   295→      setNoteText("");
+   296→   296→      setHighlightText("");
+   297→   297→      setShowNotes(false);
+   298→   298→    }
+   299→   299→  };
+   300→   300→
+   301→   301→  // Navigation
+   302→   302→  const prevLesson = currentGlobalIndex > 0 ? allLessons[currentGlobalIndex - 1] : null;
+   303→   303→  const nextLesson = currentGlobalIndex < allLessons.length - 1 ? allLessons[currentGlobalIndex + 1] : null;
+   304→   304→
+   305→   305→  const lessonNotes = progress.notes[lesson.id] || [];
+   306→   306→
+   307→   307→  // Merge enhanced interactive content with base lesson content
+   308→   308→  const enhancedContent = [...lesson.content, ...getEnhancedContent(lesson.id)];
+   309→   309→
+   310→   310→  // Filter content for search
+   311→   311→  const filteredContent = searchQuery
+   312→   312→    ? enhancedContent.filter((block) => {
+   313→   313→        if ("text" in block) return block.text.toLowerCase().includes(searchQuery.toLowerCase());
+   314→   314→        return false;
+   315→   315→      })
+   316→   316→    : enhancedContent;
+   317→   317→
+   318→   318→  return (
+   319→   319→    <div className="container mx-auto px-4 py-6 max-w-5xl">
+   320→   320→      {/* Lesson header */}
+   321→   321→      <motion.div
+   322→   322→        initial={{ opacity: 0, y: -10 }}
+   323→   323→        animate={{ opacity: 1, y: 0 }}
+   324→   324→        className="mb-6"
+   325→   325→      >
+   326→   326→        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+   327→   327→          <span className="font-medium" style={{ color: courseModule.color }}>
+   328→   328→            {courseModule.code} {courseModule.title}
+   329→   329→          </span>
+   330→   330→          <ChevronRight className="h-3 w-3" />
+   331→   331→          <span>{lesson.code}</span>
+   332→   332→        </div>
+   333→   333→        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+   334→   334→          <div className="flex-1">
+   335→   335→            <h1 className="text-2xl md:text-3xl font-bold mb-2">{lesson.title}</h1>
+   336→   336→            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+   337→   337→              <span className="flex items-center gap-1">
+   338→   338→                <Clock className="h-4 w-4" />
+   339→   339→                {lesson.duration} {t(lang, "minutes")}
+   340→   340→              </span>
+   341→   341→              {isCompleted && (
+   342→   342→                <Badge variant="default" className="gap-1">
+   343→   343→                  <CheckCircle2 className="h-3 w-3" />
+   344→   344→                  {t(lang, "completed")}
+   345→   345→                </Badge>
+   346→   346→              )}
+   347→   347→              {progress.voiceProgress[lesson.id] > 0 && (
+   348→   348→                <Badge variant="secondary" className="gap-1">
+   349→   349→                  <Volume2 className="h-3 w-3" />
+   350→   350→                  {progress.voiceProgress[lesson.id]}% listened
+   351→   351→                </Badge>
+   352→   352→              )}
+   353→   353→            </div>
+   354→   354→          </div>
+   355→   355→          <div className="flex items-center gap-2">
+   356→   356→            <Button variant="ghost" size="icon" onClick={() => setShowSearch(!showSearch)}>
+   357→   357→              <Search className="h-5 w-5" />
+   358→   358→            </Button>
+   359→   359→            <Button variant="ghost" size="icon" onClick={handleBookmark}>
+   360→   360→              {isBookmarked ? (
+   361→   361→                <BookmarkCheck className="h-5 w-5 text-primary" />
+   362→   362→              ) : (
+   363→   363→                <Bookmark className="h-5 w-5" />
+   364→   364→              )}
+   365→   365→            </Button>
+   366→   366→            <Button variant="ghost" size="icon" onClick={() => setShowNotes(!showNotes)}>
+   367→   367→              <StickyNote className="h-5 w-5" />
+   368→   368→            </Button>
+   369→   369→          </div>
+   370→   370→        </div>
+   371→   371→      </motion.div>
+   372→   372→
+   373→   373→      {/* Professional Voice Narration */}
+   374→   374→      <div className="mb-6">
+   375→   375→        <ProfessionalNarrator
+   376→   376→          text={textBlocks.map((b) => b.text).join(" ")}
+   377→   377→          lessonId={lesson.id}
+   378→   378→          lang={lang}
+   379→   379→          onProgress={(p) => updateVoiceProgress(lesson.id, p)}
+   380→   380→          className="shadow-sm"
+   381→   381→        />
+   382→   382→      </div>
+   383→   383→
+   384→   384→      {/* Search bar */}
+   385→   385→      <AnimatePresence>
+   386→   386→        {showSearch && (
+   387→   387→          <motion.div
+   388→   388→            initial={{ opacity: 0, height: 0 }}
+   389→   389→            animate={{ opacity: 1, height: "auto" }}
+   390→   390→            exit={{ opacity: 0, height: 0 }}
+   391→   391→            className="mb-4"
+   392→   392→          >
+   393→   393→            <div className="relative">
+   394→   394→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   395→   395→              <Input
+   396→   396→                placeholder={t(lang, "search")}
+   397→   397→                value={searchQuery}
+   398→   398→                onChange={(e) => setSearchQuery(e.target.value)}
+   399→   399→                className="pl-9 pr-9"
+   400→   400→              />
+   401→   401→              <Button
+   402→   402→                size="sm"
+   403→   403→                variant="ghost"
+   404→   404→                className="absolute right-1 top-1/2 -translate-y-1/2 h-7"
+   405→   405→                onClick={() => {
+   406→   406→                  setShowSearch(false);
+   407→   407→                  setSearchQuery("");
+   408→   408→                }}
+   409→   409→              >
+   410→   410→                <X className="h-4 w-4" />
+   411→   411→              </Button>
+   412→   412→            </div>
+   413→   413→          </motion.div>
+   414→   414→        )}
+   415→   415→      </AnimatePresence>
+   416→   416→
+   417→   417→      {/* Reading progress bar */}
+   418→   418→      <div className="sticky top-16 z-30 -mx-4 px-4 py-2 glass mb-6">
+   419→   419→        <div className="flex items-center gap-3">
+   420→   420→          <span className="text-xs text-muted-foreground shrink-0">{t(lang, "lessonProgress")}</span>
+   421→   421→          <Progress value={readingProgress} className="h-1.5 flex-1" />
+   422→   422→          <span className="text-xs font-medium shrink-0">{readingProgress}%</span>
+   423→   423→        </div>
+   424→   424→      </div>
+   425→   425→
+   426→   426→      {/* Lesson content */}
+   427→   427→      <div className="grid lg:grid-cols-[1fr_300px] gap-6">
+   428→   428→        <div className="min-w-0">
+   429→   429→          <Tabs defaultValue="content">
+   430→   430→            <TabsList className="grid w-full grid-cols-3 mb-4">
+   431→   431→              <TabsTrigger value="content">Content</TabsTrigger>
+   432→   432→              <TabsTrigger value="summary">{t(lang, "summary")}</TabsTrigger>
+   433→   433→              <TabsTrigger value="review">{t(lang, "reviewQuestions")}</TabsTrigger>
+   434→   434→            </TabsList>
+   435→   435→
+   436→   436→            <TabsContent value="content" className="space-y-4">
+   437→   437→              {/* Pre-Briefing Section */}
+   438→   438→              <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+   439→   439→                <CardContent className="pt-6">
+   440→   440→                  <div className="flex items-center gap-2 mb-3">
+   441→   441→                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+   442→   442→                      <GraduationCap className="h-4 w-4 text-amber-600" />
+   443→   443→                    </div>
+   444→   444→                    <div>
+   445→   445→                      <h3 className="font-semibold text-amber-700 dark:text-amber-400">Pre-Briefing</h3>
+   446→   446→                      <p className="text-xs text-muted-foreground">Instructor introduction & lesson overview</p>
+   447→   447→                    </div>
+   448→   448→                  </div>
+   449→   449→                  <div className="text-sm space-y-2">
+   450→   450→                    <p className="font-medium">Welcome to {lesson.title}</p>
+   451→   451→                    <p className="text-muted-foreground">
+   452→   452→                      This lesson covers section <strong>{lesson.code}</strong> of the Dangerous Goods Regulations.
+   453→   453→                      Duration: approximately {lesson.duration} minutes.
+   454→   454→                    </p>
+   455→   455→                    <div className="flex flex-wrap gap-2 mt-2">
+   456→   456→                      <Badge variant="outline" className="text-xs gap-1">
+   457→   457→                        <Clock className="h-3 w-3" />{lesson.duration} min
+   458→   458→                      </Badge>
+   459→   459→                      <Badge variant="outline" className="text-xs gap-1">
+   460→   460→                        <Target className="h-3 w-3" />{lesson.objectives.length} objectives
+   461→   461→                      </Badge>
+   462→   462→                      <Badge variant="outline" className="text-xs gap-1">
+   463→   463→                        <ClipboardList className="h-3 w-3" />{lesson.reviewQuestions.length} review questions
+   464→   464→                      </Badge>
+   465→   465→                    </div>
+   466→   466→                  </div>
+   467→   467→                </CardContent>
+   468→   468→              </Card>
+   469→   469→
+   470→   470→              {/* Objectives */}
+   471→   471→              <Card className="border-primary/20 bg-primary/5">
+   472→   472→                <CardContent className="pt-6">
+   473→   473→                  <div className="flex items-center gap-2 mb-3">
+   474→   474→                    <Target className="h-5 w-5 text-primary" />
+   475→   475→                    <h3 className="font-semibold">Learning Objectives</h3>
+   476→   476→                  </div>
+   477→   477→                  <ul className="space-y-2">
+   478→   478→                    {lesson.objectives.map((obj, i) => (
+   479→   479→                      <li key={i} className="flex items-start gap-2 text-sm">
+   480→   480→                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+   481→   481→                        <span>{obj}</span>
+   482→   482→                      </li>
+   483→   483→                    ))}
+   484→   484→                  </ul>
+   485→   485→                </CardContent>
+   486→   486→              </Card>
+   487→   487→
+   488→   488→              {/* Content blocks */}
+   489→   489→              {filteredContent.map((block, idx) => (
+   490→   490→                <ContentBlockRenderer
+   491→   491→                  key={idx}
+   492→   492→                  block={block}
+   493→   493→                  isSpeaking={block.type === "paragraph" && textBlocks.indexOf(block as any) === currentParagraphIdx}
+   494→   494→                  onImageClick={(src) => setImageZoom(src)}
+   495→   495→                />
+   496→   496→              ))}
+   497→   497→
+   498→   498→              {/* Key terms */}
+   499→   499→              {lesson.keyTerms && lesson.keyTerms.length > 0 && (
+   500→   500→                <Card>
+   501→   501→                  <CardHeader>
+   502→   502→                    <CardTitle className="flex items-center gap-2 text-lg">
+   503→   503→                      <BookOpen className="h-5 w-5 text-primary" />
+   504→   504→                      {t(lang, "keyTerms")}
+   505→   505→                    </CardTitle>
+   506→   506→                  </CardHeader>
+   507→   507→                  <CardContent className="space-y-3">
+   508→   508→                    {lesson.keyTerms.map((kt, i) => (
+   509→   509→                      <div key={i} className="border-l-2 border-primary pl-3">
+   510→   510→                        <div className="font-semibold text-sm">{kt.term}</div>
+   511→   511→                        <div className="text-sm text-muted-foreground">{kt.definition}</div>
+   512→   512→                      </div>
+   513→   513→                    ))}
+   514→   514→                  </CardContent>
+   515→   515→                </Card>
+   516→   516→              )}
+   517→   517→
+   518→   518→              {/* Debriefing Section */}
+   519→   519→              <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+   520→   520→                <CardContent className="pt-6">
+   521→   521→                  <div className="flex items-center gap-2 mb-3">
+   522→   522→                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+   523→   523→                      <CheckCheck className="h-4 w-4 text-green-600" />
+   524→   524→                    </div>
+   525→   525→                    <div>
+   526→   526→                      <h3 className="font-semibold text-green-700 dark:text-green-400">Debriefing</h3>
+   527→   527→                      <p className="text-xs text-muted-foreground">Key takeaways & competency check</p>
+   528→   528→                    </div>
+   529→   529→                  </div>
+   530→   530→                  <div className="text-sm space-y-2">
+   531→   531→                    <p className="font-medium">Lesson Complete - Key Takeaways:</p>
+   532→   532→                    <ul className="space-y-1">
+   533→   533→                      {lesson.summary.slice(0, 3).map((point, i) => (
+   534→   534→                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+   535→   535→                          <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+   536→   536→                          <span>{point}</span>
+   537→   537→                        </li>
+   538→   538→                      ))}
+   539→   539→                    </ul>
+   540→   540→                    <div className="mt-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+   541→   541→                      <p className="text-xs">
+   542→   542→                        <strong>Competency Validation:</strong> Complete the quiz to verify your understanding of this lesson.
+   543→   543→                        Score 70% or higher to demonstrate competency.
+   544→   544→                      </p>
+   545→   545→                    </div>
+   546→   546→                  </div>
+   547→   547→                </CardContent>
+   548→   548→              </Card>
+   549→   549→            </TabsContent>
+   550→   550→
+   551→   551→            <TabsContent value="summary" className="space-y-4">
+   552→   552→              <Card>
+   553→   553→                <CardHeader>
+   554→   554→                  <CardTitle className="flex items-center gap-2">
+   555→   555→                    <ListChecks className="h-5 w-5 text-primary" />
+   556→   556→                    {t(lang, "summary")}
+   557→   557→                  </CardTitle>
+   558→   558→                </CardHeader>
+   559→   559→                <CardContent>
+   560→   560→                  <ul className="space-y-2">
+   561→   561→                    {lesson.summary.map((point, i) => (
+   562→   562→                      <li key={i} className="flex items-start gap-2 text-sm">
+   563→   563→                        <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center shrink-0 mt-0.5">
+   564→   564→                          {i + 1}
+   565→   565→                        </span>
+   566→   566→                        <span>{point}</span>
+   567→   567→                      </li>
+   568→   568→                    ))}
+   569→   569→                  </ul>
+   570→   570→                </CardContent>
+   571→   571→              </Card>
+   572→   572→            </TabsContent>
+   573→   573→
+   574→   574→            <TabsContent value="review" className="space-y-4">
+   575→   575→              <Card>
+   576→   576→                <CardHeader>
+   577→   577→                  <CardTitle className="flex items-center gap-2">
+   578→   578→                    <Target className="h-5 w-5 text-primary" />
+   579→   579→                    {t(lang, "reviewQuestions")}
+   580→   580→                  </CardTitle>
+   581→   581→                </CardHeader>
+   582→   582→                <CardContent className="space-y-3">
+   583→   583→                  {lesson.reviewQuestions.map((q, i) => (
+   584→   584→                    <div key={i} className="p-3 rounded-lg bg-accent/30">
+   585→   585→                      <div className="flex items-start gap-2">
+   586→   586→                        <span className="text-primary font-bold">{i + 1}.</span>
+   587→   587→                        <span className="text-sm">{q}</span>
+   588→   588→                      </div>
+   589→   589→                    </div>
+   590→   590→                  ))}
+   591→   591→                </CardContent>
+   592→   592→              </Card>
+   593→   593→            </TabsContent>
+   594→   594→          </Tabs>
+   595→   595→
+   596→   596→          {/* Action buttons */}
+   597→   597→          <div className="flex flex-wrap items-center justify-between gap-3 mt-6 pt-6 border-t">
+   598→   598→            <Button
+   599→   599→              variant={isCompleted ? "outline" : "default"}
+   600→   600→              onClick={handleComplete}
+   601→   601→              className="gap-2"
+   602→   602→            >
+   603→   603→              <CheckCircle2 className="h-5 w-5" />
+   604→   604→              {isCompleted ? t(lang, "completed") : t(lang, "markComplete")}
+   605→   605→            </Button>
+   606→   606→            {courseData.quizzes[lesson.id] && (
+   607→   607→              <Button
+   608→   608→                variant="secondary"
+   609→   609→                onClick={() => startQuiz("lesson", lesson.id)}
+   610→   610→                className="gap-2"
+   611→   611→              >
+   612→   612→                <Target className="h-5 w-5" />
+   613→   613→                {t(lang, "takeQuiz")}
+   614→   614→              </Button>
+   615→   615→            )}
+   616→   616→          </div>
+   617→   617→
+   618→   618→          {/* Navigation */}
+   619→   619→          <div className="flex items-center justify-between mt-6 gap-3">
+   620→   620→            <Button
+   621→   621→              variant="ghost"
+   622→   622→              disabled={!prevLesson}
+   623→   623→              onClick={() => prevLesson && setSelectedLesson(prevLesson.lesson.id)}
+   624→   624→              className="gap-1"
+   625→   625→            >
+   626→   626→              <ChevronLeft className="h-4 w-4" />
+   627→   627→              {t(lang, "previousLesson")}
+   628→   628→            </Button>
+   629→   629→            <Button
+   630→   630→              variant="ghost"
+   631→   631→              disabled={!nextLesson}
+   632→   632→              onClick={() => nextLesson && setSelectedLesson(nextLesson.lesson.id)}
+   633→   633→              className="gap-1"
+   634→   634→            >
+   635→   635→              {t(lang, "nextLesson")}
+   636→   636→              <ChevronRight className="h-4 w-4" />
+   637→   637→            </Button>
+   638→   638→          </div>
+   639→   639→        </div>
+   640→   640→
+   641→   641→        {/* Sidebar */}
+   642→   642→        <div className="hidden lg:block">
+   643→   643→          <Card className="sticky top-32">
+   644→   644→            <CardHeader>
+   645→   645→              <CardTitle className="text-sm">Lesson Navigation</CardTitle>
+   646→   646→            </CardHeader>
+   647→   647→            <CardContent>
+   648→   648→              <ScrollArea className="h-[400px] pr-3">
+   649→   649→                <div className="space-y-1">
+   650→   650→                  {allLessons.map((l, i) => (
+   651→   651→                    <button
+   652→   652→                      key={l.lesson.id}
+   653→   653→                      onClick={() => setSelectedLesson(l.lesson.id)}
+   654→   654→                      className={cn(
+   655→   655→                        "w-full text-left p-2 rounded-lg text-xs transition-colors",
+   656→   656→                        l.lesson.id === lesson.id
+   657→   657→                          ? "bg-primary/10 text-primary font-medium"
+   658→   658→                          : "hover:bg-accent"
+   659→   659→                      )}
+   660→   660→                    >
+   661→   661→                      <div className="flex items-center gap-2">
+   662→   662→                        {progress.completedLessons.includes(l.lesson.id) ? (
+   663→   663→                          <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+   664→   664→                        ) : (
+   665→   665→                          <span className="w-3 h-3 rounded-full border border-muted-foreground/30 shrink-0" />
+   666→   666→                        )}
+   667→   667→                        <span className="truncate">
+   668→   668→                          <span className="text-muted-foreground">{l.lesson.code}</span>
+   669→   669→                          {" - "}
+   670→   670→                          {l.lesson.title}
+   671→   671→                        </span>
+   672→   672→                      </div>
+   673→   673→                    </button>
+   674→   674→                  ))}
+   675→   675→                </div>
+   676→   676→              </ScrollArea>
+   677→   677→            </CardContent>
+   678→   678→          </Card>
+   679→   679→        </div>
+   680→   680→      </div>
+   681→   681→
+   682→   682→      {/* Notes dialog */}
+   683→   683→      <Dialog open={showNotes} onOpenChange={setShowNotes}>
+   684→   684→        <DialogContent>
+   685→   685→          <DialogHeader>
+   686→   686→            <DialogTitle>Lesson Notes</DialogTitle>
+   687→   687→          </DialogHeader>
+   688→   688→          <div className="space-y-4">
+   689→   689→            <div>
+   690→   690→              <label className="text-sm font-medium mb-1 block">Add a new note</label>
+   691→   691→              <Textarea
+   692→   692→                placeholder="Write your note here..."
+   693→   693→                value={noteText}
+   694→   694→                onChange={(e) => setNoteText(e.target.value)}
+   695→   695→                rows={3}
+   696→   696→              />
+   697→   697→              <Button size="sm" className="mt-2" onClick={handleSaveNote}>
+   698→   698→                Save Note
+   699→   699→              </Button>
+   700→   700→            </div>
+   701→   701→            <div className="border-t pt-4">
+   702→   702→              <h4 className="text-sm font-medium mb-2">Your notes for this lesson</h4>
+   703→   703→              {lessonNotes.length === 0 ? (
+   704→   704→                <p className="text-sm text-muted-foreground">No notes yet. Start taking notes to track your learning.</p>
+   705→   705→              ) : (
+   706→   706→                <div className="space-y-2 max-h-60 overflow-y-auto">
+   707→   707→                  {lessonNotes.map((note, i) => (
+   708→   708→                    <div key={i} className="p-2 rounded bg-accent/30 text-sm">
+   709→   709→                      <div className="text-xs text-muted-foreground mb-1">
+   710→   710→                        {new Date(note.date).toLocaleDateString()}
+   711→   711→                      </div>
+   712→   712→                      <div>{note.note}</div>
+   713→   713→                    </div>
+   714→   714→                  ))}
+   715→   715→                </div>
+   716→   716→              )}
+   717→   717→            </div>
+   718→   718→          </div>
+   719→   719→        </DialogContent>
+   720→   720→      </Dialog>
+   721→   721→
+   722→   722→      {/* Image zoom dialog */}
+   723→   723→      <Dialog open={!!imageZoom} onOpenChange={() => setImageZoom(null)}>
+   724→   724→        <DialogContent className="max-w-3xl">
+   725→   725→          <DialogHeader>
+   726→   726→            <DialogTitle>Image View</DialogTitle>
+   727→   727→          </DialogHeader>
+   728→   728→          {imageZoom && (
+   729→   729→            <div className="space-y-3">
+   730→   730→              {/* eslint-disable-next-line @next/next/no-img-element */}
+   731→   731→              <img
+   732→   732→                src={imageZoom}
+   733→   733→                alt="Zoomed view"
+   734→   734→                className="w-full h-auto rounded-lg"
+   735→   735→              />
+   736→   736→              <div className="flex gap-2 justify-end">
+   737→   737→                <a href={imageZoom} download className="inline-flex">
+   738→   738→                  <Button variant="outline" size="sm">Download</Button>
+   739→   739→                </a>
+   740→   740→              </div>
+   741→   741→            </div>
+   742→   742→          )}
+   743→   743→        </DialogContent>
+   744→   744→      </Dialog>
+   745→   745→    </div>
+   746→   746→  );
+   747→   747→}
+   748→   748→
+   749→   749→function ContentBlockRenderer({
+   750→   750→  block,
+   751→   751→  isSpeaking,
+   752→   752→  onImageClick,
+   753→   753→}: {
+   754→   754→  block: ContentBlock;
+   755→   755→  isSpeaking?: boolean;
+   756→   756→  onImageClick?: (src: string) => void;
+   757→   757→}) {
+   758→   758→  switch (block.type) {
+   759→   759→    case "paragraph":
+   760→   760→      return (
+   761→   761→        <p className={cn("text-base leading-relaxed", isSpeaking && "speaking")}>
+   762→   762→          {block.text}
+   763→   763→        </p>
+   764→   764→      );
+   765→   765→
+   766→   766→    case "heading": {
+   767→   767→      const level = block.level || 3;
+   768→   768→      const className =
+   769→   769→        level === 2
+   770→   770→          ? "text-2xl font-bold mt-6 mb-3"
+   771→   771→          : level === 3
+   772→   772→          ? "text-xl font-semibold mt-5 mb-2"
+   773→   773→          : "text-lg font-semibold mt-4 mb-2";
+   774→   774→      return <h3 className={className}>{block.text}</h3>;
+   775→   775→    }
+   776→   776→
+   777→   777→    case "callout": {
+   778→   778→      const style = calloutStyles[block.variant];
+   779→   779→      const Icon = style.icon;
+   780→   780→      return (
+   781→   781→        <div className={cn("rounded-lg border p-4 my-4", style.className)}>
+   782→   782→          <div className="flex items-start gap-3">
+   783→   783→            <Icon className={cn("h-5 w-5 mt-0.5 shrink-0", style.iconClass)} />
+   784→   784→            <div className="flex-1">
+   785→   785→              {block.title && <div className="font-semibold mb-1">{block.title}</div>}
+   786→   786→              <div className="text-sm">{block.text}</div>
+   787→   787→            </div>
+   788→   788→          </div>
+   789→   789→        </div>
+   790→   790→      );
+   791→   791→    }
+   792→   792→
+   793→   793→    case "list":
+   794→   794→      return block.ordered ? (
+   795→   795→        <ol className="list-decimal list-inside space-y-1.5 my-3">
+   796→   796→          {block.items.map((item, i) => (
+   797→   797→            <li key={i} className="text-sm leading-relaxed">{item}</li>
+   798→   798→          ))}
+   799→   799→        </ol>
+   800→   800→      ) : (
+   801→   801→        <ul className="space-y-1.5 my-3">
+   802→   802→          {block.items.map((item, i) => (
+   803→   803→            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed">
+   804→   804→              <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+   805→   805→              <span>{item}</span>
+   806→   806→            </li>
+   807→   807→          ))}
+   808→   808→        </ul>
+   809→   809→      );
+   810→   810→
+   811→   811→    case "table":
+   812→   812→      return (
+   813→   813→        <Card className="my-4 overflow-hidden">
+   814→   814→          {block.caption && (
+   815→   815→            <div className="px-4 py-2 bg-muted/30 text-sm font-medium border-b">
+   816→   816→              {block.caption}
+   817→   817→            </div>
+   818→   818→          )}
+   819→   819→          <div className="overflow-x-auto">
+   820→   820→            <table className="w-full text-sm">
+   821→   821→              <thead className="bg-muted/50">
+   822→   822→                <tr>
+   823→   823→                  {block.headers.map((h, i) => (
+   824→   824→                    <th key={i} className="text-left p-3 font-semibold border-b">
+   825→   825→                      {h}
+   826→   826→                    </th>
+   827→   827→                  ))}
+   828→   828→                </tr>
+   829→   829→              </thead>
+   830→   830→              <tbody>
+   831→   831→                {block.rows.map((row, ri) => (
+   832→   832→                  <tr key={ri} className="hover:bg-accent/30 transition-colors">
+   833→   833→                    {row.map((cell, ci) => (
+   834→   834→                      <td key={ci} className="p-3 border-b border-border/50">
+   835→   835→                        {cell}
+   836→   836→                      </td>
+   837→   837→                    ))}
+   838→   838→                  </tr>
+   839→   839→                ))}
+   840→   840→              </tbody>
+   841→   841→            </table>
+   842→   842→          </div>
+   843→   843→        </Card>
+   844→   844→      );
+   845→   845→
+   846→   846→    case "definition":
+   847→   847→      return (
+   848→   848→        <div className="border-l-4 border-primary pl-4 my-3">
+   849→   849→          <div className="font-semibold">{block.term}</div>
+   850→   850→          <div className="text-sm text-muted-foreground">{block.definition}</div>
+   851→   851→        </div>
+   852→   852→      );
+   853→   853→
+   854→   854→    case "image":
+   855→   855→      return (
+   856→   856→        <figure className="my-4">
+   857→   857→          <div
+   858→   858→            className="relative rounded-lg overflow-hidden cursor-pointer group bg-muted/30"
+   859→   859→            onClick={() => onImageClick?.(block.src)}
+   860→   860→          >
+   861→   861→            {/* eslint-disable-next-line @next/next/no-img-element */}
+   862→   862→            <img
+   863→   863→              src={block.src}
+   864→   864→              alt={block.alt || block.caption || "Course image"}
+   865→   865→              className="w-full h-auto"
+   866→   866→            />
+   867→   867→            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+   868→   868→              <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+   869→   869→            </div>
+   870→   870→          </div>
+   871→   871→          {block.caption && (
+   872→   872→            <figcaption className="text-xs text-muted-foreground mt-2 text-center italic">
+   873→   873→              {block.caption}
+   874→   874→            </figcaption>
+   875→   875→          )}
+   876→   876→        </figure>
+   877→   877→      );
+   878→   878→
+   879→   879→    case "keyTerms":
+   880→   880→      return (
+   881→   881→        <Card className="my-4">
+   882→   882→          <CardHeader>
+   883→   883→            <CardTitle className="text-base flex items-center gap-2">
+   884→   884→              <BookOpen className="h-4 w-4 text-primary" />
+   885→   885→              Key Terms
+   886→   886→            </CardTitle>
+   887→   887→          </CardHeader>
+   888→   888→          <CardContent className="space-y-2">
+   889→   889→            {block.terms.map((kt, i) => (
+   890→   890→              <div key={i} className="border-l-2 border-primary/50 pl-3 py-1">
+   891→   891→                <div className="font-semibold text-sm">{kt.term}</div>
+   892→   892→                <div className="text-sm text-muted-foreground">{kt.definition}</div>
+   893→   893→              </div>
+   894→   894→            ))}
+   895→   895→          </CardContent>
+   896→   896→        </Card>
+   897→   897→      );
+   898→   898→
+   899→   899→    case "svg":
+   900→   900→      return (
+   901→   901→        <figure className="my-4">
+   902→   902→          <div className="rounded-xl overflow-hidden border bg-card p-4">
+   903→   903→            <div className="flex items-center justify-center">
+   904→   904→              <embed src={block.src} type="image/svg+xml" className="w-full max-w-3xl" />
+   905→   905→            </div>
+   906→   906→          </div>
+   907→   907→          {block.caption && (
+   908→   908→            <figcaption className="text-xs text-muted-foreground mt-2 text-center italic">
+   909→   909→              {block.caption}
+   910→   910→            </figcaption>
+   911→   911→          )}
+   912→   912→        </figure>
+   913→   913→      );
+   914→   914→
+   915→   915→    case "interactive":
+   916→   916→      return <InteractiveComponentRenderer component={block.component} />;
+   917→   917→
+   918→   918→    case "knowledgeCheck":
+   919→   919→      return (
+   920→   920→        <KnowledgeCheck
+   921→   921→          question={block.question}
+   922→   922→          options={block.options}
+   923→   923→          correctAnswer={block.correctAnswer}
+   924→   924→          explanation={block.explanation}
+   925→   925→          questionId={`kc-${block.question.substring(0, 20)}`}
+   926→   926→        />
+   927→   927→      );
+   928→   928→
+   929→   929→    case "clickToReveal":
+   930→   930→      return (
+   931→   931→        <ClickToReveal
+   932→   932→          title={block.title}
+   933→   933→          variant={block.variant || "info"}
+   934→   934→        >
+   935→   935→          {block.content}
+   936→   936→        </ClickToReveal>
+   937→   937→      );
+   938→   938→
+   939→   939→    case "matching":
+   940→   940→      return (
+   941→   941→        <DragDropMatching
+   942→   942→          title={block.title}
+   943→   943→          pairs={{ left: block.left, right: block.right }}
+   944→   944→        />
+   945→   945→      );
+   946→   946→
+   947→   947→    case "sequence":
+   948→   948→      return (
+   949→   949→        <SequenceOrdering
+   950→   950→          title={block.title}
+   951→   951→          steps={block.steps}
+   952→   952→          correctOrder={block.correctOrder}
+   953→   953→        />
+   954→   954→      );
+   955→   955→
+   956→   956→    default:
+   957→   957→      return null;
+   958→   958→  }
+   959→   959→}
+   960→   960→
+   961→   961→// Renderer for special interactive components
+   962→   962→function InteractiveComponentRenderer({ component }: { component: string }) {
+   963→   963→  switch (component) {
+   964→   964→    case "hazardExplorer":
+   965→   965→      return <HazardClassExplorer />;
+   966→   966→    case "cabinExplorer":
+   967→   967→      return <CabinLayoutExplorer />;
+   968→   968→    case "animatedDoorArming":
+   969→   969→      return <AnimatedDoorArming />;
+   970→   970→    case "animatedEvacuation":
+   971→   971→      return <AnimatedEvacuationFlow />;
+   972→   972→    case "animatedFireFighting":
+   973→   973→      return <AnimatedFireFighting />;
+   974→   974→    default:
+   975→   975→      return null;
+   976→   976→  }
+   977→   977→}
+   978→   978→

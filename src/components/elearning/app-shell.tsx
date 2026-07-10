@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
@@ -68,6 +68,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     toggleSidebar,
     progress,
   } = useAppStore();
+
+  const courseData = useCurrentCourse();
 
   const [mounted, setMounted] = useState(false);
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,6 +29,7 @@ const EXAM_DURATION = 30 * 60; // 30 minutes in seconds
 
 export function ExamView() {
   const { recordExamScore, setView, language, progress } = useAppStore();
+  const courseData = useCurrentCourse();
   const lang = language || "en";
 
   const [examStarted, setExamStarted] = useState(false);

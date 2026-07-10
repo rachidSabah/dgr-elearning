@@ -1,7 +1,8 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse, useAllCourses } from "@/lib/use-course";
+import { slugify } from "@/lib/courses-registry";
 import { t } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
@@ -20,11 +21,20 @@ import {
   Medal,
   Brain,
   GraduationCap,
+  Library,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 const achievementInfo: Record<string, { icon: typeof Star; label: string; color: string }> = {
   "first-lesson": { icon: Star, label: "First Lesson", color: "text-blue-500" },
@@ -37,7 +47,9 @@ const achievementInfo: Record<string, { icon: typeof Star; label: string; color:
 };
 
 export function DashboardView() {
-  const { setView, setSelectedLesson, progress, studentName, language, startQuiz } = useAppStore();
+  const { setView, setSelectedLesson, setSelectedCourse, selectedCourseId, progress, studentName, language, startQuiz } = useAppStore();
+  const courseData = useCurrentCourse();
+  const allCourses = useAllCourses();
   const lang = language || "en";
 
   const totalLessons = courseData.modules.reduce((acc, m) => acc + m.lessons.length, 0);
@@ -108,14 +120,66 @@ export function DashboardView() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">
-          {t(lang, "welcomeBack")}, {studentName || "Learner"}! 👋
-        </h1>
-        <p className="text-muted-foreground">
-          {progress.completedLessons.length > 0
-            ? `${t(lang, "yourProgress")}: ${completionPct}% ${t(lang, "complete")}`
-            : "Start your dangerous goods training journey today"}
-        </p>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+              {t(lang, "welcomeBack")}, {studentName || "Learner"}! 👋
+            </h1>
+            <p className="text-muted-foreground">
+              {progress.completedLessons.length > 0
+                ? `${t(lang, "yourProgress")}: ${completionPct}% ${t(lang, "complete")}`
+                : "Start your training journey today"}
+            </p>
+          </div>
+
+          {/* Course selector dropdown */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Library className="h-4 w-4" />
+              <span>Course:</span>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 max-w-[260px] justify-between">
+                  <span className="truncate">{courseData.title}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                {allCourses.map((cd) => {
+                  const courseId = slugify(cd.title);
+                  const isActive = courseId === selectedCourseId;
+                  const courseTotalLessons = cd.modules.reduce(
+                    (acc, m) => acc + m.lessons.length,
+                    0
+                  );
+                  const courseCompleted = cd.modules
+                    .flatMap((m) => m.lessons)
+                    .filter((l) => progress.completedLessons.includes(l.id)).length;
+                  return (
+                    <DropdownMenuItem
+                      key={courseId}
+                      onClick={() => setSelectedCourse(courseId)}
+                      className={cn(
+                        "flex flex-col items-start gap-1 py-2 cursor-pointer",
+                        isActive && "bg-accent"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <GraduationCap className="h-4 w-4 text-primary shrink-0" />
+                        <span className="font-medium text-sm truncate flex-1">{cd.title}</span>
+                        {isActive && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
+                      </div>
+                      <span className="text-xs text-muted-foreground pl-6">
+                        {cd.difficulty} • {courseCompleted}/{courseTotalLessons} lessons
+                      </span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </motion.div>
 
       {/* Stats grid */}

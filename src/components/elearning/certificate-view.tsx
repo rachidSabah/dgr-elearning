@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
@@ -22,6 +22,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function CertificateView() {
   const { progress, studentName, language, setView } = useAppStore();
+  const courseData = useCurrentCourse();
   const lang = language || "en";
   const canvasRef = useRef<HTMLCanvasElement>(null);
 

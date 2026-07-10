@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 export function FlashcardsView() {
   const { language, addXp } = useAppStore();
+  const courseData = useCurrentCourse();
   const lang = language || "en";
 
   const [deck, setDeck] = useState(() => [...courseData.flashcards]);
@@ -34,14 +35,14 @@ export function FlashcardsView() {
   const categories = useMemo(() => {
     const cats = new Set(courseData.flashcards.map((c) => c.category));
     return Array.from(cats);
-  }, []);
+  }, [courseData]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filteredDeck = useMemo(() => {
     if (!selectedCategory) return courseData.flashcards;
     return courseData.flashcards.filter((c) => c.category === selectedCategory);
-  }, [selectedCategory]);
+  }, [selectedCategory, courseData]);
 
   const currentCard = filteredDeck[currentIdx];
   const progressPct = filteredDeck.length > 0 ? ((currentIdx + 1) / filteredDeck.length) * 100 : 0;

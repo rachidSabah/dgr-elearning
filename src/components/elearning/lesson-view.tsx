@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { getEnhancedContent } from "@/lib/lesson-enhancements";
+import { getFirstAidEnhancedContent } from "@/lib/first-aid-enhancements";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -53,7 +54,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { ContentBlock, Lesson } from "@/lib/types";
+import type { ContentBlock, CourseData, Lesson } from "@/lib/types";
 import { ProfessionalNarrator } from "./professional-narrator";
 import {
   ClickToReveal,
@@ -79,7 +80,10 @@ const calloutStyles = {
   note: { icon: NotebookPen, className: "border-purple-500/30 bg-purple-500/5 text-purple-900 dark:text-purple-100", iconClass: "text-purple-500" },
 };
 
-function findLesson(lessonId: string | null): { lesson: Lesson | null; moduleIndex: number; lessonIndex: number } {
+function findLesson(
+  courseData: CourseData,
+  lessonId: string | null
+): { lesson: Lesson | null; moduleIndex: number; lessonIndex: number } {
   if (!lessonId) return { lesson: null, moduleIndex: 0, lessonIndex: 0 };
   for (let mi = 0; mi < courseData.modules.length; mi++) {
     for (let li = 0; li < courseData.modules[mi].lessons.length; li++) {
@@ -91,7 +95,7 @@ function findLesson(lessonId: string | null): { lesson: Lesson | null; moduleInd
   return { lesson: null, moduleIndex: 0, lessonIndex: 0 };
 }
 
-function getAllLessons() {
+function getAllLessons(courseData: CourseData) {
   const all: { lesson: Lesson; moduleIndex: number; lessonIndex: number }[] = [];
   courseData.modules.forEach((m, mi) => {
     m.lessons.forEach((l, li) => {
@@ -118,9 +122,11 @@ export function LessonView() {
     addTimeSpent,
   } = useAppStore();
 
+  const courseData = useCurrentCourse();
+
   const lang = language || "en";
-  const { lesson, moduleIndex, lessonIndex } = findLesson(selectedLessonId);
-  const allLessons = useMemo(() => getAllLessons(), []);
+  const { lesson, moduleIndex, lessonIndex } = findLesson(courseData, selectedLessonId);
+  const allLessons = useMemo(() => getAllLessons(courseData), [courseData]);
   const currentGlobalIndex = allLessons.findIndex((l) => l.lesson.id === selectedLessonId);
 
   const [readingProgress, setReadingProgress] = useState(0);
@@ -305,7 +311,11 @@ export function LessonView() {
   const lessonNotes = progress.notes[lesson.id] || [];
 
   // Merge enhanced interactive content with base lesson content
-  const enhancedContent = [...lesson.content, ...getEnhancedContent(lesson.id)];
+  // Check both DGR and First Aid enhancements based on lesson ID prefix
+  const enhancements = lesson.id.startsWith("fa-")
+    ? getFirstAidEnhancedContent(lesson.id)
+    : getEnhancedContent(lesson.id);
+  const enhancedContent = [...lesson.content, ...enhancements];
 
   // Filter content for search
   const filteredContent = searchQuery

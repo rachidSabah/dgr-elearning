@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse, useAllCourses } from "@/lib/use-course";
+import { slugify } from "@/lib/courses-registry";
 import { t } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
@@ -25,6 +25,7 @@ import {
   Brain,
   Bot,
   GraduationCap,
+  Library,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -39,7 +40,9 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 export function LandingView() {
-  const { setView, setSelectedLesson, progress, language } = useAppStore();
+  const { setView, setSelectedLesson, setSelectedCourse, progress, language } = useAppStore();
+  const courseData = useCurrentCourse();
+  const allCourses = useAllCourses();
   const lang = language || "en";
 
   const totalLessons = courseData.modules.reduce((acc, m) => acc + m.lessons.length, 0);
@@ -65,6 +68,33 @@ export function LandingView() {
   };
 
   const nextLesson = findNextLesson();
+
+  // Compute progress for each course based on its lessons
+  const getCourseProgress = (cd: typeof courseData) => {
+    const total = cd.modules.reduce((acc, m) => acc + m.lessons.length, 0) || 1;
+    const completed = cd.modules
+      .flatMap((m) => m.lessons)
+      .filter((l) => progress.completedLessons.includes(l.id)).length;
+    return {
+      total,
+      completed,
+      pct: Math.round((completed / total) * 100),
+      hasStarted: completed > 0,
+      firstLessonId: cd.modules[0]?.lessons[0]?.id,
+    };
+  };
+
+  const handleSelectCourse = (cd: typeof courseData) => {
+    const courseId = slugify(cd.title);
+    const courseProgress = getCourseProgress(cd);
+    setSelectedCourse(courseId);
+    // Navigate to dashboard so the user can dive into the chosen course
+    setView("dashboard");
+    // If the course has been started, jump to the next incomplete lesson
+    if (courseProgress.firstLessonId && !courseProgress.hasStarted) {
+      setSelectedLesson(courseProgress.firstLessonId);
+    }
+  };
 
   return (
     <div className="w-full">
@@ -242,6 +272,120 @@ export function LandingView() {
               </motion.div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Course Library - choose between all available courses */}
+      <section className="container mx-auto px-4 py-12 bg-card/30">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <Badge variant="secondary" className="mb-3">
+              <Library className="h-3 w-3 mr-1" />
+              {allCourses.length} courses available
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">Course Library</h2>
+            <p className="text-muted-foreground">
+              Choose from our catalog of aviation training programs. Your progress is saved per course.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {allCourses.map((cd, i) => {
+              const courseId = slugify(cd.title);
+              const courseProgress = getCourseProgress(cd);
+              const isCurrentCourse = cd.title === courseData.title;
+              return (
+                <motion.div
+                  key={courseId}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <Card
+                    className={cn(
+                      "card-hover h-full cursor-pointer overflow-hidden flex flex-col",
+                      isCurrentCourse && "ring-2 ring-primary"
+                    )}
+                    onClick={() => handleSelectCourse(cd)}
+                  >
+                    <div className="h-2 bg-gradient-to-r from-primary to-chart-4" />
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white bg-gradient-to-br from-primary to-chart-4">
+                          <GraduationCap className="h-6 w-6" />
+                        </div>
+                        {isCurrentCourse ? (
+                          <Badge>Current</Badge>
+                        ) : courseProgress.hasStarted ? (
+                          <Badge variant="secondary">In Progress</Badge>
+                        ) : (
+                          <Badge variant="outline">New</Badge>
+                        )}
+                      </div>
+                      <CardTitle className="mt-3">{cd.title}</CardTitle>
+                      <CardDescription>{cd.subtitle}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col">
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                        {cd.description}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-4">
+                        <span className="flex items-center gap-1">
+                          <BarChart3 className="h-3.5 w-3.5" />
+                          {cd.difficulty}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {Math.floor(cd.duration / 60)}h {cd.duration % 60}m
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="h-3.5 w-3.5" />
+                          {cd.modules.length} modules
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 mt-auto">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {courseProgress.completed}/{courseProgress.total} lessons
+                          </span>
+                          <span className="font-semibold">{courseProgress.pct}%</span>
+                        </div>
+                        <Progress value={courseProgress.pct} className="h-1.5" />
+                        <Button
+                          className="w-full gap-2 mt-2"
+                          variant={isCurrentCourse ? "outline" : "default"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectCourse(cd);
+                          }}
+                        >
+                          {courseProgress.hasStarted ? (
+                            <>
+                              <Play className="h-4 w-4" />
+                              Continue
+                            </>
+                          ) : (
+                            <>
+                              {t(lang, "heroCta")}
+                              <ArrowRight className="h-4 w-4" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

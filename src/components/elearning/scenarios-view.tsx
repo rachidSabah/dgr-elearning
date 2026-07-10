@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { courseData } from "@/lib/course-data";
+import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 export function ScenariosView() {
   const { language, addXp, addAchievement } = useAppStore();
+  const courseData = useCurrentCourse();
   const lang = language || "en";
 
   const [currentScenarioIdx, setCurrentScenarioIdx] = useState(0);
