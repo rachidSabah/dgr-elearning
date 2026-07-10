@@ -1,0 +1,4 @@
+# Redirects for Cloudflare Pages SPA routing
+# All routes serve the main index.html (SPA pattern)
+
+/*    /index.html   200

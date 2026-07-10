@@ -1,0 +1,74 @@
+# Cloudflare Pages Configuration - DGR eLearning Platform
+# This file configures deployment to Cloudflare Pages
+
+name = "dgr-elearning"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".next/standalone"
+
+# Environment variables (set via Cloudflare dashboard or CLI)
+# [vars]
+# NEXT_PUBLIC_APP_URL = "https://your-domain.pages.dev"
+
+# Build configuration
+[build]
+command = "npm run build:cf"
+watch_dir = "src"
+
+# Deployment settings
+[deployment]
+# Atomic deployments with rollback support
+strategy = "atomic"
+
+# Headers for security and performance
+[[headers]]
+for = "/*"
+[headers.values]
+X-Content-Type-Options = "nosniff"
+X-Frame-Options = "DENY"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+for = "/sw.js"
+[headers.values]
+Service-Worker-Allowed = "/"
+Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+for = "/manifest.json"
+[headers.values]
+Content-Type = "application/manifest+json"
+
+[[headers]]
+for = "/_next/static/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/icons/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirects for SPA routing
+[[redirects]]
+from = "/dashboard"
+to = "/"
+status = 200
+
+[[redirects]]
+from = "/lesson/*"
+to = "/"
+status = 200
+
+[[redirects]]
+from = "/quiz/*"
+to = "/"
+status = 200
+
+# Custom 404
+[[redirects]]
+from = "/*"
+to = "/"
+status = 200
