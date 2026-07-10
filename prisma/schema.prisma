@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// DGR Academy LMS - Comprehensive Database Schema
+// Supports: users, roles, courses, modules, lessons, media, quizzes, exams, certificates, progress, analytics, settings
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +10,338 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================
+// USERS & AUTHENTICATION
+// ============================================================
+
 model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String?
+  passwordHash    String
+  role            String   @default("STUDENT") // SUPER_ADMIN, ACADEMY_ADMIN, INSTRUCTOR, STUDENT, CONTENT_EDITOR
+  avatar          String?
+  phone           String?
+  department      String?
+  employeeId      String?
+  isActive        Boolean  @default(true)
+  lastLogin       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  progress        LessonProgress[]
+  quizAttempts    QuizAttempt[]
+  examAttempts    ExamAttempt[]
+  certificates    Certificate[]
+  enrollments     Enrollment[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  sessions        Session[]
+  createdCourses  Course[]    @relation("CourseAuthor")
+  createdLessons  Lesson[]    @relation("LessonAuthor")
+  editedLessons   Lesson[]    @relation("LessonEditor")
+}
+
+model Session {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
   createdAt DateTime @default(now())
+  userAgent String?
+  ipAddress String?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// COURSE STRUCTURE (Scalable for unlimited training modules)
+// ============================================================
+
+model Course {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  description   String
+  category      String   // e.g., "Cabin Crew Training", "Ground Operations"
+  difficulty    String   @default("Professional") // Beginner, Intermediate, Professional
+  duration      Int      @default(0) // total minutes
+  icon          String?
+  color         String?
+  coverImage    String?
+  isPublished   Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  order         Int      @default(0)
+  startDate     DateTime?
+  endDate       DateTime?
+  prerequisites String?  // JSON array of course IDs
+  objectives    String?  // JSON array of strings
+  tags          String?  // JSON array of strings
+  authorId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  modules       Module[]
+  enrollments   Enrollment[]
+  certificates  Certificate[]
+  examAttempts  ExamAttempt[]
+  author        User?    @relation("CourseAuthor", fields: [authorId], references: [id])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  courseId     String
+  title       String
+  code        String?  // e.g., "11.4"
+  description   String?
+  icon        String?
+  color       String?
+  order       Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id           String   @id @default(cuid())
+  moduleId     String
+  title        String
+  code         String?  // e.g., "11.4.1"
+  slug         String?  @unique
+  description  String?
+  duration     Int      @default(15) // minutes
+  objectives   String?  // JSON array
+  content      String   // JSON array of content blocks
+  keyTerms     String?  // JSON array
+  summary      String?  // JSON array
+  reviewQuestions String? // JSON array
+  order        Int      @default(0)
+  isPublished  Boolean  @default(true)
+  isFree       Boolean  @default(false) // free preview
+  authorId     String?
+  editorId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  module       Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress     LessonProgress[]
+  quizzes      Quiz[]
+  author       User?    @relation("LessonAuthor", fields: [authorId], references: [id])
+  editor       User?    @relation("LessonEditor", fields: [editorId], references: [id])
+}
+
+// ============================================================
+// ASSESSMENTS (Quizzes & Exams)
+// ============================================================
+
+model Quiz {
+  id          String   @id @default(cuid())
+  lessonId    String?
+  courseId    String?
+  moduleId    String?
+  title       String
+  type        String   @default("LESSON") // LESSON, MODULE, FINAL
+  questions   String   // JSON array of questions
+  passMark    Int      @default(70)
+  timeLimit   Int?     // minutes, null = no limit
+  shuffleQuestions Boolean @default(true)
+  shuffleAnswers   Boolean @default(true)
+  maxAttempts Int?     // null = unlimited
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  lesson      Lesson?  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  attempts    QuizAttempt[]
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  quizId      String
+  userId      String
+  score       Int      // percentage
+  correctCount Int
+  totalCount  Int
+  answers     String   // JSON array of {questionId, selectedAnswer, isCorrect}
+  timeTaken   Int?     // seconds
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  // Relations
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExamAttempt {
+  id          String   @id @default(cuid())
+  courseId    String
+  userId      String
+  score       Int      // percentage
+  correctCount Int
+  totalCount  Int
+  answers     String   // JSON
+  timeTaken   Int?     // seconds
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  // Relations
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// PROGRESS & ENROLLMENTS
+// ============================================================
+
+model Enrollment {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  status      String   @default("ACTIVE") // ACTIVE, COMPLETED, DROPPED, EXPIRED
+  enrolledAt  DateTime @default(now())
+  completedAt DateTime?
+  dueDate     DateTime?
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model LessonProgress {
+  id            String   @id @default(cuid())
+  userId        String
+  lessonId      String
+  status        String   @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED
+  progress      Int      @default(0) // 0-100
+  timeSpent     Int      @default(0) // seconds
+  voiceProgress Int      @default(0) // 0-100
+  completedAt   DateTime?
+  lastAccessed  DateTime @default(now())
+
+  // Relations
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// CERTIFICATES
+// ============================================================
+
+model Certificate {
+  id              String   @id @default(cuid())
+  userId          String
+  courseId        String
+  certificateNumber String @unique
+  score           Int      // percentage
+  issuedAt        DateTime @default(now())
+  expiresAt       DateTime?
+  templateId      String?
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// MEDIA LIBRARY
+// ============================================================
+
+model Media {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int      // bytes
+  url         String   // public URL or R2 key
+  category    String   @default("GENERAL") // IMAGE, VIDEO, AUDIO, DOCUMENT, SVG, ANIMATION, CERTIFICATE
+  tags        String?  // JSON array
+  altText     String?
+  caption     String?
+  width       Int?
+  height      Int?
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================
+// FLASHCARDS & SCENARIOS (standalone learning aids)
+// ============================================================
+
+model Flashcard {
+  id          String   @id @default(cuid())
+  courseId    String?
+  lessonId    String?
+  front       String
+  back        String
+  category    String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model Scenario {
+  id                  String   @id @default(cuid())
+  courseId            String?
+  lessonId            String?
+  title               String
+  situation           String
+  background          String
+  choices             String   // JSON array
+  correctExplanation  String
+  reference           String?
+  order               Int      @default(0)
+  createdAt           DateTime @default(now())
+}
+
+// ============================================================
+// SETTINGS & BRANDING
+// ============================================================
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   // JSON value
+  category  String   @default("GENERAL") // BRANDING, AI, EMAIL, INTEGRATION, GENERAL
   updatedAt DateTime @updatedAt
 }
 
-model Post {
+// ============================================================
+// ANALYTICS & AUDIT
+// ============================================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String   // e.g., "LOGIN", "CREATE_COURSE", "DELETE_USER"
+  entity      String?  // e.g., "Course", "User", "Lesson"
+  entityId    String?
+  details     String?  // JSON
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
   id        String   @id @default(cuid())
+  userId    String
   title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  message   String
+  type      String   @default("INFO") // INFO, SUCCESS, WARNING, ERROR
+  isRead    Boolean  @default(false)
+  link      String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -24,6 +24,7 @@ import {
   Globe,
   Flame,
   Trophy,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +151,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="font-semibold">{progress.streak}</span>
               </Badge>
             </div>
+
+            {/* Admin Portal Link */}
+            <a href="/admin" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Shield className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Admin</span>
+              </Button>
+            </a>
 
             {/* Language selector */}
             <DropdownMenu>

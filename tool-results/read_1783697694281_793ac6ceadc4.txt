@@ -1,0 +1,818 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect } from "react";
+     4→import { useRouter } from "next/navigation";
+     5→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+     6→import { Badge } from "@/components/ui/badge";
+     7→import { Button } from "@/components/ui/button";
+     8→import { Skeleton } from "@/components/ui/skeleton";
+     9→import {
+    10→  Table,
+    11→  TableHeader,
+    12→  TableBody,
+    13→  TableHead,
+    14→  TableRow,
+    15→  TableCell,
+    16→} from "@/components/ui/table";
+    17→import { Bar, Doughnut, Line } from "react-chartjs-2";
+    18→import {
+    19→  Chart as ChartJS,
+    20→  CategoryScale,
+    21→  LinearScale,
+    22→  BarElement,
+    23→  Title,
+    24→  Tooltip,
+    25→  Legend,
+    26→  PointElement,
+    27→  LineElement,
+    28→  Filler,
+    29→  ArcElement,
+    30→} from "chart.js";
+    31→import {
+    32→  Users,
+    33→  BookOpen,
+    34→  GraduationCap,
+    35→  Award,
+    36→  TrendingUp,
+    37→  Activity,
+    38→  Plus,
+    39→  FileEdit,
+    40→  Image as ImageIcon,
+    41→  AlertCircle,
+    42→  Loader2,
+    43→  ArrowRight,
+    44→  ShieldCheck,
+    45→  UserCog,
+    46→  PenTool,
+    47→  BarChart3,
+    48→  Settings,
+    49→  ScrollText,
+    50→} from "lucide-react";
+    51→
+    52→ChartJS.register(
+    53→  CategoryScale,
+    54→  LinearScale,
+    55→  BarElement,
+    56→  Title,
+    57→  Tooltip,
+    58→  Legend,
+    59→  PointElement,
+    60→  LineElement,
+    61→  Filler,
+    62→  ArcElement
+    63→);
+    64→
+    65→// ---------- Types ----------
+    66→interface RecentActivity {
+    67→  id: string;
+    68→  action: string;
+    69→  entity: string | null;
+    70→  entityId: string | null;
+    71→  details: unknown;
+    72→  ipAddress: string | null;
+    73→  createdAt: string;
+    74→  user: {
+    75→    id: string;
+    76→    name: string | null;
+    77→    email: string;
+    78→    role: string;
+    79→  } | null;
+    80→}
+    81→
+    82→interface CourseCompletion {
+    83→  courseId: string;
+    84→  title: string;
+    85→  slug: string;
+    86→  isPublished: boolean;
+    87→  enrolled: number;
+    88→  completed: number;
+    89→  completionRate: number;
+    90→}
+    91→
+    92→interface AnalyticsData {
+    93→  totalUsers: number;
+    94→  usersByRole: Record<string, number>;
+    95→  totalCourses: number;
+    96→  publishedCourses: number;
+    97→  totalEnrollments: number;
+    98→  activeEnrollments: number;
+    99→  completedEnrollments: number;
+   100→  totalCertificates: number;
+   101→  totalQuizAttempts: number;
+   102→  averageScore: number;
+   103→  recentActivity: RecentActivity[];
+   104→  courseCompletion: CourseCompletion[];
+   105→}
+   106→
+   107→interface AdminUser {
+   108→  id: string;
+   109→  name: string;
+   110→  email: string;
+   111→  role: string;
+   112→}
+   113→
+   114→// ---------- Constants ----------
+   115→const ROLE_LABELS: Record<string, string> = {
+   116→  SUPER_ADMIN: "Super Admin",
+   117→  ACADEMY_ADMIN: "Academy Admin",
+   118→  INSTRUCTOR: "Instructor",
+   119→  STUDENT: "Student",
+   120→  CONTENT_EDITOR: "Content Editor",
+   121→};
+   122→
+   123→const ROLE_ORDER: (keyof typeof ROLE_LABELS)[] = [
+   124→  "SUPER_ADMIN",
+   125→  "ACADEMY_ADMIN",
+   126→  "INSTRUCTOR",
+   127→  "STUDENT",
+   128→  "CONTENT_EDITOR",
+   129→];
+   130→
+   131→const CHART_PALETTE = {
+   132→  sky: "rgba(14, 165, 233, 0.75)",
+   133→  skyBorder: "rgb(14, 165, 233)",
+   134→  blue: "rgba(37, 99, 235, 0.75)",
+   135→  blueBorder: "rgb(37, 99, 235)",
+   136→  violet: "rgba(139, 92, 246, 0.75)",
+   137→  violetBorder: "rgb(139, 92, 246)",
+   138→  emerald: "rgba(16, 185, 129, 0.75)",
+   139→  emeraldBorder: "rgb(16, 185, 129)",
+   140→  amber: "rgba(245, 158, 11, 0.75)",
+   141→  amberBorder: "rgb(245, 158, 11)",
+   142→  slate: "rgba(100, 116, 139, 0.4)",
+   143→  slateBorder: "rgb(100, 116, 139)",
+   144→};
+   145→
+   146→// ---------- Helpers ----------
+   147→function formatRelativeTime(dateStr: string): string {
+   148→  const date = new Date(dateStr);
+   149→  const now = new Date();
+   150→  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+   151→  if (seconds < 0) return "just now";
+   152→  if (seconds < 60) return "just now";
+   153→  const minutes = Math.floor(seconds / 60);
+   154→  if (minutes < 60) return `${minutes}m ago`;
+   155→  const hours = Math.floor(minutes / 60);
+   156→  if (hours < 24) return `${hours}h ago`;
+   157→  const days = Math.floor(hours / 24);
+   158→  if (days < 7) return `${days}d ago`;
+   159→  return date.toLocaleDateString();
+   160→}
+   161→
+   162→function formatLongDate(): string {
+   163→  return new Date().toLocaleDateString("en-US", {
+   164→    weekday: "long",
+   165→    year: "numeric",
+   166→    month: "long",
+   167→    day: "numeric",
+   168→  });
+   169→}
+   170→
+   171→function getLast7Days(): { labels: string[]; dates: Date[] } {
+   172→  const labels: string[] = [];
+   173→  const dates: Date[] = [];
+   174→  for (let i = 6; i >= 0; i--) {
+   175→    const d = new Date();
+   176→    d.setHours(0, 0, 0, 0);
+   177→    d.setDate(d.getDate() - i);
+   178→    dates.push(d);
+   179→    labels.push(d.toLocaleDateString("en-US", { weekday: "short" }));
+   180→  }
+   181→  return { labels, dates };
+   182→}
+   183→
+   184→function getActionColor(action: string): string {
+   185→  if (action.startsWith("CREATE")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+   186→  if (action.startsWith("UPDATE")) return "bg-sky-100 text-sky-700 border-sky-200";
+   187→  if (action.startsWith("DELETE")) return "bg-red-100 text-red-700 border-red-200";
+   188→  if (action === "LOGIN") return "bg-violet-100 text-violet-700 border-violet-200";
+   189→  if (action === "LOGOUT") return "bg-slate-100 text-slate-700 border-slate-200";
+   190→  return "bg-amber-100 text-amber-700 border-amber-200";
+   191→}
+   192→
+   193→function prettifyAction(action: string): string {
+   194→  return action
+   195→    .toLowerCase()
+   196→    .split("_")
+   197→    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+   198→    .join(" ");
+   199→}
+   200→
+   201→// ---------- Page ----------
+   202→export default function AdminDashboardPage() {
+   203→  const router = useRouter();
+   204→  const [user, setUser] = useState<AdminUser | null>(null);
+   205→  const [data, setData] = useState<AnalyticsData | null>(null);
+   206→  const [loading, setLoading] = useState(true);
+   207→  const [error, setError] = useState<string | null>(null);
+   208→
+   209→  useEffect(() => {
+   210→    let mounted = true;
+   211→    Promise.all([
+   212→      fetch("/api/auth/me").then((r) => r.json()).catch(() => ({})),
+   213→      fetch("/api/admin/analytics").then((r) => r.json()).catch(() => ({})),
+   214→    ])
+   215→      .then(([userRes, analyticsRes]) => {
+   216→        if (!mounted) return;
+   217→        if (userRes?.user) setUser(userRes.user);
+   218→        if (analyticsRes?.error) {
+   219→          setError(analyticsRes.error);
+   220→        } else if (analyticsRes?.data) {
+   221→          setData(analyticsRes.data);
+   222→        } else {
+   223→          setError("Unexpected response from analytics API");
+   224→        }
+   225→      })
+   226→      .catch((e) => {
+   227→        if (mounted) setError(String(e));
+   228→      })
+   229→      .finally(() => {
+   230→        if (mounted) setLoading(false);
+   231→      });
+   232→    return () => {
+   233→      mounted = false;
+   234→    };
+   235→  }, []);
+   236→
+   237→  if (loading) return <DashboardSkeleton />;
+   238→
+   239→  if (error) {
+   240→    return (
+   241→      <div className="flex flex-col items-center justify-center py-20 text-center">
+   242→        <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-4">
+   243→          <AlertCircle className="h-8 w-8 text-red-500" />
+   244→        </div>
+   245→        <h2 className="text-xl font-semibold text-slate-900">Failed to load dashboard</h2>
+   246→        <p className="text-slate-500 mt-1 max-w-md text-sm">{error}</p>
+   247→        <Button onClick={() => window.location.reload()} className="mt-4">
+   248→          <Loader2 className="h-4 w-4 mr-2" /> Retry
+   249→        </Button>
+   250→      </div>
+   251→    );
+   252→  }
+   253→
+   254→  if (!data) return null;
+   255→
+   256→  // ---------- Build chart data ----------
+   257→  const roleLabels = ROLE_ORDER.map((r) => ROLE_LABELS[r]);
+   258→  const roleValues = ROLE_ORDER.map((r) => data.usersByRole[r] || 0);
+   259→  const roleColors = [
+   260→    CHART_PALETTE.sky,
+   261→    CHART_PALETTE.blue,
+   262→    CHART_PALETTE.violet,
+   263→    CHART_PALETTE.emerald,
+   264→    CHART_PALETTE.amber,
+   265→  ];
+   266→
+   267→  const usersByRoleData = {
+   268→    labels: roleLabels,
+   269→    datasets: [
+   270→      {
+   271→        label: "Users",
+   272→        data: roleValues,
+   273→        backgroundColor: roleColors,
+   274→        borderColor: roleColors.map((c) => c.replace(/0\.75\)/, "1)")),
+   275→        borderWidth: 1.5,
+   276→        borderRadius: 6,
+   277→      },
+   278→    ],
+   279→  };
+   280→
+   281→  const draftCourses = Math.max(0, data.totalCourses - data.publishedCourses);
+   282→  const courseStatusData = {
+   283→    labels: ["Published", "Draft"],
+   284→    datasets: [
+   285→      {
+   286→        data: [data.publishedCourses, draftCourses],
+   287→        backgroundColor: [CHART_PALETTE.emerald, CHART_PALETTE.slate],
+   288→        borderColor: [CHART_PALETTE.emeraldBorder, CHART_PALETTE.slateBorder],
+   289→        borderWidth: 2,
+   290→        hoverOffset: 6,
+   291→      },
+   292→    ],
+   293→  };
+   294→
+   295→  // Last 7 days activity trend (from recent audit logs)
+   296→  const { labels: dayLabels, dates: dayDates } = getLast7Days();
+   297→  const activityByDay = dayDates.map((day) => {
+   298→    const dayStart = day.getTime();
+   299→    const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+   300→    return data.recentActivity.filter((log) => {
+   301→      const t = new Date(log.createdAt).getTime();
+   302→      return t >= dayStart && t < dayEnd;
+   303→    }).length;
+   304→  });
+   305→
+   306→  const activityTrendData = {
+   307→    labels: dayLabels,
+   308→    datasets: [
+   309→      {
+   310→        label: "Audit Events",
+   311→        data: activityByDay,
+   312→        borderColor: CHART_PALETTE.skyBorder,
+   313→        backgroundColor: (ctx: { chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number } } }) => {
+   314→          const chart = ctx.chart;
+   315→          const { ctx: canvasCtx, chartArea } = chart;
+   316→          if (!chartArea) return "rgba(14, 165, 233, 0.15)";
+   317→          const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+   318→          gradient.addColorStop(0, "rgba(14, 165, 233, 0.35)");
+   319→          gradient.addColorStop(1, "rgba(14, 165, 233, 0)");
+   320→          return gradient;
+   321→        },
+   322→        fill: true,
+   323→        tension: 0.4,
+   324→        pointBackgroundColor: CHART_PALETTE.skyBorder,
+   325→        pointBorderColor: "#fff",
+   326→        pointBorderWidth: 2,
+   327→        pointRadius: 4,
+   328→        pointHoverRadius: 6,
+   329→      },
+   330→    ],
+   331→  };
+   332→
+   333→  // ---------- Stat cards ----------
+   334→  const stats = [
+   335→    {
+   336→      label: "Total Users",
+   337→      value: data.totalUsers,
+   338→      icon: Users,
+   339→      gradient: "from-sky-500 to-blue-600",
+   340→      iconBg: "bg-white/20",
+   341→      hint: `${data.usersByRole.STUDENT || 0} students`,
+   342→    },
+   343→    {
+   344→      label: "Total Courses",
+   345→      value: data.totalCourses,
+   346→      icon: BookOpen,
+   347→      gradient: "from-violet-500 to-purple-600",
+   348→      iconBg: "bg-white/20",
+   349→      hint: `${data.publishedCourses} published`,
+   350→    },
+   351→    {
+   352→      label: "Total Enrollments",
+   353→      value: data.totalEnrollments,
+   354→      icon: GraduationCap,
+   355→      gradient: "from-emerald-500 to-teal-600",
+   356→      iconBg: "bg-white/20",
+   357→      hint: `${data.activeEnrollments} active`,
+   358→    },
+   359→    {
+   360→      label: "Total Certificates",
+   361→      value: data.totalCertificates,
+   362→      icon: Award,
+   363→      gradient: "from-amber-500 to-orange-600",
+   364→      iconBg: "bg-white/20",
+   365→      hint: `${data.completedEnrollments} completions`,
+   366→    },
+   367→  ];
+   368→
+   369→  // ---------- Quick actions ----------
+   370→  const quickActions = [
+   371→    {
+   372→      label: "Create Course",
+   373→      description: "Add a new training course",
+   374→      icon: Plus,
+   375→      href: "/admin/courses",
+   376→      gradient: "from-sky-500 to-blue-600",
+   377→    },
+   378→    {
+   379→      label: "Add User",
+   380→      description: "Invite team members or students",
+   381→      icon: UserCog,
+   382→      href: "/admin/users",
+   383→      gradient: "from-violet-500 to-purple-600",
+   384→    },
+   385→    {
+   386→      label: "Content Editor",
+   387→      description: "Author lesson content",
+   388→      icon: FileEdit,
+   389→      href: "/admin/content-editor",
+   390→      gradient: "from-emerald-500 to-teal-600",
+   391→    },
+   392→    {
+   393→      label: "Media Library",
+   394→      description: "Manage images and assets",
+   395→      icon: ImageIcon,
+   396→      href: "/admin/media-library",
+   397→      gradient: "from-amber-500 to-orange-600",
+   398→    },
+   399→    {
+   400→      label: "View Analytics",
+   401→      description: "Detailed reports & insights",
+   402→      icon: BarChart3,
+   403→      href: "/admin/analytics",
+   404→      gradient: "from-rose-500 to-pink-600",
+   405→    },
+   406→    {
+   407→      label: "Settings",
+   408→      description: "Configure academy settings",
+   409→      icon: Settings,
+   410→      href: "/admin/settings",
+   411→      gradient: "from-slate-600 to-slate-800",
+   412→    },
+   413→  ];
+   414→
+   415→  // ---------- Chart options ----------
+   416→  const baseChartOptions = {
+   417→    responsive: true,
+   418→    maintainAspectRatio: false,
+   419→    plugins: {
+   420→      legend: {
+   421→        position: "bottom" as const,
+   422→        labels: {
+   423→          color: "rgb(71, 85, 105)",
+   424→          font: { size: 12 },
+   425→          padding: 16,
+   426→          usePointStyle: true,
+   427→          pointStyle: "circle" as const,
+   428→        },
+   429→      },
+   430→      tooltip: {
+   431→        backgroundColor: "rgb(15, 23, 42)",
+   432→        titleColor: "#fff",
+   433→        bodyColor: "#e2e8f0",
+   434→        padding: 12,
+   435→        cornerRadius: 8,
+   436→        displayColors: true,
+   437→        boxPadding: 4,
+   438→      },
+   439→    },
+   440→  };
+   441→
+   442→  const barOptions = {
+   443→    ...baseChartOptions,
+   444→    scales: {
+   445→      x: {
+   446→        grid: { display: false },
+   447→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 } },
+   448→      },
+   449→      y: {
+   450→        beginAtZero: true,
+   451→        grid: { color: "rgba(148, 163, 184, 0.15)" },
+   452→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 }, precision: 0 },
+   453→      },
+   454→    },
+   455→  };
+   456→
+   457→  const lineOptions = {
+   458→    ...baseChartOptions,
+   459→    plugins: { ...baseChartOptions.plugins, legend: { display: false } },
+   460→    scales: {
+   461→      x: {
+   462→        grid: { display: false },
+   463→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 } },
+   464→      },
+   465→      y: {
+   466→        beginAtZero: true,
+   467→        grid: { color: "rgba(148, 163, 184, 0.15)" },
+   468→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 }, precision: 0 },
+   469→      },
+   470→    },
+   471→  };
+   472→
+   473→  const adminName = user?.name || user?.email?.split("@")[0] || "Administrator";
+   474→  const roleLabel = user?.role ? ROLE_LABELS[user.role] || user.role : "Admin";
+   475→
+   476→  return (
+   477→    <div className="space-y-6">
+   478→      {/* ---------- Welcome Header ---------- */}
+   479→      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 p-6 lg:p-8 text-white shadow-xl">
+   480→        <div className="absolute inset-0 opacity-20 pointer-events-none">
+   481→          <div className="absolute -top-20 -right-20 w-72 h-72 bg-sky-500 rounded-full blur-3xl" />
+   482→          <div className="absolute -bottom-20 -left-10 w-72 h-72 bg-blue-600 rounded-full blur-3xl" />
+   483→        </div>
+   484→        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+   485→          <div>
+   486→            <div className="flex items-center gap-2 mb-2">
+   487→              <ShieldCheck className="h-4 w-4 text-sky-300" />
+   488→              <span className="text-xs font-medium uppercase tracking-wider text-sky-300">
+   489→                Admin Console
+   490→              </span>
+   491→            </div>
+   492→            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
+   493→              Welcome back, {adminName}
+   494→            </h1>
+   495→            <p className="text-slate-300 text-sm mt-1">
+   496→              Here&apos;s what&apos;s happening at DGR Aviation Academy today.
+   497→            </p>
+   498→            <div className="flex flex-wrap items-center gap-2 mt-3">
+   499→              <Badge className="bg-white/10 text-white border-white/20 backdrop-blur-sm">
+   500→                <ShieldCheck className="h-3 w-3 mr-1" /> {roleLabel}
+   501→              </Badge>
+   502→              <Badge className="bg-white/10 text-white border-white/20 backdrop-blur-sm">
+   503→                {formatLongDate()}
+   504→              </Badge>
+   505→            </div>
+   506→          </div>
+   507→          <div className="flex flex-wrap gap-2">
+   508→            <Button
+   509→              onClick={() => router.push("/admin/analytics")}
+   510→              className="bg-white text-slate-900 hover:bg-slate-100"
+   511→            >
+   512→              <BarChart3 className="h-4 w-4 mr-2" /> View Analytics
+   513→            </Button>
+   514→            <Button
+   515→              onClick={() => router.push("/admin/courses")}
+   516→              variant="outline"
+   517→              className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
+   518→            >
+   519→              <Plus className="h-4 w-4 mr-2" /> New Course
+   520→            </Button>
+   521→          </div>
+   522→        </div>
+   523→      </div>
+   524→
+   525→      {/* ---------- Stat Cards ---------- */}
+   526→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   527→        {stats.map((stat) => {
+   528→          const Icon = stat.icon;
+   529→          return (
+   530→            <Card
+   531→              key={stat.label}
+   532→              className={`relative overflow-hidden border-0 text-white bg-gradient-to-br ${stat.gradient} shadow-lg`}
+   533→            >
+   534→              <CardContent className="pt-6 pb-4">
+   535→                <div className="flex items-start justify-between">
+   536→                  <div>
+   537→                    <p className="text-white/80 text-xs font-medium uppercase tracking-wider">
+   538→                      {stat.label}
+   539→                    </p>
+   540→                    <p className="text-3xl font-bold mt-2">{stat.value.toLocaleString()}</p>
+   541→                    <p className="text-white/70 text-xs mt-1">{stat.hint}</p>
+   542→                  </div>
+   543→                  <div className={`w-11 h-11 rounded-xl ${stat.iconBg} backdrop-blur-sm flex items-center justify-center`}>
+   544→                    <Icon className="h-5 w-5 text-white" />
+   545→                  </div>
+   546→                </div>
+   547→              </CardContent>
+   548→            </Card>
+   549→          );
+   550→        })}
+   551→      </div>
+   552→
+   553→      {/* ---------- Charts Row 1 ---------- */}
+   554→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   555→        <Card className="shadow-sm">
+   556→          <CardHeader>
+   557→            <CardTitle className="flex items-center gap-2 text-base">
+   558→              <span className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center">
+   559→                <Users className="h-4 w-4 text-sky-600" />
+   560→              </span>
+   561→              User Roles Distribution
+   562→            </CardTitle>
+   563→            <CardDescription>Users grouped by their assigned role</CardDescription>
+   564→          </CardHeader>
+   565→          <CardContent>
+   566→            <div className="h-72">
+   567→              {data.totalUsers === 0 ? (
+   568→                <EmptyState
+   569→                  icon={<Users className="h-8 w-8 text-slate-400" />}
+   570→                  title="No users yet"
+   571→                  description="Users will appear here once they register."
+   572→                />
+   573→              ) : (
+   574→                <Bar data={usersByRoleData} options={barOptions} />
+   575→              )}
+   576→            </div>
+   577→          </CardContent>
+   578→        </Card>
+   579→
+   580→        <Card className="shadow-sm">
+   581→          <CardHeader>
+   582→            <CardTitle className="flex items-center gap-2 text-base">
+   583→              <span className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+   584→                <BookOpen className="h-4 w-4 text-emerald-600" />
+   585→              </span>
+   586→              Course Distribution
+   587→            </CardTitle>
+   588→            <CardDescription>Courses grouped by publication status</CardDescription>
+   589→          </CardHeader>
+   590→          <CardContent>
+   591→            <div className="h-72 flex items-center justify-center">
+   592→              {data.totalCourses === 0 ? (
+   593→                <EmptyState
+   594→                  icon={<BookOpen className="h-8 w-8 text-slate-400" />}
+   595→                  title="No courses yet"
+   596→                  description="Create your first course to see distribution."
+   597→                />
+   598→              ) : (
+   599→                <div className="w-full max-w-xs">
+   600→                  <Doughnut
+   601→                    data={courseStatusData}
+   602→                    options={{
+   603→                      ...baseChartOptions,
+   604→                      cutout: "65%",
+   605→                    }}
+   606→                  />
+   607→                </div>
+   608→              )}
+   609→            </div>
+   610→          </CardContent>
+   611→        </Card>
+   612→      </div>
+   613→
+   614→      {/* ---------- Charts Row 2 + Quick Actions ---------- */}
+   615→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   616→        <Card className="lg:col-span-2 shadow-sm">
+   617→          <CardHeader>
+   618→            <CardTitle className="flex items-center gap-2 text-base">
+   619→              <span className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center">
+   620→                <Activity className="h-4 w-4 text-sky-600" />
+   621→              </span>
+   622→              Recent Activity
+   623→            </CardTitle>
+   624→            <CardDescription>Audit events logged in the last 7 days</CardDescription>
+   625→          </CardHeader>
+   626→          <CardContent>
+   627→            <div className="h-64">
+   628→              {data.recentActivity.length === 0 ? (
+   629→                <EmptyState
+   630→                  icon={<Activity className="h-8 w-8 text-slate-400" />}
+   631→                  title="No recent activity"
+   632→                  description="Audit events will populate this chart as users interact with the system."
+   633→                />
+   634→              ) : (
+   635→                <Line data={activityTrendData} options={lineOptions} />
+   636→              )}
+   637→            </div>
+   638→          </CardContent>
+   639→        </Card>
+   640→
+   641→        <Card className="shadow-sm">
+   642→          <CardHeader>
+   643→            <CardTitle className="flex items-center gap-2 text-base">
+   644→              <span className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+   645→                <TrendingUp className="h-4 w-4 text-violet-600" />
+   646→              </span>
+   647→              Quick Actions
+   648→            </CardTitle>
+   649→            <CardDescription>Jump to common tasks</CardDescription>
+   650→          </CardHeader>
+   651→          <CardContent className="space-y-2">
+   652→            {quickActions.map((action) => {
+   653→              const Icon = action.icon;
+   654→              return (
+   655→                <button
+   656→                  key={action.label}
+   657→                  onClick={() => router.push(action.href)}
+   658→                  className="w-full group flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left"
+   659→                >
+   660→                  <div
+   661→                    className={`w-9 h-9 rounded-lg bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-sm shrink-0`}
+   662→                  >
+   663→                    <Icon className="h-4 w-4 text-white" />
+   664→                  </div>
+   665→                  <div className="flex-1 min-w-0">
+   666→                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+   667→                      {action.label}
+   668→                    </p>
+   669→                    <p className="text-xs text-slate-500 truncate">{action.description}</p>
+   670→                  </div>
+   671→                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+   672→                </button>
+   673→              );
+   674→            })}
+   675→          </CardContent>
+   676→        </Card>
+   677→      </div>
+   678→
+   679→      {/* ---------- Recent Audit Logs Table ---------- */}
+   680→      <Card className="shadow-sm">
+   681→        <CardHeader>
+   682→          <div className="flex items-center justify-between gap-4 flex-wrap">
+   683→            <div>
+   684→              <CardTitle className="flex items-center gap-2 text-base">
+   685→                <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+   686→                  <ScrollText className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+   687→                </span>
+   688→                Recent Audit Logs
+   689→              </CardTitle>
+   690→              <CardDescription>Latest 10 administrative actions</CardDescription>
+   691→            </div>
+   692→            <Button
+   693→              variant="outline"
+   694→              size="sm"
+   695→              onClick={() => router.push("/admin/settings")}
+   696→            >
+   697→              View All Logs
+   698→              <ArrowRight className="h-3.5 w-3.5 ml-1" />
+   699→            </Button>
+   700→          </div>
+   701→        </CardHeader>
+   702→        <CardContent>
+   703→          {data.recentActivity.length === 0 ? (
+   704→            <EmptyState
+   705→              icon={<ScrollText className="h-8 w-8 text-slate-400" />}
+   706→              title="No audit logs yet"
+   707→              description="Administrative actions will be recorded here for traceability."
+   708→            />
+   709→          ) : (
+   710→            <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+   711→              <Table>
+   712→                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+   713→                  <TableRow>
+   714→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">User</TableHead>
+   715→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Action</TableHead>
+   716→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Entity</TableHead>
+   717→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Timestamp</TableHead>
+   718→                  </TableRow>
+   719→                </TableHeader>
+   720→                <TableBody>
+   721→                  {data.recentActivity.map((log) => (
+   722→                    <TableRow key={log.id}>
+   723→                      <TableCell>
+   724→                        <div className="flex items-center gap-2">
+   725→                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
+   726→                            {(log.user?.name || log.user?.email || "A")
+   727→                              .split(" ")
+   728→                              .map((s) => s[0])
+   729→                              .slice(0, 2)
+   730→                              .join("")
+   731→                              .toUpperCase()}
+   732→                          </div>
+   733→                          <div className="min-w-0">
+   734→                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+   735→                              {log.user?.name || "Unknown"}
+   736→                            </p>
+   737→                            <p className="text-xs text-slate-500 truncate">{log.user?.email}</p>
+   738→                          </div>
+   739→                        </div>
+   740→                      </TableCell>
+   741→                      <TableCell>
+   742→                        <span
+   743→                          className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${getActionColor(
+   744→                            log.action
+   745→                          )}`}
+   746→                        >
+   747→                          {prettifyAction(log.action)}
+   748→                        </span>
+   749→                      </TableCell>
+   750→                      <TableCell>
+   751→                        {log.entity ? (
+   752→                          <span className="text-sm text-slate-700 dark:text-slate-300 font-mono">
+   753→                            {log.entity}
+   754→                          </span>
+   755→                        ) : (
+   756→                          <span className="text-xs text-slate-400 italic">—</span>
+   757→                        )}
+   758→                      </TableCell>
+   759→                      <TableCell>
+   760→                        <span className="text-xs text-slate-500" title={new Date(log.createdAt).toLocaleString()}>
+   761→                          {formatRelativeTime(log.createdAt)}
+   762→                        </span>
+   763→                      </TableCell>
+   764→                    </TableRow>
+   765→                  ))}
+   766→                </TableBody>
+   767→              </Table>
+   768→            </div>
+   769→          )}
+   770→        </CardContent>
+   771→      </Card>
+   772→    </div>
+   773→  );
+   774→}
+   775→
+   776→// ---------- Sub-components ----------
+   777→function EmptyState({
+   778→  icon,
+   779→  title,
+   780→  description,
+   781→}: {
+   782→  icon: React.ReactNode;
+   783→  title: string;
+   784→  description: string;
+   785→}) {
+   786→  return (
+   787→    <div className="h-full flex flex-col items-center justify-center text-center py-8 px-4">
+   788→      <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+   789→        {icon}
+   790→      </div>
+   791→      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{title}</p>
+   792→      <p className="text-xs text-slate-500 mt-1 max-w-xs">{description}</p>
+   793→    </div>
+   794→  );
+   795→}
+   796→
+   797→function DashboardSkeleton() {
+   798→  return (
+   799→    <div className="space-y-6">
+   800→      <Skeleton className="h-36 rounded-2xl" />
+   801→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   802→        {Array.from({ length: 4 }).map((_, i) => (
+   803→          <Skeleton key={i} className="h-28 rounded-xl" />
+   804→        ))}
+   805→      </div>
+   806→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   807→        <Skeleton className="h-96 rounded-xl" />
+   808→        <Skeleton className="h-96 rounded-xl" />
+   809→      </div>
+   810→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   811→        <Skeleton className="lg:col-span-2 h-80 rounded-xl" />
+   812→        <Skeleton className="h-80 rounded-xl" />
+   813→      </div>
+   814→      <Skeleton className="h-80 rounded-xl" />
+   815→    </div>
+   816→  );
+   817→}
+   818→

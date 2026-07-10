@@ -1,0 +1,873 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useState, useEffect, useCallback } from "react";
+     4→     4→import {
+     5→     5→  Dialog,
+     6→     6→  DialogContent,
+     7→     7→  DialogHeader,
+     8→     8→  DialogTitle,
+     9→     9→  DialogFooter,
+    10→    10→} from "@/components/ui/dialog";
+    11→    11→import {
+    12→    12→  Card,
+    13→    13→  CardContent,
+    14→    14→  CardHeader,
+    15→    15→  CardTitle,
+    16→    16→} from "@/components/ui/card";
+    17→    17→import { Button } from "@/components/ui/button";
+    18→    18→import { Input } from "@/components/ui/input";
+    19→    19→import { Textarea } from "@/components/ui/textarea";
+    20→    20→import {
+    21→    21→  Select,
+    22→    22→  SelectContent,
+    23→    23→  SelectItem,
+    24→    24→  SelectTrigger,
+    25→    25→  SelectValue,
+    26→    26→} from "@/components/ui/select";
+    27→    27→import { Checkbox } from "@/components/ui/checkbox";
+    28→    28→import { Label } from "@/components/ui/label";
+    29→    29→import { Badge } from "@/components/ui/badge";
+    30→    30→import { Skeleton } from "@/components/ui/skeleton";
+    31→    31→import {
+    32→    32→  Table,
+    33→    33→  TableHeader,
+    34→    34→  TableBody,
+    35→    35→  TableHead,
+    36→    36→  TableRow,
+    37→    37→  TableCell,
+    38→    38→} from "@/components/ui/table";
+    39→    39→import {
+    40→    40→  Plus,
+    41→    41→  Edit,
+    42→    42→  Trash2,
+    43→    43→  Eye,
+    44→    44→  Save,
+    45→    45→  X,
+    46→    46→  BookOpen,
+    47→    47→  Loader2,
+    48→    48→  Search,
+    49→    49→  AlertCircle,
+    50→    50→  Star,
+    51→    51→  Users,
+    52→    52→  Clock,
+    53→    53→} from "lucide-react";
+    54→    54→import { toast } from "sonner";
+    55→    55→
+    56→    56→// ---------- Types ----------
+    57→    57→interface Course {
+    58→    58→  id: string;
+    59→    59→  title: string;
+    60→    60→  slug: string;
+    61→    61→  description: string;
+    62→    62→  category: string;
+    63→    63→  difficulty: string;
+    64→    64→  duration: number;
+    65→    65→  icon: string | null;
+    66→    66→  color: string | null;
+    67→    67→  coverImage: string | null;
+    68→    68→  isPublished: boolean;
+    69→    69→  isFeatured: boolean;
+    70→    70→  order: number;
+    71→    71→  objectives: string[];
+    72→    72→  tags: string[];
+    73→    73→  createdAt: string;
+    74→    74→  updatedAt: string;
+    75→    75→  modulesCount: number;
+    76→    76→  enrollmentsCount: number;
+    77→    77→}
+    78→    78→
+    79→    79→interface CourseFormData {
+    80→    80→  title: string;
+    81→    81→  slug: string;
+    82→    82→  description: string;
+    83→    83→  category: string;
+    84→    84→  difficulty: string;
+    85→    85→  duration: number;
+    86→    86→  icon: string;
+    87→    87→  color: string;
+    88→    88→  coverImage: string;
+    89→    89→  objectives: string;
+    90→    90→  tags: string;
+    91→    91→  isPublished: boolean;
+    92→    92→  isFeatured: boolean;
+    93→    93→}
+    94→    94→
+    95→    95→const CATEGORIES = [
+    96→    96→  "Cabin Crew Training",
+    97→    97→  "Ground Operations",
+    98→    98→  "Airport Operations",
+    99→    99→  "Duty Free",
+   100→   100→  "Hospitality",
+   101→   101→  "Other",
+   102→   102→];
+   103→   103→
+   104→   104→const DIFFICULTIES = ["Beginner", "Intermediate", "Professional"];
+   105→   105→
+   106→   106→const EMPTY_FORM: CourseFormData = {
+   107→   107→  title: "",
+   108→   108→  slug: "",
+   109→   109→  description: "",
+   110→   110→  category: "Cabin Crew Training",
+   111→   111→  difficulty: "Professional",
+   112→   112→  duration: 0,
+   113→   113→  icon: "BookOpen",
+   114→   114→  color: "#0ea5e9",
+   115→   115→  coverImage: "",
+   116→   116→  objectives: "",
+   117→   117→  tags: "",
+   118→   118→  isPublished: false,
+   119→   119→  isFeatured: false,
+   120→   120→};
+   121→   121→
+   122→   122→function slugify(text: string): string {
+   123→   123→  return text
+   124→   124→    .toLowerCase()
+   125→   125→    .trim()
+   126→   126→    .replace(/[^\w\s-]/g, "")
+   127→   127→    .replace(/[\s_-]+/g, "-")
+   128→   128→    .replace(/^-+|-+$/g, "");
+   129→   129→}
+   130→   130→
+   131→   131→function difficultyVariant(difficulty: string) {
+   132→   132→  switch (difficulty) {
+   133→   133→    case "Beginner":
+   134→   134→      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+   135→   135→    case "Intermediate":
+   136→   136→      return "bg-amber-100 text-amber-700 border-amber-200";
+   137→   137→    case "Professional":
+   138→   138→      return "bg-rose-100 text-rose-700 border-rose-200";
+   139→   139→    default:
+   140→   140→      return "bg-slate-100 text-slate-700 border-slate-200";
+   141→   141→  }
+   142→   142→}
+   143→   143→
+   144→   144→function formatDuration(minutes: number): string {
+   145→   145→  if (!minutes) return "—";
+   146→   146→  if (minutes < 60) return `${minutes}m`;
+   147→   147→  const h = Math.floor(minutes / 60);
+   148→   148→  const m = minutes % 60;
+   149→   149→  return m ? `${h}h ${m}m` : `${h}h`;
+   150→   150→}
+   151→   151→
+   152→   152→export default function CoursesAdminPage() {
+   153→   153→  const [courses, setCourses] = useState<Course[]>([]);
+   154→   154→  const [loading, setLoading] = useState(true);
+   155→   155→  const [search, setSearch] = useState("");
+   156→   156→
+   157→   157→  // Dialog state
+   158→   158→  const [dialogOpen, setDialogOpen] = useState(false);
+   159→   159→  const [editingId, setEditingId] = useState<string | null>(null);
+   160→   160→  const [form, setForm] = useState<CourseFormData>(EMPTY_FORM);
+   161→   161→  const [saving, setSaving] = useState(false);
+   162→   162→  const [slugTouched, setSlugTouched] = useState(false);
+   163→   163→
+   164→   164→  // Delete confirmation
+   165→   165→  const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
+   166→   166→  const [deleting, setDeleting] = useState(false);
+   167→   167→
+   168→   168→  const fetchCourses = useCallback(async () => {
+   169→   169→    setLoading(true);
+   170→   170→    try {
+   171→   171→      const res = await fetch("/api/admin/courses");
+   172→   172→      if (!res.ok) throw new Error("Failed to fetch courses");
+   173→   173→      const json = await res.json();
+   174→   174→      setCourses(json.data || []);
+   175→   175→    } catch (err) {
+   176→   176→      toast.error("Failed to load courses", {
+   177→   177→        description: err instanceof Error ? err.message : "Unknown error",
+   178→   178→      });
+   179→   179→    } finally {
+   180→   180→      setLoading(false);
+   181→   181→    }
+   182→   182→  }, []);
+   183→   183→
+   184→   184→  useEffect(() => {
+   185→   185→    fetchCourses();
+   186→   186→  }, [fetchCourses]);
+   187→   187→
+   188→   188→  const openCreate = () => {
+   189→   189→    setEditingId(null);
+   190→   190→    setForm(EMPTY_FORM);
+   191→   191→    setSlugTouched(false);
+   192→   192→    setDialogOpen(true);
+   193→   193→  };
+   194→   194→
+   195→   195→  const openEdit = (course: Course) => {
+   196→   196→    setEditingId(course.id);
+   197→   197→    setForm({
+   198→   198→      title: course.title,
+   199→   199→      slug: course.slug,
+   200→   200→      description: course.description || "",
+   201→   201→      category: course.category,
+   202→   202→      difficulty: course.difficulty,
+   203→   203→      duration: course.duration,
+   204→   204→      icon: course.icon || "BookOpen",
+   205→   205→      color: course.color || "#0ea5e9",
+   206→   206→      coverImage: course.coverImage || "",
+   207→   207→      objectives: (course.objectives || []).join("\n"),
+   208→   208→      tags: (course.tags || []).join(", "),
+   209→   209→      isPublished: course.isPublished,
+   210→   210→      isFeatured: course.isFeatured,
+   211→   211→    });
+   212→   212→    setSlugTouched(true);
+   213→   213→    setDialogOpen(true);
+   214→   214→  };
+   215→   215→
+   216→   216→  const handleTitleChange = (value: string) => {
+   217→   217→    setForm((prev) => ({
+   218→   218→      ...prev,
+   219→   219→      title: value,
+   220→   220→      slug: slugTouched ? prev.slug : slugify(value),
+   221→   221→    }));
+   222→   222→  };
+   223→   223→
+   224→   224→  const handleSave = async () => {
+   225→   225→    if (
+   226→   226→      !form.title.trim() ||
+   227→   227→      !form.slug.trim() ||
+   228→   228→      !form.description.trim() ||
+   229→   229→      !form.category
+   230→   230→    ) {
+   231→   231→      toast.error("Missing required fields", {
+   232→   232→        description: "Title, slug, description and category are required.",
+   233→   233→      });
+   234→   234→      return;
+   235→   235→    }
+   236→   236→
+   237→   237→    setSaving(true);
+   238→   238→    const payload = {
+   239→   239→      title: form.title.trim(),
+   240→   240→      slug: form.slug.trim(),
+   241→   241→      description: form.description.trim(),
+   242→   242→      category: form.category,
+   243→   243→      difficulty: form.difficulty,
+   244→   244→      duration: Number(form.duration) || 0,
+   245→   245→      icon: form.icon.trim() || null,
+   246→   246→      color: form.color.trim() || null,
+   247→   247→      coverImage: form.coverImage.trim() || null,
+   248→   248→      objectives: form.objectives
+   249→   249→        .split("\n")
+   250→   250→        .map((s) => s.trim())
+   251→   251→        .filter(Boolean),
+   252→   252→      tags: form.tags
+   253→   253→        .split(",")
+   254→   254→        .map((s) => s.trim())
+   255→   255→        .filter(Boolean),
+   256→   256→      isPublished: form.isPublished,
+   257→   257→      isFeatured: form.isFeatured,
+   258→   258→    };
+   259→   259→
+   260→   260→    try {
+   261→   261→      const url = editingId
+   262→   262→        ? `/api/admin/courses/${editingId}`
+   263→   263→        : "/api/admin/courses";
+   264→   264→      const method = editingId ? "PUT" : "POST";
+   265→   265→      const res = await fetch(url, {
+   266→   266→        method,
+   267→   267→        headers: { "Content-Type": "application/json" },
+   268→   268→        body: JSON.stringify(payload),
+   269→   269→      });
+   270→   270→      const json = await res.json();
+   271→   271→      if (!res.ok) {
+   272→   272→        throw new Error(json.error || "Failed to save course");
+   273→   273→      }
+   274→   274→      toast.success(editingId ? "Course updated" : "Course created", {
+   275→   275→        description: payload.title,
+   276→   276→      });
+   277→   277→      setDialogOpen(false);
+   278→   278→      fetchCourses();
+   279→   279→    } catch (err) {
+   280→   280→      toast.error("Save failed", {
+   281→   281→        description: err instanceof Error ? err.message : "Unknown error",
+   282→   282→      });
+   283→   283→    } finally {
+   284→   284→      setSaving(false);
+   285→   285→    }
+   286→   286→  };
+   287→   287→
+   288→   288→  const handleDelete = async () => {
+   289→   289→    if (!deleteTarget) return;
+   290→   290→    setDeleting(true);
+   291→   291→    try {
+   292→   292→      const res = await fetch(`/api/admin/courses/${deleteTarget.id}`, {
+   293→   293→        method: "DELETE",
+   294→   294→      });
+   295→   295→      const json = await res.json();
+   296→   296→      if (!res.ok) throw new Error(json.error || "Failed to delete course");
+   297→   297→      toast.success("Course deleted", { description: deleteTarget.title });
+   298→   298→      setDeleteTarget(null);
+   299→   299→      fetchCourses();
+   300→   300→    } catch (err) {
+   301→   301→      toast.error("Delete failed", {
+   302→   302→        description: err instanceof Error ? err.message : "Unknown error",
+   303→   303→      });
+   304→   304→    } finally {
+   305→   305→      setDeleting(false);
+   306→   306→    }
+   307→   307→  };
+   308→   308→
+   309→   309→  const filtered = courses.filter((c) => {
+   310→   310→    const q = search.toLowerCase();
+   311→   311→    return (
+   312→   312→      !q ||
+   313→   313→      c.title.toLowerCase().includes(q) ||
+   314→   314→      c.category.toLowerCase().includes(q) ||
+   315→   315→      c.slug.toLowerCase().includes(q)
+   316→   316→    );
+   317→   317→  });
+   318→   318→
+   319→   319→  return (
+   320→   320→    <div className="space-y-6">
+   321→   321→      {/* Header */}
+   322→   322→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   323→   323→        <div>
+   324→   324→          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+   325→   325→            Course Management
+   326→   326→          </h1>
+   327→   327→          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+   328→   328→            Create, edit, and organize training courses for the academy.
+   329→   329→          </p>
+   330→   330→        </div>
+   331→   331→        <Button onClick={openCreate} className="gap-2">
+   332→   332→          <Plus className="h-4 w-4" />
+   333→   333→          Create Course
+   334→   334→        </Button>
+   335→   335→      </div>
+   336→   336→
+   337→   337→      {/* Stats */}
+   338→   338→      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   339→   339→        <Card>
+   340→   340→          <CardContent className="p-4 flex items-center gap-3">
+   341→   341→            <div className="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
+   342→   342→              <BookOpen className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+   343→   343→            </div>
+   344→   344→            <div>
+   345→   345→              <div className="text-2xl font-bold">{courses.length}</div>
+   346→   346→              <div className="text-xs text-slate-500">Total Courses</div>
+   347→   347→            </div>
+   348→   348→          </CardContent>
+   349→   349→        </Card>
+   350→   350→        <Card>
+   351→   351→          <CardContent className="p-4 flex items-center gap-3">
+   352→   352→            <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+   353→   353→              <Eye className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+   354→   354→            </div>
+   355→   355→            <div>
+   356→   356→              <div className="text-2xl font-bold">
+   357→   357→                {courses.filter((c) => c.isPublished).length}
+   358→   358→              </div>
+   359→   359→              <div className="text-xs text-slate-500">Published</div>
+   360→   360→            </div>
+   361→   361→          </CardContent>
+   362→   362→        </Card>
+   363→   363→        <Card>
+   364→   364→          <CardContent className="p-4 flex items-center gap-3">
+   365→   365→            <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+   366→   366→              <Users className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+   367→   367→            </div>
+   368→   368→            <div>
+   369→   369→              <div className="text-2xl font-bold">
+   370→   370→                {courses.reduce(
+   371→   371→                  (sum, c) => sum + (c.enrollmentsCount || 0),
+   372→   372→                  0
+   373→   373→                )}
+   374→   374→              </div>
+   375→   375→              <div className="text-xs text-slate-500">Enrollments</div>
+   376→   376→            </div>
+   377→   377→          </CardContent>
+   378→   378→        </Card>
+   379→   379→        <Card>
+   380→   380→          <CardContent className="p-4 flex items-center gap-3">
+   381→   381→            <div className="w-10 h-10 rounded-lg bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center">
+   382→   382→              <Star className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+   383→   383→            </div>
+   384→   384→            <div>
+   385→   385→              <div className="text-2xl font-bold">
+   386→   386→                {courses.filter((c) => c.isFeatured).length}
+   387→   387→              </div>
+   388→   388→              <div className="text-xs text-slate-500">Featured</div>
+   389→   389→            </div>
+   390→   390→          </CardContent>
+   391→   391→        </Card>
+   392→   392→      </div>
+   393→   393→
+   394→   394→      {/* Search + Table */}
+   395→   395→      <Card>
+   396→   396→        <CardHeader className="pb-3">
+   397→   397→          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+   398→   398→            <CardTitle className="text-lg">All Courses</CardTitle>
+   399→   399→            <div className="relative w-full sm:w-64">
+   400→   400→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   401→   401→              <Input
+   402→   402→                placeholder="Search courses..."
+   403→   403→                value={search}
+   404→   404→                onChange={(e) => setSearch(e.target.value)}
+   405→   405→                className="pl-9"
+   406→   406→              />
+   407→   407→            </div>
+   408→   408→          </div>
+   409→   409→        </CardHeader>
+   410→   410→        <CardContent>
+   411→   411→          {loading ? (
+   412→   412→            <div className="space-y-3">
+   413→   413→              {Array.from({ length: 4 }).map((_, i) => (
+   414→   414→                <Skeleton key={i} className="h-14 w-full" />
+   415→   415→              ))}
+   416→   416→            </div>
+   417→   417→          ) : filtered.length === 0 ? (
+   418→   418→            <div className="text-center py-12">
+   419→   419→              <div className="mx-auto w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+   420→   420→                <BookOpen className="h-6 w-6 text-slate-400" />
+   421→   421→              </div>
+   422→   422→              <h3 className="text-base font-semibold text-slate-700 dark:text-slate-200">
+   423→   423→                {search ? "No matching courses" : "No courses yet"}
+   424→   424→              </h3>
+   425→   425→              <p className="text-sm text-slate-500 mt-1">
+   426→   426→                {search
+   427→   427→                  ? "Try a different search query."
+   428→   428→                  : "Get started by creating your first course."}
+   429→   429→              </p>
+   430→   430→              {!search && (
+   431→   431→                <Button onClick={openCreate} className="mt-4 gap-2">
+   432→   432→                  <Plus className="h-4 w-4" />
+   433→   433→                  Create Course
+   434→   434→                </Button>
+   435→   435→              )}
+   436→   436→            </div>
+   437→   437→          ) : (
+   438→   438→            <div className="overflow-x-auto -mx-2">
+   439→   439→              <Table>
+   440→   440→                <TableHeader>
+   441→   441→                  <TableRow>
+   442→   442→                    <TableHead className="min-w-[220px]">Title</TableHead>
+   443→   443→                    <TableHead>Category</TableHead>
+   444→   444→                    <TableHead>Difficulty</TableHead>
+   445→   445→                    <TableHead>Duration</TableHead>
+   446→   446→                    <TableHead>Status</TableHead>
+   447→   447→                    <TableHead className="text-center">Modules</TableHead>
+   448→   448→                    <TableHead className="text-center">Enrolled</TableHead>
+   449→   449→                    <TableHead className="text-right">Actions</TableHead>
+   450→   450→                  </TableRow>
+   451→   451→                </TableHeader>
+   452→   452→                <TableBody>
+   453→   453→                  {filtered.map((course) => (
+   454→   454→                    <TableRow key={course.id}>
+   455→   455→                      <TableCell>
+   456→   456→                        <div className="flex items-start gap-3">
+   457→   457→                          <div
+   458→   458→                            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold text-xs"
+   459→   459→                            style={{
+   460→   460→                              backgroundColor: course.color || "#0ea5e9",
+   461→   461→                            }}
+   462→   462→                          >
+   463→   463→                            {(course.title[0] || "C").toUpperCase()}
+   464→   464→                          </div>
+   465→   465→                          <div className="min-w-0">
+   466→   466→                            <div className="font-medium text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+   467→   467→                              {course.title}
+   468→   468→                              {course.isFeatured && (
+   469→   469→                                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+   470→   470→                              )}
+   471→   471→                            </div>
+   472→   472→                            <div className="text-xs text-slate-500 truncate">
+   473→   473→                              /{course.slug}
+   474→   474→                            </div>
+   475→   475→                          </div>
+   476→   476→                        </div>
+   477→   477→                      </TableCell>
+   478→   478→                      <TableCell>
+   479→   479→                        <Badge variant="outline" className="font-normal">
+   480→   480→                          {course.category}
+   481→   481→                        </Badge>
+   482→   482→                      </TableCell>
+   483→   483→                      <TableCell>
+   484→   484→                        <span
+   485→   485→                          className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${difficultyVariant(
+   486→   486→                            course.difficulty
+   487→   487→                          )}`}
+   488→   488→                        >
+   489→   489→                          {course.difficulty}
+   490→   490→                        </span>
+   491→   491→                      </TableCell>
+   492→   492→                      <TableCell className="text-slate-600 dark:text-slate-300">
+   493→   493→                        <span className="inline-flex items-center gap-1 text-sm">
+   494→   494→                          <Clock className="h-3.5 w-3.5 text-slate-400" />
+   495→   495→                          {formatDuration(course.duration)}
+   496→   496→                        </span>
+   497→   497→                      </TableCell>
+   498→   498→                      <TableCell>
+   499→   499→                        {course.isPublished ? (
+   500→   500→                          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">
+   501→   501→                            Published
+   502→   502→                          </Badge>
+   503→   503→                        ) : (
+   504→   504→                          <Badge
+   505→   505→                            variant="outline"
+   506→   506→                            className="text-slate-500 border-slate-300"
+   507→   507→                          >
+   508→   508→                            Draft
+   509→   509→                          </Badge>
+   510→   510→                        )}
+   511→   511→                      </TableCell>
+   512→   512→                      <TableCell className="text-center font-medium">
+   513→   513→                        {course.modulesCount}
+   514→   514→                      </TableCell>
+   515→   515→                      <TableCell className="text-center font-medium">
+   516→   516→                        {course.enrollmentsCount}
+   517→   517→                      </TableCell>
+   518→   518→                      <TableCell>
+   519→   519→                        <div className="flex items-center justify-end gap-1">
+   520→   520→                          <Button
+   521→   521→                            variant="ghost"
+   522→   522→                            size="icon"
+   523→   523→                            className="h-8 w-8"
+   524→   524→                            asChild
+   525→   525→                          >
+   526→   526→                            <a
+   527→   527→                              href={`/courses/${course.slug}`}
+   528→   528→                              target="_blank"
+   529→   529→                              rel="noreferrer"
+   530→   530→                              title="View"
+   531→   531→                            >
+   532→   532→                              <Eye className="h-4 w-4" />
+   533→   533→                            </a>
+   534→   534→                          </Button>
+   535→   535→                          <Button
+   536→   536→                            variant="ghost"
+   537→   537→                            size="icon"
+   538→   538→                            className="h-8 w-8"
+   539→   539→                            onClick={() => openEdit(course)}
+   540→   540→                            title="Edit"
+   541→   541→                          >
+   542→   542→                            <Edit className="h-4 w-4" />
+   543→   543→                          </Button>
+   544→   544→                          <Button
+   545→   545→                            variant="ghost"
+   546→   546→                            size="icon"
+   547→   547→                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
+   548→   548→                            onClick={() => setDeleteTarget(course)}
+   549→   549→                            title="Delete"
+   550→   550→                          >
+   551→   551→                            <Trash2 className="h-4 w-4" />
+   552→   552→                          </Button>
+   553→   553→                        </div>
+   554→   554→                      </TableCell>
+   555→   555→                    </TableRow>
+   556→   556→                  ))}
+   557→   557→                </TableBody>
+   558→   558→              </Table>
+   559→   559→            </div>
+   560→   560→          )}
+   561→   561→        </CardContent>
+   562→   562→      </Card>
+   563→   563→
+   564→   564→      {/* Create / Edit Dialog */}
+   565→   565→      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+   566→   566→        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+   567→   567→          <DialogHeader>
+   568→   568→            <DialogTitle>
+   569→   569→              {editingId ? "Edit Course" : "Create Course"}
+   570→   570→            </DialogTitle>
+   571→   571→          </DialogHeader>
+   572→   572→
+   573→   573→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   574→   574→            {/* Title */}
+   575→   575→            <div className="sm:col-span-2 space-y-2">
+   576→   576→              <Label htmlFor="title">Title *</Label>
+   577→   577→              <Input
+   578→   578→                id="title"
+   579→   579→                value={form.title}
+   580→   580→                onChange={(e) => handleTitleChange(e.target.value)}
+   581→   581→                placeholder="e.g., Dangerous Goods Regulations - Cabin Crew"
+   582→   582→              />
+   583→   583→            </div>
+   584→   584→
+   585→   585→            {/* Slug */}
+   586→   586→            <div className="space-y-2">
+   587→   587→              <Label htmlFor="slug">Slug *</Label>
+   588→   588→              <Input
+   589→   589→                id="slug"
+   590→   590→                value={form.slug}
+   591→   591→                onChange={(e) =>
+   592→   592→                  setForm((p) => ({ ...p, slug: slugify(e.target.value) }))
+   593→   593→                }
+   594→   594→                onFocus={() => setSlugTouched(true)}
+   595→   595→                placeholder="auto-generated-from-title"
+   596→   596→              />
+   597→   597→            </div>
+   598→   598→
+   599→   599→            {/* Duration */}
+   600→   600→            <div className="space-y-2">
+   601→   601→              <Label htmlFor="duration">Duration (minutes)</Label>
+   602→   602→              <Input
+   603→   603→                id="duration"
+   604→   604→                type="number"
+   605→   605→                min={0}
+   606→   606→                value={form.duration}
+   607→   607→                onChange={(e) =>
+   608→   608→                  setForm((p) => ({
+   609→   609→                    ...p,
+   610→   610→                    duration: Number(e.target.value) || 0,
+   611→   611→                  }))
+   612→   612→                }
+   613→   613→              />
+   614→   614→            </div>
+   615→   615→
+   616→   616→            {/* Description */}
+   617→   617→            <div className="sm:col-span-2 space-y-2">
+   618→   618→              <Label htmlFor="description">Description *</Label>
+   619→   619→              <Textarea
+   620→   620→                id="description"
+   621→   621→                rows={3}
+   622→   622→                value={form.description}
+   623→   623→                onChange={(e) =>
+   624→   624→                  setForm((p) => ({ ...p, description: e.target.value }))
+   625→   625→                }
+   626→   626→                placeholder="Short course summary..."
+   627→   627→              />
+   628→   628→            </div>
+   629→   629→
+   630→   630→            {/* Category */}
+   631→   631→            <div className="space-y-2">
+   632→   632→              <Label>Category *</Label>
+   633→   633→              <Select
+   634→   634→                value={form.category}
+   635→   635→                onValueChange={(v) =>
+   636→   636→                  setForm((p) => ({ ...p, category: v }))
+   637→   637→                }
+   638→   638→              >
+   639→   639→                <SelectTrigger className="w-full">
+   640→   640→                  <SelectValue placeholder="Select category" />
+   641→   641→                </SelectTrigger>
+   642→   642→                <SelectContent>
+   643→   643→                  {CATEGORIES.map((c) => (
+   644→   644→                    <SelectItem key={c} value={c}>
+   645→   645→                      {c}
+   646→   646→                    </SelectItem>
+   647→   647→                  ))}
+   648→   648→                </SelectContent>
+   649→   649→              </Select>
+   650→   650→            </div>
+   651→   651→
+   652→   652→            {/* Difficulty */}
+   653→   653→            <div className="space-y-2">
+   654→   654→              <Label>Difficulty</Label>
+   655→   655→              <Select
+   656→   656→                value={form.difficulty}
+   657→   657→                onValueChange={(v) =>
+   658→   658→                  setForm((p) => ({ ...p, difficulty: v }))
+   659→   659→                }
+   660→   660→              >
+   661→   661→                <SelectTrigger className="w-full">
+   662→   662→                  <SelectValue placeholder="Select difficulty" />
+   663→   663→                </SelectTrigger>
+   664→   664→                <SelectContent>
+   665→   665→                  {DIFFICULTIES.map((d) => (
+   666→   666→                    <SelectItem key={d} value={d}>
+   667→   667→                      {d}
+   668→   668→                    </SelectItem>
+   669→   669→                  ))}
+   670→   670→                </SelectContent>
+   671→   671→              </Select>
+   672→   672→            </div>
+   673→   673→
+   674→   674→            {/* Icon */}
+   675→   675→            <div className="space-y-2">
+   676→   676→              <Label htmlFor="icon">Icon (lucide name)</Label>
+   677→   677→              <Input
+   678→   678→                id="icon"
+   679→   679→                value={form.icon}
+   680→   680→                onChange={(e) =>
+   681→   681→                  setForm((p) => ({ ...p, icon: e.target.value }))
+   682→   682→                }
+   683→   683→                placeholder="BookOpen"
+   684→   684→              />
+   685→   685→            </div>
+   686→   686→
+   687→   687→            {/* Color */}
+   688→   688→            <div className="space-y-2">
+   689→   689→              <Label htmlFor="color">Color</Label>
+   690→   690→              <div className="flex items-center gap-2">
+   691→   691→                <input
+   692→   692→                  type="color"
+   693→   693→                  value={form.color}
+   694→   694→                  onChange={(e) =>
+   695→   695→                    setForm((p) => ({ ...p, color: e.target.value }))
+   696→   696→                  }
+   697→   697→                  className="h-9 w-12 rounded border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer"
+   698→   698→                />
+   699→   699→                <Input
+   700→   700→                  value={form.color}
+   701→   701→                  onChange={(e) =>
+   702→   702→                    setForm((p) => ({ ...p, color: e.target.value }))
+   703→   703→                  }
+   704→   704→                  placeholder="#0ea5e9"
+   705→   705→                  className="flex-1"
+   706→   706→                />
+   707→   707→              </div>
+   708→   708→            </div>
+   709→   709→
+   710→   710→            {/* Cover Image */}
+   711→   711→            <div className="sm:col-span-2 space-y-2">
+   712→   712→              <Label htmlFor="coverImage">Cover Image URL</Label>
+   713→   713→              <Input
+   714→   714→                id="coverImage"
+   715→   715→                value={form.coverImage}
+   716→   716→                onChange={(e) =>
+   717→   717→                  setForm((p) => ({ ...p, coverImage: e.target.value }))
+   718→   718→                }
+   719→   719→                placeholder="https://..."
+   720→   720→              />
+   721→   721→              {form.coverImage && (
+   722→   722→                <div className="h-24 w-full rounded-md overflow-hidden border border-slate-200 dark:border-slate-700">
+   723→   723→                  { }
+   724→   724→                  <img
+   725→   725→                    src={form.coverImage}
+   726→   726→                    alt="Cover preview"
+   727→   727→                    className="h-full w-full object-cover"
+   728→   728→                    onError={(e) =>
+   729→   729→                      ((e.target as HTMLImageElement).style.display = "none")
+   730→   730→                    }
+   731→   731→                  />
+   732→   732→                </div>
+   733→   733→              )}
+   734→   734→            </div>
+   735→   735→
+   736→   736→            {/* Objectives */}
+   737→   737→            <div className="sm:col-span-2 space-y-2">
+   738→   738→              <Label htmlFor="objectives">
+   739→   739→                Objectives{" "}
+   740→   740→                <span className="text-xs font-normal text-slate-500">
+   741→   741→                  (one per line)
+   742→   742→                </span>
+   743→   743→              </Label>
+   744→   744→              <Textarea
+   745→   745→                id="objectives"
+   746→   746→                rows={4}
+   747→   747→                value={form.objectives}
+   748→   748→                onChange={(e) =>
+   749→   749→                  setForm((p) => ({ ...p, objectives: e.target.value }))
+   750→   750→                }
+   751→   751→                placeholder={"Identify hazard classes\nApply emergency procedures"}
+   752→   752→              />
+   753→   753→            </div>
+   754→   754→
+   755→   755→            {/* Tags */}
+   756→   756→            <div className="sm:col-span-2 space-y-2">
+   757→   757→              <Label htmlFor="tags">
+   758→   758→                Tags{" "}
+   759→   759→                <span className="text-xs font-normal text-slate-500">
+   760→   760→                  (comma separated)
+   761→   761→                </span>
+   762→   762→              </Label>
+   763→   763→              <Input
+   764→   764→                id="tags"
+   765→   765→                value={form.tags}
+   766→   766→                onChange={(e) =>
+   767→   767→                  setForm((p) => ({ ...p, tags: e.target.value }))
+   768→   768→                }
+   769→   769→                placeholder="IATA, DGR, safety"
+   770→   770→              />
+   771→   771→            </div>
+   772→   772→
+   773→   773→            {/* Checkboxes */}
+   774→   774→            <div className="sm:col-span-2 flex flex-wrap items-center gap-6 pt-2">
+   775→   775→              <div className="flex items-center gap-2">
+   776→   776→                <Checkbox
+   777→   777→                  id="isPublished"
+   778→   778→                  checked={form.isPublished}
+   779→   779→                  onCheckedChange={(v) =>
+   780→   780→                    setForm((p) => ({ ...p, isPublished: Boolean(v) }))
+   781→   781→                  }
+   782→   782→                />
+   783→   783→                <Label htmlFor="isPublished" className="cursor-pointer">
+   784→   784→                  Published
+   785→   785→                </Label>
+   786→   786→              </div>
+   787→   787→              <div className="flex items-center gap-2">
+   788→   788→                <Checkbox
+   789→   789→                  id="isFeatured"
+   790→   790→                  checked={form.isFeatured}
+   791→   791→                  onCheckedChange={(v) =>
+   792→   792→                    setForm((p) => ({ ...p, isFeatured: Boolean(v) }))
+   793→   793→                  }
+   794→   794→                />
+   795→   795→                <Label htmlFor="isFeatured" className="cursor-pointer">
+   796→   796→                  Featured
+   797→   797→                </Label>
+   798→   798→              </div>
+   799→   799→            </div>
+   800→   800→          </div>
+   801→   801→
+   802→   802→          <DialogFooter className="pt-2">
+   803→   803→            <Button
+   804→   804→              variant="outline"
+   805→   805→              onClick={() => setDialogOpen(false)}
+   806→   806→              disabled={saving}
+   807→   807→            >
+   808→   808→              <X className="h-4 w-4" />
+   809→   809→              Cancel
+   810→   810→            </Button>
+   811→   811→            <Button onClick={handleSave} disabled={saving}>
+   812→   812→              {saving ? (
+   813→   813→                <Loader2 className="h-4 w-4 animate-spin" />
+   814→   814→              ) : (
+   815→   815→                <Save className="h-4 w-4" />
+   816→   816→              )}
+   817→   817→              {editingId ? "Save Changes" : "Create Course"}
+   818→   818→            </Button>
+   819→   819→          </DialogFooter>
+   820→   820→        </DialogContent>
+   821→   821→      </Dialog>
+   822→   822→
+   823→   823→      {/* Delete Confirmation */}
+   824→   824→      <Dialog
+   825→   825→        open={!!deleteTarget}
+   826→   826→        onOpenChange={(o) =>
+   827→   827→          !deleting && setDeleteTarget(o ? deleteTarget : null)
+   828→   828→        }
+   829→   829→      >
+   830→   830→        <DialogContent className="sm:max-w-md">
+   831→   831→          <DialogHeader>
+   832→   832→            <DialogTitle className="flex items-center gap-2">
+   833→   833→              <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+   834→   834→                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+   835→   835→              </div>
+   836→   836→              Delete Course?
+   837→   837→            </DialogTitle>
+   838→   838→          </DialogHeader>
+   839→   839→          <p className="text-sm text-slate-600 dark:text-slate-300">
+   840→   840→            You are about to delete{" "}
+   841→   841→            <span className="font-semibold text-slate-900 dark:text-white">
+   842→   842→              {deleteTarget?.title}
+   843→   843→            </span>
+   844→   844→            . This will also delete all modules and lessons within it. This
+   845→   845→            action cannot be undone.
+   846→   846→          </p>
+   847→   847→          <DialogFooter className="pt-2">
+   848→   848→            <Button
+   849→   849→              variant="outline"
+   850→   850→              onClick={() => setDeleteTarget(null)}
+   851→   851→              disabled={deleting}
+   852→   852→            >
+   853→   853→              Cancel
+   854→   854→            </Button>
+   855→   855→            <Button
+   856→   856→              variant="destructive"
+   857→   857→              onClick={handleDelete}
+   858→   858→              disabled={deleting}
+   859→   859→            >
+   860→   860→              {deleting ? (
+   861→   861→                <Loader2 className="h-4 w-4 animate-spin" />
+   862→   862→              ) : (
+   863→   863→                <Trash2 className="h-4 w-4" />
+   864→   864→              )}
+   865→   865→              Delete Course
+   866→   866→            </Button>
+   867→   867→          </DialogFooter>
+   868→   868→        </DialogContent>
+   869→   869→      </Dialog>
+   870→   870→    </div>
+   871→   871→  );
+   872→   872→}
+   873→   873→

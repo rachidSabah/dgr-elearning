@@ -1,0 +1,898 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useMemo } from "react";
+     4→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+     5→import { Badge } from "@/components/ui/badge";
+     6→import { Button } from "@/components/ui/button";
+     7→import { Skeleton } from "@/components/ui/skeleton";
+     8→import {
+     9→  Table,
+    10→  TableHeader,
+    11→  TableBody,
+    12→  TableHead,
+    13→  TableRow,
+    14→  TableCell,
+    15→} from "@/components/ui/table";
+    16→import { Bar, Doughnut, Line } from "react-chartjs-2";
+    17→import {
+    18→  Chart as ChartJS,
+    19→  CategoryScale,
+    20→  LinearScale,
+    21→  BarElement,
+    22→  Title,
+    23→  Tooltip,
+    24→  Legend,
+    25→  PointElement,
+    26→  LineElement,
+    27→  Filler,
+    28→  ArcElement,
+    29→} from "chart.js";
+    30→import {
+    31→  Users,
+    32→  TrendingUp,
+    33→  Target,
+    34→  Award,
+    35→  Activity,
+    36→  AlertCircle,
+    37→  Loader2,
+    38→  Download,
+    39→  FileText,
+    40→  FileSpreadsheet,
+    41→  Calendar,
+    42→  GraduationCap,
+    43→  CheckCircle2,
+    44→  Clock,
+    45→  CircleDashed,
+    46→  Trophy,
+    47→  AlertTriangle,
+    48→  BarChart3,
+    49→} from "lucide-react";
+    50→
+    51→ChartJS.register(
+    52→  CategoryScale,
+    53→  LinearScale,
+    54→  BarElement,
+    55→  Title,
+    56→  Tooltip,
+    57→  Legend,
+    58→  PointElement,
+    59→  LineElement,
+    60→  Filler,
+    61→  ArcElement
+    62→);
+    63→
+    64→// ---------- Types ----------
+    65→interface RecentActivity {
+    66→  id: string;
+    67→  action: string;
+    68→  entity: string | null;
+    69→  entityId: string | null;
+    70→  createdAt: string;
+    71→  user: {
+    72→    id: string;
+    73→    name: string | null;
+    74→    email: string;
+    75→    role: string;
+    76→  } | null;
+    77→}
+    78→
+    79→interface CourseCompletion {
+    80→  courseId: string;
+    81→  title: string;
+    82→  slug: string;
+    83→  isPublished: boolean;
+    84→  enrolled: number;
+    85→  completed: number;
+    86→  completionRate: number;
+    87→}
+    88→
+    89→interface AnalyticsData {
+    90→  totalUsers: number;
+    91→  usersByRole: Record<string, number>;
+    92→  totalCourses: number;
+    93→  publishedCourses: number;
+    94→  totalEnrollments: number;
+    95→  activeEnrollments: number;
+    96→  completedEnrollments: number;
+    97→  totalCertificates: number;
+    98→  totalQuizAttempts: number;
+    99→  averageScore: number;
+   100→  recentActivity: RecentActivity[];
+   101→  courseCompletion: CourseCompletion[];
+   102→}
+   103→
+   104→type DateRange = "7d" | "30d" | "90d" | "all";
+   105→
+   106→// ---------- Constants ----------
+   107→const DATE_RANGES: { value: DateRange; label: string }[] = [
+   108→  { value: "7d", label: "Last 7 days" },
+   109→  { value: "30d", label: "Last 30 days" },
+   110→  { value: "90d", label: "Last 90 days" },
+   111→  { value: "all", label: "All time" },
+   112→];
+   113→
+   114→const CHART_PALETTE = {
+   115→  sky: "rgba(14, 165, 233, 0.75)",
+   116→  skyBorder: "rgb(14, 165, 233)",
+   117→  blue: "rgba(37, 99, 235, 0.75)",
+   118→  blueBorder: "rgb(37, 99, 235)",
+   119→  violet: "rgba(139, 92, 246, 0.75)",
+   120→  violetBorder: "rgb(139, 92, 246)",
+   121→  emerald: "rgba(16, 185, 129, 0.75)",
+   122→  emeraldBorder: "rgb(16, 185, 129)",
+   123→  amber: "rgba(245, 158, 11, 0.75)",
+   124→  amberBorder: "rgb(245, 158, 11)",
+   125→  rose: "rgba(244, 63, 94, 0.75)",
+   126→  roseBorder: "rgb(244, 63, 94)",
+   127→  slate: "rgba(100, 116, 139, 0.4)",
+   128→  slateBorder: "rgb(100, 116, 139)",
+   129→};
+   130→
+   131→// ---------- Helpers ----------
+   132→function getLastNDays(n: number): { labels: string[]; dates: Date[] } {
+   133→  const labels: string[] = [];
+   134→  const dates: Date[] = [];
+   135→  for (let i = n - 1; i >= 0; i--) {
+   136→    const d = new Date();
+   137→    d.setHours(0, 0, 0, 0);
+   138→    d.setDate(d.getDate() - i);
+   139→    dates.push(d);
+   140→    labels.push(
+   141→      d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+   142→    );
+   143→  }
+   144→  return { labels, dates };
+   145→}
+   146→
+   147→function shortDate(dateStr: string): string {
+   148→  return new Date(dateStr).toLocaleDateString("en-US", {
+   149→    month: "short",
+   150→    day: "numeric",
+   151→    year: "numeric",
+   152→  });
+   153→}
+   154→
+   155→// ---------- Page ----------
+   156→export default function AdminAnalyticsPage() {
+   157→  const [data, setData] = useState<AnalyticsData | null>(null);
+   158→  const [loading, setLoading] = useState(true);
+   159→  const [error, setError] = useState<string | null>(null);
+   160→  const [dateRange, setDateRange] = useState<DateRange>("30d");
+   161→
+   162→  useEffect(() => {
+   163→    let mounted = true;
+   164→    fetch("/api/admin/analytics")
+   165→      .then((r) => r.json())
+   166→      .then((res) => {
+   167→        if (!mounted) return;
+   168→        if (res.error) {
+   169→          setError(res.error);
+   170→        } else if (res.data) {
+   171→          setData(res.data);
+   172→        } else {
+   173→          setError("Unexpected response from analytics API");
+   174→        }
+   175→      })
+   176→      .catch((e) => {
+   177→        if (mounted) setError(String(e));
+   178→      })
+   179→      .finally(() => {
+   180→        if (mounted) setLoading(false);
+   181→      });
+   182→    return () => {
+   183→      mounted = false;
+   184→    };
+   185→  }, []);
+   186→
+   187→  // ---------- Derived metrics ----------
+   188→  const totalStudents = data?.usersByRole.STUDENT || 0;
+   189→
+   190→  // Active learners: distinct users from recentActivity within last 7 days (best available proxy)
+   191→  const activeLearners = useMemo(() => {
+   192→    if (!data) return 0;
+   193→    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+   194→    const userIds = new Set<string>();
+   195→    for (const log of data.recentActivity) {
+   196→      if (new Date(log.createdAt).getTime() >= sevenDaysAgo && log.user?.id) {
+   197→        userIds.add(log.user.id);
+   198→      }
+   199→    }
+   200→    return userIds.size;
+   201→  }, [data]);
+   202→
+   203→  const completionRate =
+   204→    data && data.totalEnrollments > 0
+   205→      ? Math.round((data.completedEnrollments / data.totalEnrollments) * 1000) / 10
+   206→      : 0;
+   207→
+   208→  const avgExamScore = data?.averageScore || 0;
+   209→
+   210→  // ---------- Chart data ----------
+   211→  const enrollmentsByCourseData = useMemo(() => {
+   212→    if (!data) return null;
+   213→    const courses = data.courseCompletion.filter((c) => c.enrolled > 0);
+   214→    return {
+   215→      labels: courses.map((c) => c.title.length > 24 ? c.title.slice(0, 24) + "…" : c.title),
+   216→      datasets: [
+   217→        {
+   218→          label: "Enrollments",
+   219→          data: courses.map((c) => c.enrolled),
+   220→          backgroundColor: courses.map((_, i) =>
+   221→            i % 4 === 0
+   222→              ? CHART_PALETTE.sky
+   223→              : i % 4 === 1
+   224→              ? CHART_PALETTE.blue
+   225→              : i % 4 === 2
+   226→              ? CHART_PALETTE.violet
+   227→              : CHART_PALETTE.emerald
+   228→          ),
+   229→          borderColor: CHART_PALETTE.skyBorder,
+   230→          borderWidth: 1.5,
+   231→          borderRadius: 6,
+   232→        },
+   233→      ],
+   234→    };
+   235→  }, [data]);
+   236→
+   237→  // Daily active users trend: derived from audit logs over the selected window
+   238→  const dauTrendData = useMemo(() => {
+   239→    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 30;
+   240→    const { labels, dates } = getLastNDays(days);
+   241→    const counts = dates.map((day) => {
+   242→      const dayStart = day.getTime();
+   243→      const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+   244→      const userIds = new Set<string>();
+   245→      for (const log of data?.recentActivity || []) {
+   246→        const t = new Date(log.createdAt).getTime();
+   247→        if (t >= dayStart && t < dayEnd && log.user?.id) {
+   248→          userIds.add(log.user.id);
+   249→        }
+   250→      }
+   251→      return userIds.size;
+   252→    });
+   253→    return {
+   254→      labels,
+   255→      datasets: [
+   256→        {
+   257→          label: "Active Users",
+   258→          data: counts,
+   259→          borderColor: CHART_PALETTE.violetBorder,
+   260→          backgroundColor: (ctx: { chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number } } }) => {
+   261→            const chart = ctx.chart;
+   262→            const { ctx: canvasCtx, chartArea } = chart;
+   263→            if (!chartArea) return "rgba(139, 92, 246, 0.15)";
+   264→            const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+   265→            gradient.addColorStop(0, "rgba(139, 92, 246, 0.35)");
+   266→            gradient.addColorStop(1, "rgba(139, 92, 246, 0)");
+   267→            return gradient;
+   268→          },
+   269→          fill: true,
+   270→          tension: 0.4,
+   271→          pointRadius: 0,
+   272→          pointHoverRadius: 5,
+   273→          pointBackgroundColor: CHART_PALETTE.violetBorder,
+   274→          pointBorderColor: "#fff",
+   275→          pointBorderWidth: 2,
+   276→        },
+   277→      ],
+   278→    };
+   279→  }, [data, dateRange]);
+   280→
+   281→  // Completion status doughnut
+   282→  const completionStatusData = useMemo(() => {
+   283→    if (!data) return null;
+   284→    const completed = data.completedEnrollments;
+   285→    const inProgress = data.activeEnrollments;
+   286→    const notStarted = Math.max(0, data.totalEnrollments - completed - inProgress);
+   287→    return {
+   288→      labels: ["Completed", "In Progress", "Not Started"],
+   289→      datasets: [
+   290→        {
+   291→          data: [completed, inProgress, notStarted],
+   292→          backgroundColor: [CHART_PALETTE.emerald, CHART_PALETTE.sky, CHART_PALETTE.slate],
+   293→          borderColor: [CHART_PALETTE.emeraldBorder, CHART_PALETTE.skyBorder, CHART_PALETTE.slateBorder],
+   294→          borderWidth: 2,
+   295→          hoverOffset: 6,
+   296→        },
+   297→      ],
+   298→    };
+   299→  }, [data]);
+   300→
+   301→  // Top 5 courses by enrollment (horizontal bar)
+   302→  const topCoursesData = useMemo(() => {
+   303→    if (!data) return null;
+   304→    const top = [...data.courseCompletion].sort((a, b) => b.enrolled - a.enrolled).slice(0, 5);
+   305→    return {
+   306→      labels: top.map((c) => c.title.length > 22 ? c.title.slice(0, 22) + "…" : c.title),
+   307→      datasets: [
+   308→        {
+   309→          label: "Enrolled",
+   310→          data: top.map((c) => c.enrolled),
+   311→          backgroundColor: [
+   312→            CHART_PALETTE.sky,
+   313→            CHART_PALETTE.blue,
+   314→            CHART_PALETTE.violet,
+   315→            CHART_PALETTE.emerald,
+   316→            CHART_PALETTE.amber,
+   317→          ],
+   318→          borderColor: [
+   319→            CHART_PALETTE.skyBorder,
+   320→            CHART_PALETTE.blueBorder,
+   321→            CHART_PALETTE.violetBorder,
+   322→            CHART_PALETTE.emeraldBorder,
+   323→            CHART_PALETTE.amberBorder,
+   324→          ],
+   325→          borderWidth: 1.5,
+   326→          borderRadius: 6,
+   327→        },
+   328→      ],
+   329→    };
+   330→  }, [data]);
+   331→
+   332→  // ---------- Chart options ----------
+   333→  const baseChartOptions = {
+   334→    responsive: true,
+   335→    maintainAspectRatio: false,
+   336→    plugins: {
+   337→      legend: {
+   338→        position: "bottom" as const,
+   339→        labels: {
+   340→          color: "rgb(71, 85, 105)",
+   341→          font: { size: 12 },
+   342→          padding: 16,
+   343→          usePointStyle: true,
+   344→          pointStyle: "circle" as const,
+   345→        },
+   346→      },
+   347→      tooltip: {
+   348→        backgroundColor: "rgb(15, 23, 42)",
+   349→        titleColor: "#fff",
+   350→        bodyColor: "#e2e8f0",
+   351→        padding: 12,
+   352→        cornerRadius: 8,
+   353→        displayColors: true,
+   354→        boxPadding: 4,
+   355→      },
+   356→    },
+   357→  };
+   358→
+   359→  const verticalBarOptions = {
+   360→    ...baseChartOptions,
+   361→    plugins: { ...baseChartOptions.plugins, legend: { display: false } },
+   362→    scales: {
+   363→      x: {
+   364→        grid: { display: false },
+   365→        ticks: { color: "rgb(100, 116, 139)", font: { size: 10 }, maxRotation: 45, minRotation: 0 },
+   366→      },
+   367→      y: {
+   368→        beginAtZero: true,
+   369→        grid: { color: "rgba(148, 163, 184, 0.15)" },
+   370→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 }, precision: 0 },
+   371→      },
+   372→    },
+   373→  };
+   374→
+   375→  const horizontalBarOptions = {
+   376→    ...baseChartOptions,
+   377→    indexAxis: "y" as const,
+   378→    plugins: { ...baseChartOptions.plugins, legend: { display: false } },
+   379→    scales: {
+   380→      x: {
+   381→        beginAtZero: true,
+   382→        grid: { color: "rgba(148, 163, 184, 0.15)" },
+   383→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 }, precision: 0 },
+   384→      },
+   385→      y: {
+   386→        grid: { display: false },
+   387→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 } },
+   388→      },
+   389→    },
+   390→  };
+   391→
+   392→  const lineOptions = {
+   393→    ...baseChartOptions,
+   394→    plugins: { ...baseChartOptions.plugins, legend: { display: false } },
+   395→    scales: {
+   396→      x: {
+   397→        grid: { display: false },
+   398→        ticks: {
+   399→          color: "rgb(100, 116, 139)",
+   400→          font: { size: 10 },
+   401→          maxTicksLimit: 8,
+   402→          autoSkip: true,
+   403→        },
+   404→      },
+   405→      y: {
+   406→        beginAtZero: true,
+   407→        grid: { color: "rgba(148, 163, 184, 0.15)" },
+   408→        ticks: { color: "rgb(100, 116, 139)", font: { size: 11 }, precision: 0 },
+   409→      },
+   410→    },
+   411→  };
+   412→
+   413→  // ---------- Render ----------
+   414→  if (loading) return <AnalyticsSkeleton />;
+   415→
+   416→  if (error) {
+   417→    return (
+   418→      <div className="flex flex-col items-center justify-center py-20 text-center">
+   419→        <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-4">
+   420→          <AlertCircle className="h-8 w-8 text-red-500" />
+   421→        </div>
+   422→        <h2 className="text-xl font-semibold text-slate-900">Failed to load analytics</h2>
+   423→        <p className="text-slate-500 mt-1 max-w-md text-sm">{error}</p>
+   424→        <Button onClick={() => window.location.reload()} className="mt-4">
+   425→          <Loader2 className="h-4 w-4 mr-2" /> Retry
+   426→        </Button>
+   427→      </div>
+   428→    );
+   429→  }
+   430→
+   431→  if (!data) return null;
+   432→
+   433→  const stats = [
+   434→    {
+   435→      label: "Total Students",
+   436→      value: totalStudents,
+   437→      icon: Users,
+   438→      gradient: "from-sky-500 to-blue-600",
+   439→      hint: `${data.totalUsers} total users`,
+   440→    },
+   441→    {
+   442→      label: "Active Learners",
+   443→      value: activeLearners,
+   444→      icon: Activity,
+   445→      gradient: "from-violet-500 to-purple-600",
+   446→      hint: "Logged in last 7 days",
+   447→    },
+   448→    {
+   449→      label: "Completion Rate",
+   450→      value: `${completionRate}%`,
+   451→      icon: Target,
+   452→      gradient: "from-emerald-500 to-teal-600",
+   453→      hint: `${data.completedEnrollments} of ${data.totalEnrollments}`,
+   454→    },
+   455→    {
+   456→      label: "Avg Exam Score",
+   457→      value: `${avgExamScore}%`,
+   458→      icon: Award,
+   459→      gradient: "from-amber-500 to-orange-600",
+   460→      hint: `${data.totalQuizAttempts} attempts`,
+   461→    },
+   462→  ];
+   463→
+   464→  return (
+   465→    <div className="space-y-6">
+   466→      {/* ---------- Header ---------- */}
+   467→      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-6 lg:p-8 text-white shadow-xl">
+   468→        <div className="absolute inset-0 opacity-20 pointer-events-none">
+   469→          <div className="absolute -top-20 -right-10 w-72 h-72 bg-blue-500 rounded-full blur-3xl" />
+   470→          <div className="absolute -bottom-20 -left-10 w-72 h-72 bg-sky-500 rounded-full blur-3xl" />
+   471→        </div>
+   472→        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+   473→          <div>
+   474→            <div className="flex items-center gap-2 mb-2">
+   475→              <BarChart3 className="h-4 w-4 text-sky-300" />
+   476→              <span className="text-xs font-medium uppercase tracking-wider text-sky-300">
+   477→                Reports & Insights
+   478→              </span>
+   479→            </div>
+   480→            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Analytics &amp; Reports</h1>
+   481→            <p className="text-slate-300 text-sm mt-1 max-w-2xl">
+   482→              Track learner engagement, course performance, and identify opportunities for improvement.
+   483→            </p>
+   484→          </div>
+   485→
+   486→          {/* Date Range Selector */}
+   487→          <div className="flex flex-wrap gap-2 items-center">
+   488→            <Calendar className="h-4 w-4 text-slate-400 mr-1 hidden sm:block" />
+   489→            <div className="inline-flex rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+   490→              {DATE_RANGES.map((range) => (
+   491→                <button
+   492→                  key={range.value}
+   493→                  onClick={() => setDateRange(range.value)}
+   494→                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+   495→                    dateRange === range.value
+   496→                      ? "bg-white text-slate-900 shadow-sm"
+   497→                      : "text-white/80 hover:text-white"
+   498→                  }`}
+   499→                >
+   500→                  {range.label}
+   501→                </button>
+   502→              ))}
+   503→            </div>
+   504→          </div>
+   505→        </div>
+   506→
+   507→        {/* Export Buttons */}
+   508→        <div className="relative z-10 flex flex-wrap gap-2 mt-5">
+   509→          <Button
+   510→            size="sm"
+   511→            className="bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm"
+   512→            variant="outline"
+   513→            onClick={() => {/* visual only */}}
+   514→          >
+   515→            <FileText className="h-4 w-4 mr-2" /> Export PDF
+   516→          </Button>
+   517→          <Button
+   518→            size="sm"
+   519→            className="bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm"
+   520→            variant="outline"
+   521→            onClick={() => {/* visual only */}}
+   522→          >
+   523→            <FileSpreadsheet className="h-4 w-4 mr-2" /> Export Excel
+   524→          </Button>
+   525→          <Button
+   526→            size="sm"
+   527→            className="bg-white text-slate-900 hover:bg-slate-100"
+   528→            onClick={() => {/* visual only */}}
+   529→          >
+   530→            <Download className="h-4 w-4 mr-2" /> Download Report
+   531→          </Button>
+   532→        </div>
+   533→      </div>
+   534→
+   535→      {/* ---------- Stats Grid ---------- */}
+   536→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   537→        {stats.map((stat) => {
+   538→          const Icon = stat.icon;
+   539→          return (
+   540→            <Card
+   541→              key={stat.label}
+   542→              className={`relative overflow-hidden border-0 text-white bg-gradient-to-br ${stat.gradient} shadow-lg`}
+   543→            >
+   544→              <CardContent className="pt-6 pb-4">
+   545→                <div className="flex items-start justify-between">
+   546→                  <div>
+   547→                    <p className="text-white/80 text-xs font-medium uppercase tracking-wider">
+   548→                      {stat.label}
+   549→                    </p>
+   550→                    <p className="text-3xl font-bold mt-2">{stat.value}</p>
+   551→                    <p className="text-white/70 text-xs mt-1">{stat.hint}</p>
+   552→                  </div>
+   553→                  <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+   554→                    <Icon className="h-5 w-5 text-white" />
+   555→                  </div>
+   556→                </div>
+   557→              </CardContent>
+   558→            </Card>
+   559→          );
+   560→        })}
+   561→      </div>
+   562→
+   563→      {/* ---------- Charts Row 1 ---------- */}
+   564→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   565→        <Card className="shadow-sm">
+   566→          <CardHeader>
+   567→            <CardTitle className="flex items-center gap-2 text-base">
+   568→              <span className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center">
+   569→                <GraduationCap className="h-4 w-4 text-sky-600" />
+   570→              </span>
+   571→              Enrollments by Course
+   572→            </CardTitle>
+   573→            <CardDescription>Total enrollments per course offering</CardDescription>
+   574→          </CardHeader>
+   575→          <CardContent>
+   576→            <div className="h-72">
+   577→              {!enrollmentsByCourseData ||
+   578→              enrollmentsByCourseData.datasets[0].data.length === 0 ? (
+   579→                <EmptyState
+   580→                  icon={<GraduationCap className="h-8 w-8 text-slate-400" />}
+   581→                  title="No enrollments yet"
+   582→                  description="Enrollments will appear here once students register for courses."
+   583→                />
+   584→              ) : (
+   585→                <Bar data={enrollmentsByCourseData} options={verticalBarOptions} />
+   586→              )}
+   587→            </div>
+   588→          </CardContent>
+   589→        </Card>
+   590→
+   591→        <Card className="shadow-sm">
+   592→          <CardHeader>
+   593→            <CardTitle className="flex items-center gap-2 text-base">
+   594→              <span className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+   595→                <Activity className="h-4 w-4 text-violet-600" />
+   596→              </span>
+   597→              Daily Active Users
+   598→            </CardTitle>
+   599→            <CardDescription>
+   600→              Unique active users per day — {DATE_RANGES.find((r) => r.value === dateRange)?.label.toLowerCase()}
+   601→            </CardDescription>
+   602→          </CardHeader>
+   603→          <CardContent>
+   604→            <div className="h-72">
+   605→              {!data.recentActivity.length ? (
+   606→                <EmptyState
+   607→                  icon={<Activity className="h-8 w-8 text-slate-400" />}
+   608→                  title="No activity recorded"
+   609→                  description="Active user trends will populate as users engage with the platform."
+   610→                />
+   611→              ) : (
+   612→                <Line data={dauTrendData} options={lineOptions} />
+   613→              )}
+   614→            </div>
+   615→          </CardContent>
+   616→        </Card>
+   617→      </div>
+   618→
+   619→      {/* ---------- Charts Row 2 ---------- */}
+   620→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   621→        <Card className="shadow-sm">
+   622→          <CardHeader>
+   623→            <CardTitle className="flex items-center gap-2 text-base">
+   624→              <span className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+   625→                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+   626→              </span>
+   627→              Course Completion Status
+   628→            </CardTitle>
+   629→            <CardDescription>Enrollments grouped by completion state</CardDescription>
+   630→          </CardHeader>
+   631→          <CardContent>
+   632→            <div className="h-72 flex items-center justify-center">
+   633→              {data.totalEnrollments === 0 ? (
+   634→                <EmptyState
+   635→                  icon={<CheckCircle2 className="h-8 w-8 text-slate-400" />}
+   636→                  title="No enrollments yet"
+   637→                  description="Completion status will display once enrollments exist."
+   638→                />
+   639→              ) : (
+   640→                <div className="w-full max-w-xs">
+   641→                  <Doughnut
+   642→                    data={completionStatusData!}
+   643→                    options={{
+   644→                      ...baseChartOptions,
+   645→                      cutout: "65%",
+   646→                    }}
+   647→                  />
+   648→                </div>
+   649→              )}
+   650→            </div>
+   651→          </CardContent>
+   652→        </Card>
+   653→
+   654→        <Card className="shadow-sm">
+   655→          <CardHeader>
+   656→            <CardTitle className="flex items-center gap-2 text-base">
+   657→              <span className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+   658→                <Trophy className="h-4 w-4 text-amber-600" />
+   659→              </span>
+   660→              Top 5 Courses by Enrollment
+   661→            </CardTitle>
+   662→            <CardDescription>Most popular course offerings</CardDescription>
+   663→          </CardHeader>
+   664→          <CardContent>
+   665→            <div className="h-72">
+   666→              {!topCoursesData || topCoursesData.datasets[0].data.length === 0 ? (
+   667→                <EmptyState
+   668→                  icon={<Trophy className="h-8 w-8 text-slate-400" />}
+   669→                  title="No course data"
+   670→                  description="Top courses will be ranked here once enrollments exist."
+   671→                />
+   672→              ) : (
+   673→                <Bar data={topCoursesData} options={horizontalBarOptions} />
+   674→              )}
+   675→            </div>
+   676→          </CardContent>
+   677→        </Card>
+   678→      </div>
+   679→
+   680→      {/* ---------- Tables Row ---------- */}
+   681→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   682→        {/* Top performing students */}
+   683→        <Card className="shadow-sm">
+   684→          <CardHeader>
+   685→            <CardTitle className="flex items-center gap-2 text-base">
+   686→              <span className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+   687→                <Award className="h-4 w-4 text-amber-600" />
+   688→              </span>
+   689→              Top Performing Students
+   690→              <Badge variant="secondary" className="ml-auto text-xs">
+   691→                By avg score
+   692→              </Badge>
+   693→            </CardTitle>
+   694→            <CardDescription>Highest achieving learners across all courses</CardDescription>
+   695→          </CardHeader>
+   696→          <CardContent>
+   697→            <EmptyState
+   698→              icon={<Award className="h-8 w-8 text-slate-400" />}
+   699→              title="Per-student analytics coming soon"
+   700→              description="Detailed per-student performance breakdowns require an extended analytics endpoint. Connect additional data sources to enable leaderboard insights."
+   701→            />
+   702→          </CardContent>
+   703→        </Card>
+   704→
+   705→        {/* Weak topics */}
+   706→        <Card className="shadow-sm">
+   707→          <CardHeader>
+   708→            <CardTitle className="flex items-center gap-2 text-base">
+   709→              <span className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+   710→                <AlertTriangle className="h-4 w-4 text-rose-600" />
+   711→              </span>
+   712→              Weak Topics
+   713→              <Badge variant="secondary" className="ml-auto text-xs">
+   714→                Lowest scoring
+   715→              </Badge>
+   716→            </CardTitle>
+   717→            <CardDescription>Lessons with the lowest average quiz scores</CardDescription>
+   718→          </CardHeader>
+   719→          <CardContent>
+   720→            <EmptyState
+   721→              icon={<AlertTriangle className="h-8 w-8 text-slate-400" />}
+   722→              title="Lesson-level analytics coming soon"
+   723→              description="Quiz-attempt breakdowns by lesson require an extended analytics endpoint. Add per-lesson quiz aggregation to surface weak topics here."
+   724→            />
+   725→          </CardContent>
+   726→        </Card>
+   727→      </div>
+   728→
+   729→      {/* ---------- Completion Status Legend Cards ---------- */}
+   730→      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+   731→        <Card className="shadow-sm border-l-4 border-l-emerald-500">
+   732→          <CardContent className="pt-5 pb-5">
+   733→            <div className="flex items-center gap-3">
+   734→              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+   735→                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+   736→              </div>
+   737→              <div>
+   738→                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Completed</p>
+   739→                <p className="text-2xl font-bold text-slate-900">{data.completedEnrollments}</p>
+   740→              </div>
+   741→            </div>
+   742→          </CardContent>
+   743→        </Card>
+   744→        <Card className="shadow-sm border-l-4 border-l-sky-500">
+   745→          <CardContent className="pt-5 pb-5">
+   746→            <div className="flex items-center gap-3">
+   747→              <div className="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
+   748→                <Clock className="h-5 w-5 text-sky-600" />
+   749→              </div>
+   750→              <div>
+   751→                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">In Progress</p>
+   752→                <p className="text-2xl font-bold text-slate-900">{data.activeEnrollments}</p>
+   753→              </div>
+   754→            </div>
+   755→          </CardContent>
+   756→        </Card>
+   757→        <Card className="shadow-sm border-l-4 border-l-slate-400">
+   758→          <CardContent className="pt-5 pb-5">
+   759→            <div className="flex items-center gap-3">
+   760→              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+   761→                <CircleDashed className="h-5 w-5 text-slate-500" />
+   762→              </div>
+   763→              <div>
+   764→                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Not Started</p>
+   765→                <p className="text-2xl font-bold text-slate-900">
+   766→                  {Math.max(0, data.totalEnrollments - data.completedEnrollments - data.activeEnrollments)}
+   767→                </p>
+   768→              </div>
+   769→            </div>
+   770→          </CardContent>
+   771→        </Card>
+   772→      </div>
+   773→
+   774→      {/* ---------- Recent Activity Summary ---------- */}
+   775→      <Card className="shadow-sm">
+   776→        <CardHeader>
+   777→          <CardTitle className="flex items-center gap-2 text-base">
+   778→            <span className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center">
+   779→              <TrendingUp className="h-4 w-4 text-sky-600" />
+   780→            </span>
+   781→            Recent Activity Summary
+   782→          </CardTitle>
+   783→          <CardDescription>Most recent {data.recentActivity.length} platform events</CardDescription>
+   784→        </CardHeader>
+   785→        <CardContent>
+   786→          {data.recentActivity.length === 0 ? (
+   787→            <EmptyState
+   788→              icon={<TrendingUp className="h-8 w-8 text-slate-400" />}
+   789→              title="No recent activity"
+   790→              description="Platform events will appear here as users interact with the system."
+   791→            />
+   792→          ) : (
+   793→            <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+   794→              <Table>
+   795→                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+   796→                  <TableRow>
+   797→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">User</TableHead>
+   798→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Action</TableHead>
+   799→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Entity</TableHead>
+   800→                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Date</TableHead>
+   801→                  </TableRow>
+   802→                </TableHeader>
+   803→                <TableBody>
+   804→                  {data.recentActivity.slice(0, 8).map((log) => (
+   805→                    <TableRow key={log.id}>
+   806→                      <TableCell>
+   807→                        <div className="flex items-center gap-2">
+   808→                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
+   809→                            {(log.user?.name || log.user?.email || "A")
+   810→                              .split(" ")
+   811→                              .map((s) => s[0])
+   812→                              .slice(0, 2)
+   813→                              .join("")
+   814→                              .toUpperCase()}
+   815→                          </div>
+   816→                          <div className="min-w-0">
+   817→                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+   818→                              {log.user?.name || "Unknown"}
+   819→                            </p>
+   820→                            <p className="text-xs text-slate-500 truncate">{log.user?.email}</p>
+   821→                          </div>
+   822→                        </div>
+   823→                      </TableCell>
+   824→                      <TableCell>
+   825→                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+   826→                          {log.action.split("_").map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(" ")}
+   827→                        </span>
+   828→                      </TableCell>
+   829→                      <TableCell>
+   830→                        {log.entity ? (
+   831→                          <span className="text-sm text-slate-600 dark:text-slate-400 font-mono">
+   832→                            {log.entity}
+   833→                          </span>
+   834→                        ) : (
+   835→                          <span className="text-xs text-slate-400 italic">—</span>
+   836→                        )}
+   837→                      </TableCell>
+   838→                      <TableCell>
+   839→                        <span className="text-xs text-slate-500">{shortDate(log.createdAt)}</span>
+   840→                      </TableCell>
+   841→                    </TableRow>
+   842→                  ))}
+   843→                </TableBody>
+   844→              </Table>
+   845→            </div>
+   846→          )}
+   847→        </CardContent>
+   848→      </Card>
+   849→    </div>
+   850→  );
+   851→}
+   852→
+   853→// ---------- Sub-components ----------
+   854→function EmptyState({
+   855→  icon,
+   856→  title,
+   857→  description,
+   858→}: {
+   859→  icon: React.ReactNode;
+   860→  title: string;
+   861→  description: string;
+   862→}) {
+   863→  return (
+   864→    <div className="h-full flex flex-col items-center justify-center text-center py-8 px-4 min-h-[200px]">
+   865→      <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+   866→        {icon}
+   867→      </div>
+   868→      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{title}</p>
+   869→      <p className="text-xs text-slate-500 mt-1 max-w-xs">{description}</p>
+   870→    </div>
+   871→  );
+   872→}
+   873→
+   874→function AnalyticsSkeleton() {
+   875→  return (
+   876→    <div className="space-y-6">
+   877→      <Skeleton className="h-44 rounded-2xl" />
+   878→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   879→        {Array.from({ length: 4 }).map((_, i) => (
+   880→          <Skeleton key={i} className="h-28 rounded-xl" />
+   881→        ))}
+   882→      </div>
+   883→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   884→        <Skeleton className="h-96 rounded-xl" />
+   885→        <Skeleton className="h-96 rounded-xl" />
+   886→      </div>
+   887→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   888→        <Skeleton className="h-96 rounded-xl" />
+   889→        <Skeleton className="h-96 rounded-xl" />
+   890→      </div>
+   891→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   892→        <Skeleton className="h-72 rounded-xl" />
+   893→        <Skeleton className="h-72 rounded-xl" />
+   894→      </div>
+   895→    </div>
+   896→  );
+   897→}
+   898→
