@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
+const isCloudflareBuild = process.env.BUILD_TARGET === "cloudflare";
+
 const nextConfig: NextConfig = {
-  output: "standalone",
-  // Enable static export optimizations for Cloudflare Pages compatibility
+  // Use static export for Cloudflare, standalone for dev/other
+  output: isCloudflareBuild ? "export" : "standalone",
   trailingSlash: false,
   poweredByHeader: false,
   compress: true,
@@ -16,13 +18,14 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },
-  // Image optimization for Cloudflare
+  // Image optimization - disable for static export
   images: {
     unoptimized: true,
     formats: ["image/avif", "image/webp"],
   },
-  // Headers for security and caching
+  // Headers for security and caching (only applies to standalone mode)
   async headers() {
+    if (isCloudflareBuild) return [];
     return [
       {
         source: "/(.*)",

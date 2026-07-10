@@ -32,12 +32,27 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile || npm install --legacy-peer-deps
 
-      - name: Build for Cloudflare Pages
+      - name: Move API route (not needed for static export)
+        run: |
+          if [ -d "src/app/api" ]; then
+            mkdir -p .api-backup
+            mv src/app/api .api-backup/
+          fi
+
+      - name: Build for Cloudflare Pages (Static Export)
         run: |
           bun run build:cf || npm run build:cf
         env:
           NEXT_TELEMETRY_DISABLED: '1'
           SKIP_ENV_VALIDATION: '1'
+          BUILD_TARGET: 'cloudflare'
+
+      - name: Restore API route
+        run: |
+          if [ -d ".api-backup/api" ]; then
+            mv .api-backup/api src/app/
+            rm -rf .api-backup
+          fi
 
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
@@ -45,6 +60,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: dgr-elearning
-          directory: .next/standalone
+          directory: out
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: main
