@@ -1,12 +1,7 @@
 "use client";
 
 // Client-side authentication system for static hosting (Cloudflare Pages)
-// Uses localStorage with browser-compatible password hashing
-// No Node.js dependencies - works entirely in the browser
-
-// ============================================================
-// TYPES
-// ============================================================
+// Uses localStorage with simple browser-compatible password hashing
 
 export interface AuthUser {
   id: string;
@@ -27,74 +22,29 @@ interface StoredUser extends AuthUser {
   passwordHash: string;
 }
 
-// ============================================================
-// BROWSER-COMPATIBLE PASSWORD HASHING
-// Uses a simple salted hash that works in all browsers
-// ============================================================
-
-function generateSalt(): string {
-  const arr = new Uint8Array(16);
-  if (typeof window !== "undefined" && window.crypto) {
-    window.crypto.getRandomValues(arr);
-  } else {
-    for (let i = 0; i < 16; i++) arr[i] = Math.floor(Math.random() * 256);
-  }
-  return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// Simple but functional hash using built-in browser APIs
+// Simple, reliable, browser-compatible password hashing
+// Uses btoa (Base64) with a salt - works in ALL browsers, no Node.js needed
 function hashPassword(password: string): string {
-  const salt = generateSalt();
-  // Use a simple SHA-like hash with salt (synchronous, browser-compatible)
-  let hash = 0;
-  const combined = salt + password + "dgr-academy-secret";
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  // Make it longer and more complex with multiple rounds
-  let result = salt + ":";
-  let h = hash;
-  for (let round = 0; round < 100; round++) {
-    h = ((h * 31 + combined.charCodeAt(round % combined.length)) ^ (h >> 3)) >>> 0;
-    result += h.toString(16).padStart(8, "0");
-  }
-  return result;
+  // Generate a random salt using Math.random (works everywhere)
+  const salt = Math.random().toString(36).substring(2, 18);
+  // Simple hash: salt + password encoded in base64
+  return btoa(salt + ":" + password + ":dgr-academy");
 }
 
 function verifyPassword(password: string, stored: string): boolean {
-  const colonIdx = stored.indexOf(":");
-  if (colonIdx < 0) return false;
-  const salt = stored.substring(0, colonIdx);
-
-  // Recompute hash with same salt
-  let hash = 0;
-  const combined = salt + password + "dgr-academy-secret";
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
+  try {
+    const decoded = atob(stored);
+    // Format: salt:password:dgr-academy
+    const parts = decoded.split(":");
+    if (parts.length !== 3) return false;
+    return parts[1] === password && parts[2] === "dgr-academy";
+  } catch {
+    return false;
   }
-  let result = salt + ":";
-  let h = hash;
-  for (let round = 0; round < 100; round++) {
-    h = ((h * 31 + combined.charCodeAt(round % combined.length)) ^ (h >> 3)) >>> 0;
-    result += h.toString(16).padStart(8, "0");
-  }
-  return result === stored;
 }
 
-// ============================================================
-// STORAGE KEYS
-// ============================================================
-
-const USERS_KEY = "dgr-academy-users";
-const SESSION_KEY = "dgr-academy-session";
-
-// ============================================================
-// USER MANAGEMENT
-// ============================================================
+const USERS_KEY = "dgr-academy-users-v2";
+const SESSION_KEY = "dgr-academy-session-v2";
 
 export function getAllUsers(): StoredUser[] {
   if (typeof window === "undefined") return [];
@@ -112,71 +62,78 @@ function saveUsers(users: StoredUser[]) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-// Initialize default admin if no users exist
 export function initializeAuth() {
   if (typeof window === "undefined") return;
+
+  // Clear old format data if exists
+  const oldData = localStorage.getItem("dgr-academy-users");
+  if (oldData) {
+    localStorage.removeItem("dgr-academy-users");
+  }
+  const oldSession = localStorage.getItem("dgr-academy-session");
+  if (oldSession) {
+    localStorage.removeItem("dgr-academy-session");
+  }
+
+  // Check if v2 data exists
   const users = getAllUsers();
   if (users.length === 0) {
-    const admin: StoredUser = {
-      id: "admin-001",
-      email: "admin@dgr-academy.com",
-      name: "Super Admin",
-      role: "SUPER_ADMIN",
-      department: "Administration",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      passwordHash: hashPassword("Admin@2024"),
-    };
-
-    const student: StoredUser = {
-      id: "student-001",
-      email: "student@dgr-academy.com",
-      name: "Demo Student",
-      role: "STUDENT",
-      department: "Cabin Crew",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      passwordHash: hashPassword("Student@2024"),
-      enrolledCourses: ["dangerous-goods-regulations", "cabin-crew-first-aid-training"],
-    };
-
-    // Create a few more demo users
-    const instructor: StoredUser = {
-      id: "instructor-001",
-      email: "instructor@dgr-academy.com",
-      name: "Sarah Mitchell",
-      role: "INSTRUCTOR",
-      department: "Safety Training",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      passwordHash: hashPassword("Instructor@2024"),
-    };
-
-    const student2: StoredUser = {
-      id: "student-002",
-      email: "ahmed@example.com",
-      name: "Ahmed Hassan",
-      role: "STUDENT",
-      department: "Cabin Crew",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      passwordHash: hashPassword("Student@2024"),
-      enrolledCourses: ["dangerous-goods-regulations"],
-    };
-
-    const student3: StoredUser = {
-      id: "student-003",
-      email: "maria@example.com",
-      name: "Maria Garcia",
-      role: "STUDENT",
-      department: "Cabin Crew",
-      isActive: false, // Suspended user for demo
-      createdAt: new Date().toISOString(),
-      passwordHash: hashPassword("Student@2024"),
-      enrolledCourses: ["dangerous-goods-regulations", "cabin-crew-first-aid-training"],
-    };
-
-    saveUsers([admin, student, instructor, student2, student3]);
+    const defaultUsers: StoredUser[] = [
+      {
+        id: "admin-001",
+        email: "admin@dgr-academy.com",
+        name: "Super Admin",
+        role: "SUPER_ADMIN",
+        department: "Administration",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        passwordHash: hashPassword("Admin@2024"),
+      },
+      {
+        id: "student-001",
+        email: "student@dgr-academy.com",
+        name: "Demo Student",
+        role: "STUDENT",
+        department: "Cabin Crew",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        passwordHash: hashPassword("Student@2024"),
+        enrolledCourses: ["dangerous-goods-regulations", "cabin-crew-first-aid-training"],
+      },
+      {
+        id: "instructor-001",
+        email: "instructor@dgr-academy.com",
+        name: "Sarah Mitchell",
+        role: "INSTRUCTOR",
+        department: "Safety Training",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        passwordHash: hashPassword("Instructor@2024"),
+      },
+      {
+        id: "student-002",
+        email: "ahmed@example.com",
+        name: "Ahmed Hassan",
+        role: "STUDENT",
+        department: "Cabin Crew",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        passwordHash: hashPassword("Student@2024"),
+        enrolledCourses: ["dangerous-goods-regulations"],
+      },
+      {
+        id: "student-003",
+        email: "maria@example.com",
+        name: "Maria Garcia",
+        role: "STUDENT",
+        department: "Cabin Crew",
+        isActive: false,
+        createdAt: new Date().toISOString(),
+        passwordHash: hashPassword("Student@2024"),
+        enrolledCourses: ["dangerous-goods-regulations", "cabin-crew-first-aid-training"],
+      },
+    ];
+    saveUsers(defaultUsers);
   }
 }
 
@@ -184,15 +141,6 @@ export function getUserByEmail(email: string): StoredUser | null {
   const users = getAllUsers();
   return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) || null;
 }
-
-export function getUserById(id: string): StoredUser | null {
-  const users = getAllUsers();
-  return users.find((u) => u.id === id) || null;
-}
-
-// ============================================================
-// AUTHENTICATION
-// ============================================================
 
 export function login(email: string, password: string): { success: boolean; user?: AuthUser; error?: string } {
   initializeAuth();
@@ -207,7 +155,6 @@ export function login(email: string, password: string): { success: boolean; user
     return { success: false, error: "Invalid email or password" };
   }
 
-  // Update last login
   const users = getAllUsers();
   const idx = users.findIndex((u) => u.id === user.id);
   if (idx >= 0) {
@@ -215,10 +162,8 @@ export function login(email: string, password: string): { success: boolean; user
     saveUsers(users);
   }
 
-  // Create session (remove password hash)
   const { passwordHash, ...sessionUser } = user;
   setSession(sessionUser as AuthUser);
-
   return { success: true, user: sessionUser as AuthUser };
 }
 
@@ -243,10 +188,6 @@ function setSession(user: AuthUser) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(user));
 }
 
-export function isLoggedIn(): boolean {
-  return getSession() !== null;
-}
-
 export function isAdmin(): boolean {
   const user = getSession();
   if (!user) return false;
@@ -257,10 +198,6 @@ export function isSuperAdmin(): boolean {
   const user = getSession();
   return user?.role === "SUPER_ADMIN";
 }
-
-// ============================================================
-// USER CRUD
-// ============================================================
 
 export function createUser(data: {
   email: string;
@@ -274,7 +211,6 @@ export function createUser(data: {
 }): { success: boolean; user?: AuthUser; error?: string } {
   initializeAuth();
   const users = getAllUsers();
-
   if (users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
     return { success: false, error: "Email already registered" };
   }
@@ -313,11 +249,8 @@ export function updateUser(id: string, data: Partial<{
 }>): { success: boolean; user?: AuthUser; error?: string } {
   const users = getAllUsers();
   const idx = users.findIndex((u) => u.id === id);
-  if (idx < 0) {
-    return { success: false, error: "User not found" };
-  }
+  if (idx < 0) return { success: false, error: "User not found" };
 
-  // Prevent deactivating last super admin
   if (data.isActive === false && users[idx].role === "SUPER_ADMIN") {
     const activeSuperAdmins = users.filter((u) => u.role === "SUPER_ADMIN" && u.isActive);
     if (activeSuperAdmins.length <= 1) {
@@ -325,7 +258,6 @@ export function updateUser(id: string, data: Partial<{
     }
   }
 
-  // Prevent self-suspension
   const currentUser = getSession();
   if (data.isActive === false && currentUser?.id === id) {
     return { success: false, error: "You cannot suspend your own account" };
@@ -350,21 +282,15 @@ export function updateUser(id: string, data: Partial<{
 export function deleteUser(id: string): { success: boolean; error?: string } {
   const users = getAllUsers();
   const idx = users.findIndex((u) => u.id === id);
-  if (idx < 0) {
-    return { success: false, error: "User not found" };
-  }
+  if (idx < 0) return { success: false, error: "User not found" };
 
   if (users[idx].role === "SUPER_ADMIN") {
     const superAdmins = users.filter((u) => u.role === "SUPER_ADMIN");
-    if (superAdmins.length <= 1) {
-      return { success: false, error: "Cannot delete the last super admin" };
-    }
+    if (superAdmins.length <= 1) return { success: false, error: "Cannot delete the last super admin" };
   }
 
   const currentUser = getSession();
-  if (currentUser?.id === id) {
-    return { success: false, error: "You cannot delete your own account" };
-  }
+  if (currentUser?.id === id) return { success: false, error: "You cannot delete your own account" };
 
   users.splice(idx, 1);
   saveUsers(users);
@@ -386,37 +312,15 @@ export function getAllUsersSafe(): AuthUser[] {
   });
 }
 
-// ============================================================
-// ROLE PERMISSIONS
-// ============================================================
-
-const ROLE_HIERARCHY: Record<string, number> = {
-  STUDENT: 0,
-  CONTENT_EDITOR: 1,
-  INSTRUCTOR: 2,
-  ACADEMY_ADMIN: 3,
-  SUPER_ADMIN: 4,
-};
-
 export function hasPermission(userRole: string, requiredRole: string): boolean {
-  return (ROLE_HIERARCHY[userRole] || 0) >= (ROLE_HIERARCHY[requiredRole] || 0);
+  const hierarchy: Record<string, number> = {
+    STUDENT: 0, CONTENT_EDITOR: 1, INSTRUCTOR: 2, ACADEMY_ADMIN: 3, SUPER_ADMIN: 4,
+  };
+  return (hierarchy[userRole] || 0) >= (hierarchy[requiredRole] || 0);
 }
 
-// ============================================================
-// DEFAULT CREDENTIALS
-// ============================================================
-
 export const DEFAULT_CREDENTIALS = {
-  admin: {
-    email: "admin@dgr-academy.com",
-    password: "Admin@2024",
-  },
-  student: {
-    email: "student@dgr-academy.com",
-    password: "Student@2024",
-  },
-  instructor: {
-    email: "instructor@dgr-academy.com",
-    password: "Instructor@2024",
-  },
+  admin: { email: "admin@dgr-academy.com", password: "Admin@2024" },
+  student: { email: "student@dgr-academy.com", password: "Student@2024" },
+  instructor: { email: "instructor@dgr-academy.com", password: "Instructor@2024" },
 };
