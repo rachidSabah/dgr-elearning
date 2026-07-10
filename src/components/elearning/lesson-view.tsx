@@ -138,6 +138,13 @@ export function LessonView() {
   const [currentParagraphIdx, setCurrentParagraphIdx] = useState(-1);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // Auto-select first lesson if none selected (prevents crash on "Lessons" tab click)
+  useEffect(() => {
+    if (!selectedLessonId && courseData.modules.length > 0 && courseData.modules[0].lessons.length > 0) {
+      setSelectedLesson(courseData.modules[0].lessons[0].id);
+    }
+  }, [selectedLessonId, setSelectedLesson]);
+
   // Update streak on lesson view
   useEffect(() => {
     updateStreak();
@@ -163,7 +170,12 @@ export function LessonView() {
 
   // Cleanup narration on lesson change
   useEffect(() => {
-    stopNarration();
+    // Inline cleanup to avoid referencing stopNarration before it's defined
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsNarrating(false);
+    setIsPaused(false);
     setCurrentParagraphIdx(-1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLessonId]);
