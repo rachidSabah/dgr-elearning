@@ -37,7 +37,7 @@ export default function StudentLoginPage() {
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
+    try {
       const result = login(email, password);
       if (!result.success) {
         setError(result.error || "Login failed");
@@ -52,7 +52,10 @@ export default function StudentLoginPage() {
         router.push("/");
       }
       router.refresh();
-    }, 500);
+    } catch (err) {
+      setError("An error occurred during login. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (

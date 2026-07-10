@@ -1,10 +1,8 @@
 "use client";
 
 // Client-side authentication system for static hosting (Cloudflare Pages)
-// Uses localStorage with hashed passwords - no server required
-// This allows admin and student login to work on static deployments
-
-import { scryptSync, randomBytes } from "crypto";
+// Uses localStorage with browser-compatible password hashing
+// No Node.js dependencies - works entirely in the browser
 
 // ============================================================
 // TYPES
@@ -22,7 +20,7 @@ export interface AuthUser {
   isActive: boolean;
   lastLogin?: string;
   createdAt: string;
-  enrolledCourses?: string[]; // course IDs for students
+  enrolledCourses?: string[];
 }
 
 interface StoredUser extends AuthUser {
@@ -30,39 +28,61 @@ interface StoredUser extends AuthUser {
 }
 
 // ============================================================
-// PASSWORD HASHING (using Web Crypto API for browser compatibility)
+// BROWSER-COMPATIBLE PASSWORD HASHING
+// Uses a simple salted hash that works in all browsers
 // ============================================================
 
-async function hashPassword(password: string): Promise<string> {
-  // Use a simple hash for client-side (this is not as secure as server-side but works for demo)
-  // In production, use proper server-side authentication
-  const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(password, salt, 64).toString("hex");
-  return `${salt}:${hash}`;
+function generateSalt(): string {
+  const arr = new Uint8Array(16);
+  if (typeof window !== "undefined" && window.crypto) {
+    window.crypto.getRandomValues(arr);
+  } else {
+    for (let i = 0; i < 16; i++) arr[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Simple but functional hash using built-in browser APIs
+function hashPassword(password: string): string {
+  const salt = generateSalt();
+  // Use a simple SHA-like hash with salt (synchronous, browser-compatible)
+  let hash = 0;
+  const combined = salt + password + "dgr-academy-secret";
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Make it longer and more complex with multiple rounds
+  let result = salt + ":";
+  let h = hash;
+  for (let round = 0; round < 100; round++) {
+    h = ((h * 31 + combined.charCodeAt(round % combined.length)) ^ (h >> 3)) >>> 0;
+    result += h.toString(16).padStart(8, "0");
+  }
+  return result;
 }
 
 function verifyPassword(password: string, stored: string): boolean {
-  try {
-    const [salt, hash] = stored.split(":");
-    if (!salt || !hash) return false;
-    const verifyHash = scryptSync(password, salt, 64).toString("hex");
-    return verifyHash === hash;
-  } catch {
-    // Fallback for browser environment where scryptSync might not be available
-    return stored === `simple:${btoa(password)}`;
-  }
-}
+  const colonIdx = stored.indexOf(":");
+  if (colonIdx < 0) return false;
+  const salt = stored.substring(0, colonIdx);
 
-// Simple hash fallback for browser
-function simpleHash(password: string): string {
-  return `simple:${btoa(password)}`;
-}
-
-function verifySimpleHash(password: string, stored: string): boolean {
-  if (stored.startsWith("simple:")) {
-    return stored === simpleHash(password);
+  // Recompute hash with same salt
+  let hash = 0;
+  const combined = salt + password + "dgr-academy-secret";
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
   }
-  return verifyPassword(password, stored);
+  let result = salt + ":";
+  let h = hash;
+  for (let round = 0; round < 100; round++) {
+    h = ((h * 31 + combined.charCodeAt(round % combined.length)) ^ (h >> 3)) >>> 0;
+    result += h.toString(16).padStart(8, "0");
+  }
+  return result === stored;
 }
 
 // ============================================================
@@ -76,7 +96,6 @@ const SESSION_KEY = "dgr-academy-session";
 // USER MANAGEMENT
 // ============================================================
 
-// Get all users from localStorage
 export function getAllUsers(): StoredUser[] {
   if (typeof window === "undefined") return [];
   const data = localStorage.getItem(USERS_KEY);
@@ -88,7 +107,6 @@ export function getAllUsers(): StoredUser[] {
   }
 }
 
-// Save all users to localStorage
 function saveUsers(users: StoredUser[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
@@ -99,7 +117,6 @@ export function initializeAuth() {
   if (typeof window === "undefined") return;
   const users = getAllUsers();
   if (users.length === 0) {
-    // Create default super admin
     const admin: StoredUser = {
       id: "admin-001",
       email: "admin@dgr-academy.com",
@@ -108,11 +125,9 @@ export function initializeAuth() {
       department: "Administration",
       isActive: true,
       createdAt: new Date().toISOString(),
-      passwordHash: simpleHash("Admin@2024"),
+      passwordHash: hashPassword("Admin@2024"),
     };
-    saveUsers([admin]);
 
-    // Create a demo student
     const student: StoredUser = {
       id: "student-001",
       email: "student@dgr-academy.com",
@@ -121,20 +136,55 @@ export function initializeAuth() {
       department: "Cabin Crew",
       isActive: true,
       createdAt: new Date().toISOString(),
-      passwordHash: simpleHash("Student@2024"),
+      passwordHash: hashPassword("Student@2024"),
       enrolledCourses: ["dangerous-goods-regulations", "cabin-crew-first-aid-training"],
     };
-    saveUsers([admin, student]);
+
+    // Create a few more demo users
+    const instructor: StoredUser = {
+      id: "instructor-001",
+      email: "instructor@dgr-academy.com",
+      name: "Sarah Mitchell",
+      role: "INSTRUCTOR",
+      department: "Safety Training",
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      passwordHash: hashPassword("Instructor@2024"),
+    };
+
+    const student2: StoredUser = {
+      id: "student-002",
+      email: "ahmed@example.com",
+      name: "Ahmed Hassan",
+      role: "STUDENT",
+      department: "Cabin Crew",
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      passwordHash: hashPassword("Student@2024"),
+      enrolledCourses: ["dangerous-goods-regulations"],
+    };
+
+    const student3: StoredUser = {
+      id: "student-003",
+      email: "maria@example.com",
+      name: "Maria Garcia",
+      role: "STUDENT",
+      department: "Cabin Crew",
+      isActive: false, // Suspended user for demo
+      createdAt: new Date().toISOString(),
+      passwordHash: hashPassword("Student@2024"),
+      enrolledCourses: ["dangerous-goods-regulations", "cabin-crew-first-aid-training"],
+    };
+
+    saveUsers([admin, student, instructor, student2, student3]);
   }
 }
 
-// Get user by email
 export function getUserByEmail(email: string): StoredUser | null {
   const users = getAllUsers();
   return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) || null;
 }
 
-// Get user by ID
 export function getUserById(id: string): StoredUser | null {
   const users = getAllUsers();
   return users.find((u) => u.id === id) || null;
@@ -144,7 +194,6 @@ export function getUserById(id: string): StoredUser | null {
 // AUTHENTICATION
 // ============================================================
 
-// Login user
 export function login(email: string, password: string): { success: boolean; user?: AuthUser; error?: string } {
   initializeAuth();
   const user = getUserByEmail(email);
@@ -154,7 +203,7 @@ export function login(email: string, password: string): { success: boolean; user
   if (!user.isActive) {
     return { success: false, error: "Your account has been suspended. Please contact the administrator." };
   }
-  if (!verifySimpleHash(password, user.passwordHash)) {
+  if (!verifyPassword(password, user.passwordHash)) {
     return { success: false, error: "Invalid email or password" };
   }
 
@@ -166,21 +215,18 @@ export function login(email: string, password: string): { success: boolean; user
     saveUsers(users);
   }
 
-  // Create session
-  const sessionUser: AuthUser = { ...user };
-  delete (sessionUser as any).passwordHash;
-  setSession(sessionUser);
+  // Create session (remove password hash)
+  const { passwordHash, ...sessionUser } = user;
+  setSession(sessionUser as AuthUser);
 
-  return { success: true, user: sessionUser };
+  return { success: true, user: sessionUser as AuthUser };
 }
 
-// Logout
 export function logout() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(SESSION_KEY);
 }
 
-// Get current session
 export function getSession(): AuthUser | null {
   if (typeof window === "undefined") return null;
   const data = localStorage.getItem(SESSION_KEY);
@@ -192,35 +238,30 @@ export function getSession(): AuthUser | null {
   }
 }
 
-// Set session
 function setSession(user: AuthUser) {
   if (typeof window === "undefined") return;
   localStorage.setItem(SESSION_KEY, JSON.stringify(user));
 }
 
-// Check if logged in
 export function isLoggedIn(): boolean {
   return getSession() !== null;
 }
 
-// Check if admin
 export function isAdmin(): boolean {
   const user = getSession();
   if (!user) return false;
   return ["SUPER_ADMIN", "ACADEMY_ADMIN", "INSTRUCTOR", "CONTENT_EDITOR"].includes(user.role);
 }
 
-// Check if super admin
 export function isSuperAdmin(): boolean {
   const user = getSession();
   return user?.role === "SUPER_ADMIN";
 }
 
 // ============================================================
-// USER CRUD (for admin panel)
+// USER CRUD
 // ============================================================
 
-// Create new user
 export function createUser(data: {
   email: string;
   name: string;
@@ -234,7 +275,6 @@ export function createUser(data: {
   initializeAuth();
   const users = getAllUsers();
 
-  // Check if email already exists
   if (users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
     return { success: false, error: "Email already registered" };
   }
@@ -249,19 +289,17 @@ export function createUser(data: {
     employeeId: data.employeeId,
     isActive: true,
     createdAt: new Date().toISOString(),
-    passwordHash: simpleHash(data.password),
+    passwordHash: hashPassword(data.password),
     enrolledCourses: data.enrolledCourses || [],
   };
 
   users.push(newUser);
   saveUsers(users);
 
-  const userCopy: AuthUser = { ...newUser };
-  delete (userCopy as any).passwordHash;
-  return { success: true, user: userCopy };
+  const { passwordHash, ...userCopy } = newUser;
+  return { success: true, user: userCopy as AuthUser };
 }
 
-// Update user
 export function updateUser(id: string, data: Partial<{
   email: string;
   name: string;
@@ -293,10 +331,9 @@ export function updateUser(id: string, data: Partial<{
     return { success: false, error: "You cannot suspend your own account" };
   }
 
-  // Update fields
   if (data.email) users[idx].email = data.email;
   if (data.name) users[idx].name = data.name;
-  if (data.password) users[idx].passwordHash = simpleHash(data.password);
+  if (data.password) users[idx].passwordHash = hashPassword(data.password);
   if (data.role) users[idx].role = data.role;
   if (data.department !== undefined) users[idx].department = data.department;
   if (data.phone !== undefined) users[idx].phone = data.phone;
@@ -306,12 +343,10 @@ export function updateUser(id: string, data: Partial<{
 
   saveUsers(users);
 
-  const userCopy: AuthUser = { ...users[idx] };
-  delete (userCopy as any).passwordHash;
-  return { success: true, user: userCopy };
+  const { passwordHash, ...userCopy } = users[idx];
+  return { success: true, user: userCopy as AuthUser };
 }
 
-// Delete user
 export function deleteUser(id: string): { success: boolean; error?: string } {
   const users = getAllUsers();
   const idx = users.findIndex((u) => u.id === id);
@@ -319,7 +354,6 @@ export function deleteUser(id: string): { success: boolean; error?: string } {
     return { success: false, error: "User not found" };
   }
 
-  // Prevent deleting last super admin
   if (users[idx].role === "SUPER_ADMIN") {
     const superAdmins = users.filter((u) => u.role === "SUPER_ADMIN");
     if (superAdmins.length <= 1) {
@@ -327,7 +361,6 @@ export function deleteUser(id: string): { success: boolean; error?: string } {
     }
   }
 
-  // Prevent self-deletion
   const currentUser = getSession();
   if (currentUser?.id === id) {
     return { success: false, error: "You cannot delete your own account" };
@@ -338,17 +371,14 @@ export function deleteUser(id: string): { success: boolean; error?: string } {
   return { success: true };
 }
 
-// Suspend user (deactivate)
 export function suspendUser(id: string): { success: boolean; error?: string } {
   return updateUser(id, { isActive: false });
 }
 
-// Reactivate user
 export function reactivateUser(id: string): { success: boolean; error?: string } {
   return updateUser(id, { isActive: true });
 }
 
-// Get all users (without password hashes) - for admin panel
 export function getAllUsersSafe(): AuthUser[] {
   return getAllUsers().map((u) => {
     const { passwordHash, ...safe } = u;
@@ -384,5 +414,9 @@ export const DEFAULT_CREDENTIALS = {
   student: {
     email: "student@dgr-academy.com",
     password: "Student@2024",
+  },
+  instructor: {
+    email: "instructor@dgr-academy.com",
+    password: "Instructor@2024",
   },
 };

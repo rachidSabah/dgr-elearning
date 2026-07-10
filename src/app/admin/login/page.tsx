@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { login, initializeAuth, isAdmin, getSession, DEFAULT_CREDENTIALS } from "@/lib/client-auth";
+import { login, initializeAuth, isAdmin, getSession, logout, DEFAULT_CREDENTIALS } from "@/lib/client-auth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -20,9 +20,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Initialize auth system
     initializeAuth();
-    // Check if already logged in as admin
     const user = getSession();
     if (user && isAdmin()) {
       router.push("/admin");
@@ -34,8 +32,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError("");
 
-    // Small delay for UX
-    setTimeout(() => {
+    try {
       const result = login(email, password);
       if (!result.success) {
         setError(result.error || "Login failed");
@@ -52,13 +49,9 @@ export default function AdminLoginPage() {
 
       router.push("/admin");
       router.refresh();
-    }, 500);
-  };
-
-  // Import logout for the student check
-  const logout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("dgr-academy-session");
+    } catch (err) {
+      setError("An error occurred during login. Please try again.");
+      setLoading(false);
     }
   };
 
