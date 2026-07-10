@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Loader2, GraduationCap } from "lucide-react";
+import { getSession, initializeAuth, isAdmin } from "@/lib/client-auth";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -12,29 +13,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Initialize auth system
+    initializeAuth();
+
     // Don't check auth on login page
     if (pathname === "/admin/login") {
       setLoading(false);
       return;
     }
 
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((data) => {
-        if (!data.user) {
-          router.push("/admin/login");
-          return;
-        }
-        if (data.user.role === "STUDENT") {
-          router.push("/");
-          return;
-        }
-        setUser(data.user);
-        setLoading(false);
-      })
-      .catch(() => {
-        router.push("/admin/login");
-      });
+    // Check session from localStorage
+    const session = getSession();
+    if (!session) {
+      router.push("/admin/login");
+      return;
+    }
+    if (!isAdmin()) {
+      router.push("/");
+      return;
+    }
+    setUser(session);
+    setLoading(false);
   }, [pathname, router]);
 
   // Login page renders without shell

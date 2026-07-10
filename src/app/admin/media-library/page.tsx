@@ -54,6 +54,83 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
+import { initializeAuth } from "@/lib/client-auth";
+
+// ---------- localStorage helpers ----------
+const MEDIA_KEY = "dgr-academy-media-data";
+
+function loadMediaFromStorage(): Media[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem(MEDIA_KEY);
+  if (!data) {
+    // Seed with a few sample SVG assets from public folder
+    const samples: Media[] = [
+      {
+        id: `media-seed-1`,
+        filename: "hero-aircraft.svg",
+        originalName: "Hero Aircraft",
+        mimeType: "image/svg+xml",
+        size: 0,
+        url: "/images/svg/hero-aircraft.svg",
+        category: "SVG",
+        tags: ["hero", "aircraft", "branding"],
+        altText: "DGR Aviation Academy hero aircraft illustration",
+        caption: "Hero aircraft illustration",
+        width: null,
+        height: null,
+        uploadedBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: `media-seed-2`,
+        filename: "hazard-class-1.svg",
+        originalName: "Hazard Class 1",
+        mimeType: "image/svg+xml",
+        size: 0,
+        url: "/images/svg/hazard-class-1.svg",
+        category: "SVG",
+        tags: ["hazard", "explosives", "dangerous-goods"],
+        altText: "Hazard Class 1 - Explosives label",
+        caption: "Class 1 Explosives hazard label",
+        width: null,
+        height: null,
+        uploadedBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: `media-seed-3`,
+        filename: "cabin-layout.svg",
+        originalName: "Cabin Layout",
+        mimeType: "image/svg+xml",
+        size: 0,
+        url: "/images/svg/cabin-layout.svg",
+        category: "SVG",
+        tags: ["cabin", "layout", "training"],
+        altText: "Aircraft cabin layout diagram",
+        caption: "Cabin layout diagram",
+        width: null,
+        height: null,
+        uploadedBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+    localStorage.setItem(MEDIA_KEY, JSON.stringify(samples));
+    return samples;
+  }
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+function persistMedia(media: Media[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(MEDIA_KEY, JSON.stringify(media));
+}
 
 // ---------- Types ----------
 type MediaCategory =
@@ -272,17 +349,11 @@ export default function MediaLibraryAdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<Media | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchMedia = useCallback(async () => {
+  const fetchMedia = useCallback(() => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (activeCategory !== "ALL") params.set("category", activeCategory);
-      if (search.trim()) params.set("search", search.trim());
-      params.set("limit", "100");
-      const res = await fetch(`/api/admin/media?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch media");
-      const json = await res.json();
-      setMedia(json.data || []);
+      const all = loadMediaFromStorage();
+      setMedia(all);
     } catch (err) {
       toast.error("Failed to load media", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -290,18 +361,36 @@ export default function MediaLibraryAdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeCategory, search]);
+  }, []);
 
   useEffect(() => {
+    initializeAuth();
     fetchMedia();
   }, [fetchMedia]);
+
+  // Filtered view (derived, not stored in state) so counts reflect the full list
+  const visibleMedia = useMemo(() => {
+    const byCategory =
+      activeCategory === "ALL"
+        ? media
+        : media.filter((m) => m.category === activeCategory);
+    const q = search.trim().toLowerCase();
+    if (!q) return byCategory;
+    return byCategory.filter(
+      (m) =>
+        m.originalName.toLowerCase().includes(q) ||
+        m.filename.toLowerCase().includes(q) ||
+        (m.tags || []).some((t) => t.toLowerCase().includes(q)) ||
+        (m.altText || "").toLowerCase().includes(q),
+    );
+  }, [media, activeCategory, search]);
 
   const openUpload = () => {
     setForm(EMPTY_FORM);
     setUploadOpen(true);
   };
 
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (!form.url.trim()) {
       toast.error("URL is required");
       return;
@@ -322,28 +411,27 @@ export default function MediaLibraryAdminPage() {
       .map((s) => s.trim())
       .filter(Boolean);
 
-    const payload = {
-      filename,
-      originalName,
-      mimeType,
-      size: 0,
-      url,
-      category,
-      tags: tags.length ? tags : undefined,
-      altText: form.altText.trim() || undefined,
-      caption: form.caption.trim() || undefined,
-      width: form.width ? Number(form.width) : undefined,
-      height: form.height ? Number(form.height) : undefined,
-    };
-
     try {
-      const res = await fetch("/api/admin/media", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to upload media");
+      const all = loadMediaFromStorage();
+      const newMedia: Media = {
+        id: `media-${Date.now()}`,
+        filename,
+        originalName,
+        mimeType,
+        size: 0,
+        url,
+        category,
+        tags: tags.length ? tags : null,
+        altText: form.altText.trim() || null,
+        caption: form.caption.trim() || null,
+        width: form.width ? Number(form.width) : null,
+        height: form.height ? Number(form.height) : null,
+        uploadedBy: "admin",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      all.push(newMedia);
+      persistMedia(all);
       toast.success("Media added", { description: originalName });
       setUploadOpen(false);
       fetchMedia();
@@ -356,24 +444,27 @@ export default function MediaLibraryAdminPage() {
     }
   };
 
-  const handleReplace = async () => {
+  const handleReplace = () => {
     if (!replaceTarget || !replaceUrl.trim()) return;
     setReplacing(true);
     try {
-      const res = await fetch(`/api/admin/media/${replaceTarget.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: replaceUrl.trim() }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to replace media");
+      const all = loadMediaFromStorage();
+      const idx = all.findIndex((m) => m.id === replaceTarget.id);
+      if (idx >= 0) {
+        all[idx] = {
+          ...all[idx],
+          url: replaceUrl.trim(),
+          updatedAt: new Date().toISOString(),
+        };
+        persistMedia(all);
+      }
       toast.success("Media replaced", {
         description: replaceTarget.originalName,
       });
       setReplaceTarget(null);
       setReplaceUrl("");
       setSelected((s) =>
-        s && s.id === replaceTarget.id ? { ...s, url: replaceUrl.trim() } : s
+        s && s.id === replaceTarget.id ? { ...s, url: replaceUrl.trim() } : s,
       );
       fetchMedia();
     } catch (err) {
@@ -385,15 +476,13 @@ export default function MediaLibraryAdminPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/media/${deleteTarget.id}`, {
-        method: "DELETE",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to delete media");
+      const all = loadMediaFromStorage();
+      const filtered = all.filter((m) => m.id !== deleteTarget.id);
+      persistMedia(filtered);
       toast.success("Media deleted", {
         description: deleteTarget.originalName,
       });
@@ -578,7 +667,7 @@ export default function MediaLibraryAdminPage() {
                 <Skeleton key={i} className="h-44 w-full rounded-lg" />
               ))}
             </div>
-          ) : media.length === 0 ? (
+          ) : visibleMedia.length === 0 ? (
             <div className="text-center py-16">
               <div className="mx-auto w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
                 <ImageIcon className="h-6 w-6 text-slate-400" />
@@ -602,7 +691,7 @@ export default function MediaLibraryAdminPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {media.map((item) => {
+              {visibleMedia.map((item) => {
                 const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.GENERAL;
                 const Icon = cfg.icon;
                 const isImage =
@@ -699,9 +788,10 @@ export default function MediaLibraryAdminPage() {
               })}
             </div>
           )}
-          {!loading && media.length > 0 && (
+          {!loading && visibleMedia.length > 0 && (
             <div className="mt-3 text-xs text-slate-500 px-1">
-              Showing {media.length} media item{media.length !== 1 ? "s" : ""}
+              Showing {visibleMedia.length} of {media.length} media item
+              {media.length !== 1 ? "s" : ""}
               {activeCategory !== "ALL" && ` in ${activeCategory.toLowerCase()}`}
             </div>
           )}

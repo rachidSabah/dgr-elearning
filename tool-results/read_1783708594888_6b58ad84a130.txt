@@ -1,0 +1,871 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useCallback } from "react";
+     4→import {
+     5→  Dialog,
+     6→  DialogContent,
+     7→  DialogHeader,
+     8→  DialogTitle,
+     9→  DialogFooter,
+    10→  DialogDescription,
+    11→} from "@/components/ui/dialog";
+    12→import {
+    13→  Card,
+    14→  CardContent,
+    15→  CardHeader,
+    16→  CardTitle,
+    17→} from "@/components/ui/card";
+    18→import { Button } from "@/components/ui/button";
+    19→import { Input } from "@/components/ui/input";
+    20→import {
+    21→  Select,
+    22→  SelectContent,
+    23→  SelectItem,
+    24→  SelectTrigger,
+    25→  SelectValue,
+    26→} from "@/components/ui/select";
+    27→import { Checkbox } from "@/components/ui/checkbox";
+    28→import { Label } from "@/components/ui/label";
+    29→import { Badge } from "@/components/ui/badge";
+    30→import { Skeleton } from "@/components/ui/skeleton";
+    31→import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+    32→import {
+    33→  Table,
+    34→  TableHeader,
+    35→  TableBody,
+    36→  TableHead,
+    37→  TableRow,
+    38→  TableCell,
+    39→} from "@/components/ui/table";
+    40→import {
+    41→  Plus,
+    42→  Edit,
+    43→  Trash2,
+    44→  Save,
+    45→  X,
+    46→  Loader2,
+    47→  Search,
+    48→  AlertCircle,
+    49→  Users as UsersIcon,
+    50→  Shield,
+    51→  ShieldCheck,
+    52→  GraduationCap,
+    53→  FileEdit,
+    54→  UserCircle,
+    55→  Mail,
+    56→  Phone,
+    57→  Building2,
+    58→  Hash,
+    59→  KeyRound,
+    60→} from "lucide-react";
+    61→import { toast } from "sonner";
+    62→
+    63→// ---------- Types ----------
+    64→type Role =
+    65→  | "SUPER_ADMIN"
+    66→  | "ACADEMY_ADMIN"
+    67→  | "INSTRUCTOR"
+    68→  | "CONTENT_EDITOR"
+    69→  | "STUDENT";
+    70→
+    71→interface User {
+    72→  id: string;
+    73→  email: string;
+    74→  name: string | null;
+    75→  role: Role;
+    76→  avatar: string | null;
+    77→  phone: string | null;
+    78→  department: string | null;
+    79→  employeeId: string | null;
+    80→  isActive: boolean;
+    81→  lastLogin: string | null;
+    82→  createdAt: string;
+    83→  updatedAt: string;
+    84→  _count?: {
+    85→    enrollments: number;
+    86→    certificates: number;
+    87→    quizAttempts: number;
+    88→    auditLogs: number;
+    89→  };
+    90→}
+    91→
+    92→interface UserFormData {
+    93→  name: string;
+    94→  email: string;
+    95→  password: string;
+    96→  role: Role;
+    97→  department: string;
+    98→  phone: string;
+    99→  employeeId: string;
+   100→  isActive: boolean;
+   101→}
+   102→
+   103→interface CurrentUser {
+   104→  id: string;
+   105→  email: string;
+   106→  role: Role;
+   107→}
+   108→
+   109→const ROLES: Role[] = [
+   110→  "SUPER_ADMIN",
+   111→  "ACADEMY_ADMIN",
+   112→  "INSTRUCTOR",
+   113→  "CONTENT_EDITOR",
+   114→  "STUDENT",
+   115→];
+   116→
+   117→const ROLE_CONFIG: Record<
+   118→  Role,
+   119→  { label: string; badge: string; icon: React.ComponentType<{ className?: string }>; statBg: string; statText: string; statIcon: string }
+   120→> = {
+   121→  SUPER_ADMIN: {
+   122→    label: "Super Admin",
+   123→    badge: "bg-red-100 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800",
+   124→    icon: Shield,
+   125→    statBg: "bg-red-100 dark:bg-red-900/40",
+   126→    statText: "text-red-600 dark:text-red-400",
+   127→    statIcon: "text-red-600 dark:text-red-400",
+   128→  },
+   129→  ACADEMY_ADMIN: {
+   130→    label: "Academy Admin",
+   131→    badge: "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800",
+   132→    icon: ShieldCheck,
+   133→    statBg: "bg-orange-100 dark:bg-orange-900/40",
+   134→    statText: "text-orange-600 dark:text-orange-400",
+   135→    statIcon: "text-orange-600 dark:text-orange-400",
+   136→  },
+   137→  INSTRUCTOR: {
+   138→    label: "Instructor",
+   139→    badge: "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+   140→    icon: GraduationCap,
+   141→    statBg: "bg-blue-100 dark:bg-blue-900/40",
+   142→    statText: "text-blue-600 dark:text-blue-400",
+   143→    statIcon: "text-blue-600 dark:text-blue-400",
+   144→  },
+   145→  CONTENT_EDITOR: {
+   146→    label: "Content Editor",
+   147→    badge: "bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800",
+   148→    icon: FileEdit,
+   149→    statBg: "bg-purple-100 dark:bg-purple-900/40",
+   150→    statText: "text-purple-600 dark:text-purple-400",
+   151→    statIcon: "text-purple-600 dark:text-purple-400",
+   152→  },
+   153→  STUDENT: {
+   154→    label: "Student",
+   155→    badge: "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+   156→    icon: UserCircle,
+   157→    statBg: "bg-slate-100 dark:bg-slate-800",
+   158→    statText: "text-slate-600 dark:text-slate-300",
+   159→    statIcon: "text-slate-600 dark:text-slate-300",
+   160→  },
+   161→};
+   162→
+   163→const EMPTY_FORM: UserFormData = {
+   164→  name: "",
+   165→  email: "",
+   166→  password: "",
+   167→  role: "STUDENT",
+   168→  department: "",
+   169→  phone: "",
+   170→  employeeId: "",
+   171→  isActive: true,
+   172→};
+   173→
+   174→function formatDateTime(iso: string | null): string {
+   175→  if (!iso) return "Never";
+   176→  const d = new Date(iso);
+   177→  if (Number.isNaN(d.getTime())) return "—";
+   178→  return d.toLocaleString(undefined, {
+   179→    year: "numeric",
+   180→    month: "short",
+   181→    day: "numeric",
+   182→    hour: "2-digit",
+   183→    minute: "2-digit",
+   184→  });
+   185→}
+   186→
+   187→function initials(name: string | null, email: string): string {
+   188→  const src = name || email || "U";
+   189→  return src
+   190→    .split(" ")
+   191→    .map((s) => s[0])
+   192→    .slice(0, 2)
+   193→    .join("")
+   194→    .toUpperCase();
+   195→}
+   196→
+   197→export default function UsersAdminPage() {
+   198→  const [users, setUsers] = useState<User[]>([]);
+   199→  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+   200→  const [loading, setLoading] = useState(true);
+   201→  const [search, setSearch] = useState("");
+   202→  const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
+   203→
+   204→  // Dialog state
+   205→  const [dialogOpen, setDialogOpen] = useState(false);
+   206→  const [editingId, setEditingId] = useState<string | null>(null);
+   207→  const [form, setForm] = useState<UserFormData>(EMPTY_FORM);
+   208→  const [saving, setSaving] = useState(false);
+   209→
+   210→  // Delete confirmation
+   211→  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+   212→  const [deleting, setDeleting] = useState(false);
+   213→
+   214→  const fetchUsers = useCallback(async () => {
+   215→    setLoading(true);
+   216→    try {
+   217→      const res = await fetch("/api/admin/users");
+   218→      if (!res.ok) throw new Error("Failed to fetch users");
+   219→      const json = await res.json();
+   220→      setUsers(json.data || []);
+   221→    } catch (err) {
+   222→      toast.error("Failed to load users", {
+   223→        description: err instanceof Error ? err.message : "Unknown error",
+   224→      });
+   225→    } finally {
+   226→      setLoading(false);
+   227→    }
+   228→  }, []);
+   229→
+   230→  const fetchCurrentUser = useCallback(async () => {
+   231→    try {
+   232→      const res = await fetch("/api/auth/me");
+   233→      const json = await res.json();
+   234→      if (json.user) setCurrentUser(json.user);
+   235→    } catch {
+   236→      // ignore
+   237→    }
+   238→  }, []);
+   239→
+   240→  useEffect(() => {
+   241→    fetchUsers();
+   242→    fetchCurrentUser();
+   243→  }, [fetchUsers, fetchCurrentUser]);
+   244→
+   245→  const openCreate = () => {
+   246→    setEditingId(null);
+   247→    setForm(EMPTY_FORM);
+   248→    setDialogOpen(true);
+   249→  };
+   250→
+   251→  const openEdit = (user: User) => {
+   252→    setEditingId(user.id);
+   253→    setForm({
+   254→      name: user.name || "",
+   255→      email: user.email,
+   256→      password: "",
+   257→      role: user.role,
+   258→      department: user.department || "",
+   259→      phone: user.phone || "",
+   260→      employeeId: user.employeeId || "",
+   261→      isActive: user.isActive,
+   262→    });
+   263→    setDialogOpen(true);
+   264→  };
+   265→
+   266→  const handleSave = async () => {
+   267→    if (!form.email.trim() || !form.name.trim()) {
+   268→      toast.error("Missing required fields", {
+   269→        description: "Name and email are required.",
+   270→      });
+   271→      return;
+   272→    }
+   273→    if (!editingId && !form.password.trim()) {
+   274→      toast.error("Password required", {
+   275→        description: "Password is required when creating a new user.",
+   276→      });
+   277→      return;
+   278→    }
+   279→    if (form.password.trim() && form.password.length < 6) {
+   280→      toast.error("Password too short", {
+   281→        description: "Password must be at least 6 characters.",
+   282→      });
+   283→      return;
+   284→    }
+   285→
+   286→    setSaving(true);
+   287→    const payload: Record<string, unknown> = {
+   288→      name: form.name.trim(),
+   289→      email: form.email.trim().toLowerCase(),
+   290→      role: form.role,
+   291→      department: form.department.trim() || undefined,
+   292→      phone: form.phone.trim() || undefined,
+   293→      employeeId: form.employeeId.trim() || undefined,
+   294→      isActive: form.isActive,
+   295→    };
+   296→    if (form.password.trim()) {
+   297→      payload.password = form.password.trim();
+   298→    }
+   299→
+   300→    try {
+   301→      const url = editingId
+   302→        ? `/api/admin/users/${editingId}`
+   303→        : "/api/admin/users";
+   304→      const method = editingId ? "PUT" : "POST";
+   305→      const res = await fetch(url, {
+   306→        method,
+   307→        headers: { "Content-Type": "application/json" },
+   308→        body: JSON.stringify(payload),
+   309→      });
+   310→      const json = await res.json();
+   311→      if (!res.ok) {
+   312→        throw new Error(json.error || "Failed to save user");
+   313→      }
+   314→      toast.success(editingId ? "User updated" : "User created", {
+   315→        description: payload.email as string,
+   316→      });
+   317→      setDialogOpen(false);
+   318→      fetchUsers();
+   319→    } catch (err) {
+   320→      toast.error("Save failed", {
+   321→        description: err instanceof Error ? err.message : "Unknown error",
+   322→      });
+   323→    } finally {
+   324→      setSaving(false);
+   325→    }
+   326→  };
+   327→
+   328→  const handleDelete = async () => {
+   329→    if (!deleteTarget) return;
+   330→    // Client-side guards (server enforces too)
+   331→    if (currentUser && deleteTarget.id === currentUser.id) {
+   332→      toast.error("Cannot delete your own account");
+   333→      return;
+   334→    }
+   335→    if (
+   336→      deleteTarget.role === "SUPER_ADMIN" &&
+   337→      users.filter((u) => u.role === "SUPER_ADMIN" && u.isActive).length <= 1
+   338→    ) {
+   339→      toast.error("Cannot delete the last super admin");
+   340→      return;
+   341→    }
+   342→
+   343→    setDeleting(true);
+   344→    try {
+   345→      const res = await fetch(`/api/admin/users/${deleteTarget.id}`, {
+   346→        method: "DELETE",
+   347→      });
+   348→      const json = await res.json();
+   349→      if (!res.ok) throw new Error(json.error || "Failed to delete user");
+   350→      toast.success("User deleted", {
+   351→        description: deleteTarget.email,
+   352→      });
+   353→      setDeleteTarget(null);
+   354→      fetchUsers();
+   355→    } catch (err) {
+   356→      toast.error("Delete failed", {
+   357→        description: err instanceof Error ? err.message : "Unknown error",
+   358→      });
+   359→    } finally {
+   360→      setDeleting(false);
+   361→    }
+   362→  };
+   363→
+   364→  // ---------- Derived data ----------
+   365→  const filtered = users.filter((u) => {
+   366→    const q = search.toLowerCase();
+   367→    const matchesSearch =
+   368→      !q ||
+   369→      (u.name || "").toLowerCase().includes(q) ||
+   370→      u.email.toLowerCase().includes(q) ||
+   371→      (u.employeeId || "").toLowerCase().includes(q) ||
+   372→      (u.department || "").toLowerCase().includes(q);
+   373→    const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+   374→    return matchesSearch && matchesRole;
+   375→  });
+   376→
+   377→  const countsByRole = (role: Role) =>
+   378→    users.filter((u) => u.role === role).length;
+   379→
+   380→  const activeCount = users.filter((u) => u.isActive).length;
+   381→
+   382→  return (
+   383→    <div className="space-y-6">
+   384→      {/* Header */}
+   385→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   386→        <div>
+   387→          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+   388→            User Management
+   389→          </h1>
+   390→          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+   391→            Manage academy staff, instructors, and student accounts.
+   392→          </p>
+   393→        </div>
+   394→        <Button onClick={openCreate} className="gap-2">
+   395→          <Plus className="h-4 w-4" />
+   396→          Add User
+   397→        </Button>
+   398→      </div>
+   399→
+   400→      {/* Stats */}
+   401→      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+   402→        <Card>
+   403→          <CardContent className="p-4 flex items-center gap-3">
+   404→            <div className="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
+   405→              <UsersIcon className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+   406→            </div>
+   407→            <div>
+   408→              <div className="text-2xl font-bold">{users.length}</div>
+   409→              <div className="text-xs text-slate-500">Total Users</div>
+   410→            </div>
+   411→          </CardContent>
+   412→        </Card>
+   413→        {ROLES.map((role) => {
+   414→          const cfg = ROLE_CONFIG[role];
+   415→          const Icon = cfg.icon;
+   416→          return (
+   417→            <Card key={role}>
+   418→              <CardContent className="p-4 flex items-center gap-3">
+   419→                <div
+   420→                  className={`w-10 h-10 rounded-lg ${cfg.statBg} flex items-center justify-center`}
+   421→                >
+   422→                  <Icon className={`h-5 w-5 ${cfg.statIcon}`} />
+   423→                </div>
+   424→                <div>
+   425→                  <div className="text-2xl font-bold">{countsByRole(role)}</div>
+   426→                  <div className="text-xs text-slate-500">{cfg.label}</div>
+   427→                </div>
+   428→              </CardContent>
+   429→            </Card>
+   430→          );
+   431→        })}
+   432→      </div>
+   433→
+   434→      {/* Search + Filter + Table */}
+   435→      <Card>
+   436→        <CardHeader className="pb-3">
+   437→          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+   438→            <CardTitle className="text-lg">All Users</CardTitle>
+   439→            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+   440→              <div className="relative w-full sm:w-64">
+   441→                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   442→                <Input
+   443→                  placeholder="Search name, email, ID..."
+   444→                  value={search}
+   445→                  onChange={(e) => setSearch(e.target.value)}
+   446→                  className="pl-9"
+   447→                />
+   448→              </div>
+   449→              <Select
+   450→                value={roleFilter}
+   451→                onValueChange={(v) => setRoleFilter(v as Role | "ALL")}
+   452→              >
+   453→                <SelectTrigger className="w-full sm:w-44">
+   454→                  <SelectValue placeholder="Filter by role" />
+   455→                </SelectTrigger>
+   456→                <SelectContent>
+   457→                  <SelectItem value="ALL">All Roles</SelectItem>
+   458→                  {ROLES.map((r) => (
+   459→                    <SelectItem key={r} value={r}>
+   460→                      {ROLE_CONFIG[r].label}
+   461→                    </SelectItem>
+   462→                  ))}
+   463→                </SelectContent>
+   464→              </Select>
+   465→            </div>
+   466→          </div>
+   467→        </CardHeader>
+   468→        <CardContent>
+   469→          {loading ? (
+   470→            <div className="space-y-3">
+   471→              {Array.from({ length: 5 }).map((_, i) => (
+   472→                <Skeleton key={i} className="h-14 w-full" />
+   473→              ))}
+   474→            </div>
+   475→          ) : filtered.length === 0 ? (
+   476→            <div className="text-center py-12">
+   477→              <div className="mx-auto w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+   478→                <UsersIcon className="h-6 w-6 text-slate-400" />
+   479→              </div>
+   480→              <h3 className="text-base font-semibold text-slate-700 dark:text-slate-200">
+   481→                {search || roleFilter !== "ALL"
+   482→                  ? "No matching users"
+   483→                  : "No users yet"}
+   484→              </h3>
+   485→              <p className="text-sm text-slate-500 mt-1">
+   486→                {search || roleFilter !== "ALL"
+   487→                  ? "Try a different search or filter."
+   488→                  : "Get started by adding your first user."}
+   489→              </p>
+   490→              {!search && roleFilter === "ALL" && (
+   491→                <Button onClick={openCreate} className="mt-4 gap-2">
+   492→                  <Plus className="h-4 w-4" />
+   493→                  Add User
+   494→                </Button>
+   495→              )}
+   496→            </div>
+   497→          ) : (
+   498→            <div className="overflow-x-auto -mx-2">
+   499→              <Table>
+   500→                <TableHeader>
+   501→                  <TableRow>
+   502→                    <TableHead className="min-w-[220px]">Name</TableHead>
+   503→                    <TableHead>Role</TableHead>
+   504→                    <TableHead>Department</TableHead>
+   505→                    <TableHead>Status</TableHead>
+   506→                    <TableHead>Last Login</TableHead>
+   507→                    <TableHead className="text-right">Actions</TableHead>
+   508→                  </TableRow>
+   509→                </TableHeader>
+   510→                <TableBody>
+   511→                  {filtered.map((user) => {
+   512→                    const cfg = ROLE_CONFIG[user.role];
+   513→                    const RoleIcon = cfg.icon;
+   514→                    const isSelf = currentUser?.id === user.id;
+   515→                    return (
+   516→                      <TableRow key={user.id}>
+   517→                        <TableCell>
+   518→                          <div className="flex items-start gap-3">
+   519→                            <Avatar className="w-9 h-9">
+   520→                              <AvatarFallback className="bg-gradient-to-br from-sky-500 to-blue-600 text-white text-xs">
+   521→                                {initials(user.name, user.email)}
+   522→                              </AvatarFallback>
+   523→                            </Avatar>
+   524→                            <div className="min-w-0">
+   525→                              <div className="font-medium text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+   526→                                {user.name || "—"}
+   527→                                {isSelf && (
+   528→                                  <Badge
+   529→                                    variant="outline"
+   530→                                    className="text-[10px] py-0 px-1.5 h-4 border-sky-300 text-sky-700 dark:border-sky-700 dark:text-sky-300"
+   531→                                  >
+   532→                                    You
+   533→                                  </Badge>
+   534→                                )}
+   535→                              </div>
+   536→                              <div className="text-xs text-slate-500 truncate flex items-center gap-1">
+   537→                                <Mail className="h-3 w-3" />
+   538→                                {user.email}
+   539→                              </div>
+   540→                              {user.employeeId && (
+   541→                                <div className="text-xs text-slate-400 truncate flex items-center gap-1">
+   542→                                  <Hash className="h-3 w-3" />
+   543→                                  {user.employeeId}
+   544→                                </div>
+   545→                              )}
+   546→                            </div>
+   547→                          </div>
+   548→                        </TableCell>
+   549→                        <TableCell>
+   550→                          <Badge
+   551→                            variant="outline"
+   552→                            className={`font-normal gap-1 ${cfg.badge}`}
+   553→                          >
+   554→                            <RoleIcon className="h-3 w-3" />
+   555→                            {cfg.label}
+   556→                          </Badge>
+   557→                        </TableCell>
+   558→                        <TableCell className="text-slate-600 dark:text-slate-300">
+   559→                          {user.department || "—"}
+   560→                        </TableCell>
+   561→                        <TableCell>
+   562→                          {user.isActive ? (
+   563→                            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+   564→                              Active
+   565→                            </Badge>
+   566→                          ) : (
+   567→                            <Badge
+   568→                              variant="outline"
+   569→                              className="text-slate-500 border-slate-300 dark:border-slate-700"
+   570→                            >
+   571→                              Inactive
+   572→                            </Badge>
+   573→                          )}
+   574→                        </TableCell>
+   575→                        <TableCell className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
+   576→                          {formatDateTime(user.lastLogin)}
+   577→                        </TableCell>
+   578→                        <TableCell>
+   579→                          <div className="flex items-center justify-end gap-1">
+   580→                            <Button
+   581→                              variant="ghost"
+   582→                              size="icon"
+   583→                              className="h-8 w-8"
+   584→                              onClick={() => openEdit(user)}
+   585→                              title="Edit"
+   586→                            >
+   587→                              <Edit className="h-4 w-4" />
+   588→                            </Button>
+   589→                            <Button
+   590→                              variant="ghost"
+   591→                              size="icon"
+   592→                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-40 disabled:cursor-not-allowed"
+   593→                              onClick={() => setDeleteTarget(user)}
+   594→                              title={
+   595→                                isSelf ? "Cannot delete yourself" : "Delete"
+   596→                              }
+   597→                              disabled={isSelf}
+   598→                            >
+   599→                              <Trash2 className="h-4 w-4" />
+   600→                            </Button>
+   601→                          </div>
+   602→                        </TableCell>
+   603→                      </TableRow>
+   604→                    );
+   605→                  })}
+   606→                </TableBody>
+   607→              </Table>
+   608→              <div className="mt-3 text-xs text-slate-500 px-2">
+   609→                Showing {filtered.length} of {users.length} users ·{" "}
+   610→                {activeCount} active
+   611→              </div>
+   612→            </div>
+   613→          )}
+   614→        </CardContent>
+   615→      </Card>
+   616→
+   617→      {/* Create / Edit Dialog */}
+   618→      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+   619→        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+   620→          <DialogHeader>
+   621→            <DialogTitle>
+   622→              {editingId ? "Edit User" : "Add User"}
+   623→            </DialogTitle>
+   624→            <DialogDescription>
+   625→              {editingId
+   626→                ? "Update account details and role. Leave password blank to keep current."
+   627→                : "Create a new academy account. Required fields are marked with *."}
+   628→            </DialogDescription>
+   629→          </DialogHeader>
+   630→
+   631→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   632→            {/* Name */}
+   633→            <div className="space-y-2">
+   634→              <Label htmlFor="name">
+   635→                Full Name <span className="text-red-500">*</span>
+   636→              </Label>
+   637→              <div className="relative">
+   638→                <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   639→                <Input
+   640→                  id="name"
+   641→                  value={form.name}
+   642→                  onChange={(e) =>
+   643→                    setForm((p) => ({ ...p, name: e.target.value }))
+   644→                  }
+   645→                  className="pl-9"
+   646→                  placeholder="Jane Doe"
+   647→                />
+   648→              </div>
+   649→            </div>
+   650→
+   651→            {/* Email */}
+   652→            <div className="space-y-2">
+   653→              <Label htmlFor="email">
+   654→                Email <span className="text-red-500">*</span>
+   655→              </Label>
+   656→              <div className="relative">
+   657→                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   658→                <Input
+   659→                  id="email"
+   660→                  type="email"
+   661→                  value={form.email}
+   662→                  onChange={(e) =>
+   663→                    setForm((p) => ({ ...p, email: e.target.value }))
+   664→                  }
+   665→                  className="pl-9"
+   666→                  placeholder="jane@dgr-academy.com"
+   667→                />
+   668→              </div>
+   669→            </div>
+   670→
+   671→            {/* Password */}
+   672→            <div className="space-y-2">
+   673→              <Label htmlFor="password">
+   674→                Password{" "}
+   675→                {!editingId && <span className="text-red-500">*</span>}{" "}
+   676→                <span className="text-xs font-normal text-slate-500">
+   677→                  {editingId ? "(leave blank to keep current)" : "(min 6 chars)"}
+   678→                </span>
+   679→              </Label>
+   680→              <div className="relative">
+   681→                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   682→                <Input
+   683→                  id="password"
+   684→                  type="password"
+   685→                  value={form.password}
+   686→                  onChange={(e) =>
+   687→                    setForm((p) => ({ ...p, password: e.target.value }))
+   688→                  }
+   689→                  className="pl-9"
+   690→                  placeholder={editingId ? "••••••••" : "Set a password"}
+   691→                  autoComplete="new-password"
+   692→                />
+   693→              </div>
+   694→            </div>
+   695→
+   696→            {/* Role */}
+   697→            <div className="space-y-2">
+   698→              <Label>Role</Label>
+   699→              <Select
+   700→                value={form.role}
+   701→                onValueChange={(v) =>
+   702→                  setForm((p) => ({ ...p, role: v as Role }))
+   703→                }
+   704→              >
+   705→                <SelectTrigger className="w-full">
+   706→                  <SelectValue placeholder="Select role" />
+   707→                </SelectTrigger>
+   708→                <SelectContent>
+   709→                  {ROLES.map((r) => {
+   710→                    const cfg = ROLE_CONFIG[r];
+   711→                    const Icon = cfg.icon;
+   712→                    return (
+   713→                      <SelectItem key={r} value={r}>
+   714→                        <span className="flex items-center gap-2">
+   715→                          <Icon className="h-4 w-4" />
+   716→                          {cfg.label}
+   717→                        </span>
+   718→                      </SelectItem>
+   719→                    );
+   720→                  })}
+   721→                </SelectContent>
+   722→              </Select>
+   723→            </div>
+   724→
+   725→            {/* Department */}
+   726→            <div className="space-y-2">
+   727→              <Label htmlFor="department">Department</Label>
+   728→              <div className="relative">
+   729→                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   730→                <Input
+   731→                  id="department"
+   732→                  value={form.department}
+   733→                  onChange={(e) =>
+   734→                    setForm((p) => ({ ...p, department: e.target.value }))
+   735→                  }
+   736→                  className="pl-9"
+   737→                  placeholder="Cabin Crew Training"
+   738→                />
+   739→              </div>
+   740→            </div>
+   741→
+   742→            {/* Phone */}
+   743→            <div className="space-y-2">
+   744→              <Label htmlFor="phone">Phone</Label>
+   745→              <div className="relative">
+   746→                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   747→                <Input
+   748→                  id="phone"
+   749→                  value={form.phone}
+   750→                  onChange={(e) =>
+   751→                    setForm((p) => ({ ...p, phone: e.target.value }))
+   752→                  }
+   753→                  className="pl-9"
+   754→                  placeholder="+1 555 0100"
+   755→                />
+   756→              </div>
+   757→            </div>
+   758→
+   759→            {/* Employee ID */}
+   760→            <div className="space-y-2 sm:col-span-2">
+   761→              <Label htmlFor="employeeId">Employee ID</Label>
+   762→              <div className="relative">
+   763→                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   764→                <Input
+   765→                  id="employeeId"
+   766→                  value={form.employeeId}
+   767→                  onChange={(e) =>
+   768→                    setForm((p) => ({ ...p, employeeId: e.target.value }))
+   769→                  }
+   770→                  className="pl-9"
+   771→                  placeholder="EMP-001"
+   772→                />
+   773→              </div>
+   774→            </div>
+   775→
+   776→            {/* Active checkbox */}
+   777→            <div className="sm:col-span-2 flex items-center gap-2 pt-2">
+   778→              <Checkbox
+   779→                id="isActive"
+   780→                checked={form.isActive}
+   781→                onCheckedChange={(v) =>
+   782→                  setForm((p) => ({ ...p, isActive: Boolean(v) }))
+   783→                }
+   784→              />
+   785→              <Label htmlFor="isActive" className="cursor-pointer">
+   786→                Account active
+   787→                <span className="block text-xs font-normal text-slate-500">
+   788→                  Inactive users cannot sign in.
+   789→                </span>
+   790→              </Label>
+   791→            </div>
+   792→          </div>
+   793→
+   794→          <DialogFooter className="pt-2">
+   795→            <Button
+   796→              variant="outline"
+   797→              onClick={() => setDialogOpen(false)}
+   798→              disabled={saving}
+   799→            >
+   800→              <X className="h-4 w-4" />
+   801→              Cancel
+   802→            </Button>
+   803→            <Button onClick={handleSave} disabled={saving}>
+   804→              {saving ? (
+   805→                <Loader2 className="h-4 w-4 animate-spin" />
+   806→              ) : (
+   807→                <Save className="h-4 w-4" />
+   808→              )}
+   809→              {editingId ? "Save Changes" : "Create User"}
+   810→            </Button>
+   811→          </DialogFooter>
+   812→        </DialogContent>
+   813→      </Dialog>
+   814→
+   815→      {/* Delete Confirmation */}
+   816→      <Dialog
+   817→        open={!!deleteTarget}
+   818→        onOpenChange={(o) =>
+   819→          !deleting && setDeleteTarget(o ? deleteTarget : null)
+   820→        }
+   821→      >
+   822→        <DialogContent className="sm:max-w-md">
+   823→          <DialogHeader>
+   824→            <DialogTitle className="flex items-center gap-2">
+   825→              <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+   826→                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+   827→              </div>
+   828→              Delete User?
+   829→            </DialogTitle>
+   830→          </DialogHeader>
+   831→          <p className="text-sm text-slate-600 dark:text-slate-300">
+   832→            You are about to delete{" "}
+   833→            <span className="font-semibold text-slate-900 dark:text-white">
+   834→              {deleteTarget?.name || deleteTarget?.email}
+   835→            </span>{" "}
+   836→            ({deleteTarget?.email}). This will also remove related progress,
+   837→            certificates, and audit logs. This action cannot be undone.
+   838→          </p>
+   839→          {deleteTarget?.role === "SUPER_ADMIN" && (
+   840→            <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-md p-2">
+   841→              Warning: This is a Super Admin account. At least one Super Admin
+   842→              must remain.
+   843→            </p>
+   844→          )}
+   845→          <DialogFooter className="pt-2">
+   846→            <Button
+   847→              variant="outline"
+   848→              onClick={() => setDeleteTarget(null)}
+   849→              disabled={deleting}
+   850→            >
+   851→              Cancel
+   852→            </Button>
+   853→            <Button
+   854→              variant="destructive"
+   855→              onClick={handleDelete}
+   856→              disabled={deleting}
+   857→            >
+   858→              {deleting ? (
+   859→                <Loader2 className="h-4 w-4 animate-spin" />
+   860→              ) : (
+   861→                <Trash2 className="h-4 w-4" />
+   862→              )}
+   863→              Delete User
+   864→            </Button>
+   865→          </DialogFooter>
+   866→        </DialogContent>
+   867→      </Dialog>
+   868→    </div>
+   869→  );
+   870→}
+   871→

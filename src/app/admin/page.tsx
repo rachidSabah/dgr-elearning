@@ -48,6 +48,12 @@ import {
   Settings,
   ScrollText,
 } from "lucide-react";
+import {
+  getAllUsersSafe,
+  getSession,
+  initializeAuth,
+  type AuthUser,
+} from "@/lib/client-auth";
 
 ChartJS.register(
   CategoryScale,
@@ -92,6 +98,8 @@ interface CourseCompletion {
 interface AnalyticsData {
   totalUsers: number;
   usersByRole: Record<string, number>;
+  activeUsers: number;
+  suspendedUsers: number;
   totalCourses: number;
   publishedCourses: number;
   totalEnrollments: number;
@@ -102,6 +110,7 @@ interface AnalyticsData {
   averageScore: number;
   recentActivity: RecentActivity[];
   courseCompletion: CourseCompletion[];
+  recentRegistrations: AuthUser[];
 }
 
 interface AdminUser {
@@ -207,31 +216,102 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-    Promise.all([
-      fetch("/api/auth/me").then((r) => r.json()).catch(() => ({})),
-      fetch("/api/admin/analytics").then((r) => r.json()).catch(() => ({})),
-    ])
-      .then(([userRes, analyticsRes]) => {
-        if (!mounted) return;
-        if (userRes?.user) setUser(userRes.user);
-        if (analyticsRes?.error) {
-          setError(analyticsRes.error);
-        } else if (analyticsRes?.data) {
-          setData(analyticsRes.data);
-        } else {
-          setError("Unexpected response from analytics API");
-        }
-      })
-      .catch((e) => {
-        if (mounted) setError(String(e));
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
+    // Use client-side auth + localStorage data (no API routes on static hosting)
+    initializeAuth();
+    const session = getSession();
+    if (session) setUser(session as unknown as AdminUser);
+
+    const users = getAllUsersSafe();
+    const usersByRole: Record<string, number> = {
+      SUPER_ADMIN: 0,
+      ACADEMY_ADMIN: 0,
+      INSTRUCTOR: 0,
+      STUDENT: 0,
+      CONTENT_EDITOR: 0,
     };
+    for (const u of users) {
+      usersByRole[u.role] = (usersByRole[u.role] || 0) + 1;
+    }
+    const activeUsers = users.filter((u) => u.isActive).length;
+
+    // Sort by createdAt desc for recent registrations
+    const recentRegistrations = [...users]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      .slice(0, 10);
+
+    // Synthesize audit-like activity from last login times
+    const recentActivity: RecentActivity[] = users
+      .filter((u) => u.lastLogin)
+      .sort(
+        (a, b) =>
+          new Date(b.lastLogin as string).getTime() -
+          new Date(a.lastLogin as string).getTime(),
+      )
+      .slice(0, 10)
+      .map((u) => ({
+        id: `login-${u.id}-${u.lastLogin}`,
+        action: "LOGIN",
+        entity: "User",
+        entityId: u.id,
+        details: null,
+        ipAddress: null,
+        createdAt: u.lastLogin as string,
+        user: {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+        },
+      }));
+
+    setData({
+      totalUsers: users.length,
+      usersByRole,
+      activeUsers,
+      suspendedUsers: users.length - activeUsers,
+      totalCourses: 2, // Static courses in registry
+      publishedCourses: 2,
+      totalEnrollments: users
+        .filter((u) => u.role === "STUDENT")
+        .reduce((sum, u) => sum + (u.enrolledCourses?.length || 0), 0),
+      activeEnrollments: users
+        .filter((u) => u.role === "STUDENT" && u.isActive)
+        .reduce((sum, u) => sum + (u.enrolledCourses?.length || 0), 0),
+      completedEnrollments: 0,
+      totalCertificates: 0,
+      totalQuizAttempts: 0,
+      averageScore: 0,
+      recentActivity,
+      courseCompletion: [
+        {
+          courseId: "dangerous-goods-regulations",
+          title: "Dangerous Goods Regulations",
+          slug: "dangerous-goods-regulations",
+          isPublished: true,
+          enrolled: users.filter((u) =>
+            u.enrolledCourses?.includes("dangerous-goods-regulations"),
+          ).length,
+          completed: 0,
+          completionRate: 0,
+        },
+        {
+          courseId: "cabin-crew-first-aid-training",
+          title: "Cabin Crew First Aid Training",
+          slug: "cabin-crew-first-aid-training",
+          isPublished: true,
+          enrolled: users.filter((u) =>
+            u.enrolledCourses?.includes("cabin-crew-first-aid-training"),
+          ).length,
+          completed: 0,
+          completionRate: 0,
+        },
+      ],
+      recentRegistrations,
+    });
+    setLoading(false);
   }, []);
 
   if (loading) return <DashboardSkeleton />;

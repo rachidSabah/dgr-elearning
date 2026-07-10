@@ -9,61 +9,61 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { login, initializeAuth, isAdmin, getSession, DEFAULT_CREDENTIALS } from "@/lib/client-auth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@dgr-academy.com");
-  const [password, setPassword] = useState("Admin@2024");
+  const [email, setEmail] = useState(DEFAULT_CREDENTIALS.admin.email);
+  const [password, setPassword] = useState(DEFAULT_CREDENTIALS.admin.password);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if already logged in
-    fetch("/api/auth/me").then(r => r.json()).then(data => {
-      if (data.user && data.user.role !== "STUDENT") {
-        router.push("/admin");
-      }
-    });
+    // Initialize auth system
+    initializeAuth();
+    // Check if already logged in as admin
+    const user = getSession();
+    if (user && isAdmin()) {
+      router.push("/admin");
+    }
   }, [router]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Login failed");
+    // Small delay for UX
+    setTimeout(() => {
+      const result = login(email, password);
+      if (!result.success) {
+        setError(result.error || "Login failed");
         setLoading(false);
         return;
       }
 
-      if (data.user.role === "STUDENT") {
-        setError("Students do not have admin access. Please use a different account.");
-        await fetch("/api/auth/logout", { method: "POST" });
+      if (!isAdmin()) {
+        setError("Students do not have admin access. Please use the student portal.");
+        logout();
         setLoading(false);
         return;
       }
 
       router.push("/admin");
       router.refresh();
-    } catch {
-      setError("Network error. Please try again.");
-      setLoading(false);
+    }, 500);
+  };
+
+  // Import logout for the student check
+  const logout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("dgr-academy-session");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 p-4 relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-72 h-72 bg-sky-500 rounded-full blur-3xl" />
         <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-600 rounded-full blur-3xl" />
@@ -172,10 +172,16 @@ export default function AdminLoginPage() {
               <p className="text-xs text-sky-700">Password: Admin@2024</p>
             </div>
 
-            <div className="mt-4 text-center">
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <button
+                onClick={() => router.push("/login")}
+                className="text-sky-600 hover:text-sky-800 font-medium"
+              >
+                Student Login →
+              </button>
               <button
                 onClick={() => router.push("/")}
-                className="text-xs text-slate-500 hover:text-slate-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 ← Back to Academy
               </button>

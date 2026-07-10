@@ -64,8 +64,10 @@ export function AdminShell({ children, user, currentPath }: { children: React.Re
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("dgr-academy-session");
+    }
     router.push("/admin/login");
     router.refresh();
   };

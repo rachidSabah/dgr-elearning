@@ -46,7 +46,15 @@ import {
   Trophy,
   AlertTriangle,
   BarChart3,
+  UserCheck,
+  UserX,
 } from "lucide-react";
+import {
+  getAllUsersSafe,
+  getSession,
+  initializeAuth,
+  type AuthUser,
+} from "@/lib/client-auth";
 
 ChartJS.register(
   CategoryScale,
@@ -89,6 +97,8 @@ interface CourseCompletion {
 interface AnalyticsData {
   totalUsers: number;
   usersByRole: Record<string, number>;
+  activeUsers: number;
+  suspendedUsers: number;
   totalCourses: number;
   publishedCourses: number;
   totalEnrollments: number;
@@ -99,6 +109,7 @@ interface AnalyticsData {
   averageScore: number;
   recentActivity: RecentActivity[];
   courseCompletion: CourseCompletion[];
+  recentRegistrations: AuthUser[];
 }
 
 type DateRange = "7d" | "30d" | "90d" | "all";
@@ -110,6 +121,14 @@ const DATE_RANGES: { value: DateRange; label: string }[] = [
   { value: "90d", label: "Last 90 days" },
   { value: "all", label: "All time" },
 ];
+
+const ROLE_LABELS: Record<string, string> = {
+  SUPER_ADMIN: "Super Admin",
+  ACADEMY_ADMIN: "Academy Admin",
+  INSTRUCTOR: "Instructor",
+  STUDENT: "Student",
+  CONTENT_EDITOR: "Content Editor",
+};
 
 const CHART_PALETTE = {
   sky: "rgba(14, 165, 233, 0.75)",
@@ -160,28 +179,100 @@ export default function AdminAnalyticsPage() {
   const [dateRange, setDateRange] = useState<DateRange>("30d");
 
   useEffect(() => {
-    let mounted = true;
-    fetch("/api/admin/analytics")
-      .then((r) => r.json())
-      .then((res) => {
-        if (!mounted) return;
-        if (res.error) {
-          setError(res.error);
-        } else if (res.data) {
-          setData(res.data);
-        } else {
-          setError("Unexpected response from analytics API");
-        }
-      })
-      .catch((e) => {
-        if (mounted) setError(String(e));
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
+    // Use client-side auth + localStorage data (no API routes on static hosting)
+    initializeAuth();
+    const session = getSession();
+    void session; // current admin (not displayed in stats but kept for parity)
+
+    const users = getAllUsersSafe();
+    const usersByRole: Record<string, number> = {
+      SUPER_ADMIN: 0,
+      ACADEMY_ADMIN: 0,
+      INSTRUCTOR: 0,
+      STUDENT: 0,
+      CONTENT_EDITOR: 0,
     };
+    for (const u of users) {
+      usersByRole[u.role] = (usersByRole[u.role] || 0) + 1;
+    }
+    const activeUsers = users.filter((u) => u.isActive).length;
+
+    // Sort by createdAt desc for recent registrations
+    const recentRegistrations = [...users]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      .slice(0, 10);
+
+    // Synthesize audit-like activity from last login times
+    const recentActivity: RecentActivity[] = users
+      .filter((u) => u.lastLogin)
+      .sort(
+        (a, b) =>
+          new Date(b.lastLogin as string).getTime() -
+          new Date(a.lastLogin as string).getTime(),
+      )
+      .slice(0, 30)
+      .map((u) => ({
+        id: `login-${u.id}-${u.lastLogin}`,
+        action: "LOGIN",
+        entity: "User",
+        entityId: u.id,
+        createdAt: u.lastLogin as string,
+        user: {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+        },
+      }));
+
+    setData({
+      totalUsers: users.length,
+      usersByRole,
+      activeUsers,
+      suspendedUsers: users.length - activeUsers,
+      totalCourses: 2,
+      publishedCourses: 2,
+      totalEnrollments: users
+        .filter((u) => u.role === "STUDENT")
+        .reduce((sum, u) => sum + (u.enrolledCourses?.length || 0), 0),
+      activeEnrollments: users
+        .filter((u) => u.role === "STUDENT" && u.isActive)
+        .reduce((sum, u) => sum + (u.enrolledCourses?.length || 0), 0),
+      completedEnrollments: 0,
+      totalCertificates: 0,
+      totalQuizAttempts: 0,
+      averageScore: 0,
+      recentActivity,
+      courseCompletion: [
+        {
+          courseId: "dangerous-goods-regulations",
+          title: "Dangerous Goods Regulations",
+          slug: "dangerous-goods-regulations",
+          isPublished: true,
+          enrolled: users.filter((u) =>
+            u.enrolledCourses?.includes("dangerous-goods-regulations"),
+          ).length,
+          completed: 0,
+          completionRate: 0,
+        },
+        {
+          courseId: "cabin-crew-first-aid-training",
+          title: "Cabin Crew First Aid Training",
+          slug: "cabin-crew-first-aid-training",
+          isPublished: true,
+          enrolled: users.filter((u) =>
+            u.enrolledCourses?.includes("cabin-crew-first-aid-training"),
+          ).length,
+          completed: 0,
+          completionRate: 0,
+        },
+      ],
+      recentRegistrations,
+    });
+    setLoading(false);
   }, []);
 
   // ---------- Derived metrics ----------
@@ -837,6 +928,186 @@ export default function AdminAnalyticsPage() {
                       </TableCell>
                       <TableCell>
                         <span className="text-xs text-slate-500">{shortDate(log.createdAt)}</span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ---------- User Role Distribution + Active/Suspended ---------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <span className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center">
+                <Users className="h-4 w-4 text-sky-600" />
+              </span>
+              User Role Distribution
+            </CardTitle>
+            <CardDescription>Users grouped by their assigned role</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                  <TableRow>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Role</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500 text-right">Count</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500 text-right">Share</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(data.usersByRole).map(([role, count]) => (
+                    <TableRow key={role}>
+                      <TableCell className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        {ROLE_LABELS[role] || role}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-bold text-slate-900 dark:text-white">
+                        {count}
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-slate-500">
+                        {data.totalUsers > 0
+                          ? Math.round((count / data.totalUsers) * 1000) / 10
+                          : 0}
+                        %
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <span className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <UserCheck className="h-4 w-4 text-emerald-600" />
+              </span>
+              Active vs Suspended
+            </CardTitle>
+            <CardDescription>Account status breakdown</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <UserCheck className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                    Active
+                  </span>
+                </div>
+                <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
+                  {data.activeUsers}
+                </p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                  {data.totalUsers > 0
+                    ? Math.round((data.activeUsers / data.totalUsers) * 1000) / 10
+                    : 0}
+                  % of users
+                </p>
+              </div>
+              <div className="rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <UserX className="h-4 w-4 text-amber-600" />
+                  <span className="text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                    Suspended
+                  </span>
+                </div>
+                <p className="text-3xl font-bold text-amber-700 dark:text-amber-300">
+                  {data.suspendedUsers}
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  {data.totalUsers > 0
+                    ? Math.round((data.suspendedUsers / data.totalUsers) * 1000) / 10
+                    : 0}
+                  % of users
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ---------- Recent Registrations ---------- */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <span className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+              <Users className="h-4 w-4 text-violet-600" />
+            </span>
+            Recent Registrations
+          </CardTitle>
+          <CardDescription>Most recently created user accounts</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.recentRegistrations.length === 0 ? (
+            <EmptyState
+              icon={<Users className="h-8 w-8 text-slate-400" />}
+              title="No users yet"
+              description="Newly registered users will appear here."
+            />
+          ) : (
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                  <TableRow>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">User</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Role</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Status</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Registered</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-slate-500">Last Login</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.recentRegistrations.slice(0, 10).map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
+                            {(u.name || u.email || "U")
+                              .split(" ")
+                              .map((s) => s[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                              {u.name || "—"}
+                            </p>
+                            <p className="text-xs text-slate-500 truncate">{u.email}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-slate-700 dark:text-slate-300">
+                          {ROLE_LABELS[u.role] || u.role}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {u.isActive ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border bg-emerald-100 text-emerald-700 border-emerald-200">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border bg-amber-100 text-amber-700 border-amber-200">
+                            Suspended
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-slate-500">{shortDate(u.createdAt)}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-slate-500">
+                          {u.lastLogin ? shortDate(u.lastLogin) : "Never"}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -10,6 +10,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -43,7 +53,6 @@ import {
   Trash2,
   Save,
   X,
-  Loader2,
   Search,
   AlertCircle,
   Users as UsersIcon,
@@ -57,37 +66,25 @@ import {
   Building2,
   Hash,
   KeyRound,
+  PauseCircle,
+  PlayCircle,
+  BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  getAllUsersSafe,
+  createUser,
+  updateUser,
+  deleteUser,
+  suspendUser,
+  reactivateUser,
+  getSession,
+  initializeAuth,
+  type AuthUser,
+} from "@/lib/client-auth";
 
 // ---------- Types ----------
-type Role =
-  | "SUPER_ADMIN"
-  | "ACADEMY_ADMIN"
-  | "INSTRUCTOR"
-  | "CONTENT_EDITOR"
-  | "STUDENT";
-
-interface User {
-  id: string;
-  email: string;
-  name: string | null;
-  role: Role;
-  avatar: string | null;
-  phone: string | null;
-  department: string | null;
-  employeeId: string | null;
-  isActive: boolean;
-  lastLogin: string | null;
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    enrollments: number;
-    certificates: number;
-    quizAttempts: number;
-    auditLogs: number;
-  };
-}
+type Role = AuthUser["role"];
 
 interface UserFormData {
   name: string;
@@ -98,12 +95,7 @@ interface UserFormData {
   phone: string;
   employeeId: string;
   isActive: boolean;
-}
-
-interface CurrentUser {
-  id: string;
-  email: string;
-  role: Role;
+  enrolledCourses: string[];
 }
 
 const ROLES: Role[] = [
@@ -116,11 +108,19 @@ const ROLES: Role[] = [
 
 const ROLE_CONFIG: Record<
   Role,
-  { label: string; badge: string; icon: React.ComponentType<{ className?: string }>; statBg: string; statText: string; statIcon: string }
+  {
+    label: string;
+    badge: string;
+    icon: React.ComponentType<{ className?: string }>;
+    statBg: string;
+    statText: string;
+    statIcon: string;
+  }
 > = {
   SUPER_ADMIN: {
     label: "Super Admin",
-    badge: "bg-red-100 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800",
+    badge:
+      "bg-red-100 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800",
     icon: Shield,
     statBg: "bg-red-100 dark:bg-red-900/40",
     statText: "text-red-600 dark:text-red-400",
@@ -128,7 +128,8 @@ const ROLE_CONFIG: Record<
   },
   ACADEMY_ADMIN: {
     label: "Academy Admin",
-    badge: "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800",
+    badge:
+      "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800",
     icon: ShieldCheck,
     statBg: "bg-orange-100 dark:bg-orange-900/40",
     statText: "text-orange-600 dark:text-orange-400",
@@ -136,7 +137,8 @@ const ROLE_CONFIG: Record<
   },
   INSTRUCTOR: {
     label: "Instructor",
-    badge: "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    badge:
+      "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
     icon: GraduationCap,
     statBg: "bg-blue-100 dark:bg-blue-900/40",
     statText: "text-blue-600 dark:text-blue-400",
@@ -144,7 +146,8 @@ const ROLE_CONFIG: Record<
   },
   CONTENT_EDITOR: {
     label: "Content Editor",
-    badge: "bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800",
+    badge:
+      "bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800",
     icon: FileEdit,
     statBg: "bg-purple-100 dark:bg-purple-900/40",
     statText: "text-purple-600 dark:text-purple-400",
@@ -152,13 +155,25 @@ const ROLE_CONFIG: Record<
   },
   STUDENT: {
     label: "Student",
-    badge: "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+    badge:
+      "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
     icon: UserCircle,
     statBg: "bg-slate-100 dark:bg-slate-800",
     statText: "text-slate-600 dark:text-slate-300",
     statIcon: "text-slate-600 dark:text-slate-300",
   },
 };
+
+const AVAILABLE_COURSES = [
+  {
+    id: "dangerous-goods-regulations",
+    title: "Dangerous Goods Regulations",
+  },
+  {
+    id: "cabin-crew-first-aid-training",
+    title: "Cabin Crew First Aid Training",
+  },
+];
 
 const EMPTY_FORM: UserFormData = {
   name: "",
@@ -169,9 +184,10 @@ const EMPTY_FORM: UserFormData = {
   phone: "",
   employeeId: "",
   isActive: true,
+  enrolledCourses: [],
 };
 
-function formatDateTime(iso: string | null): string {
+function formatDateTime(iso?: string | null): string {
   if (!iso) return "Never";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
@@ -184,7 +200,7 @@ function formatDateTime(iso: string | null): string {
   });
 }
 
-function initials(name: string | null, email: string): string {
+function initials(name?: string | null, email?: string): string {
   const src = name || email || "U";
   return src
     .split(" ")
@@ -195,8 +211,8 @@ function initials(name: string | null, email: string): string {
 }
 
 export default function UsersAdminPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [users, setUsers] = useState<AuthUser[]>([]);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
@@ -208,47 +224,31 @@ export default function UsersAdminPage() {
   const [saving, setSaving] = useState(false);
 
   // Delete confirmation
-  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AuthUser | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/users");
-      if (!res.ok) throw new Error("Failed to fetch users");
-      const json = await res.json();
-      setUsers(json.data || []);
-    } catch (err) {
-      toast.error("Failed to load users", {
-        description: err instanceof Error ? err.message : "Unknown error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Suspend confirmation
+  const [suspendTarget, setSuspendTarget] = useState<AuthUser | null>(null);
+  const [suspending, setSuspending] = useState(false);
 
-  const fetchCurrentUser = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/me");
-      const json = await res.json();
-      if (json.user) setCurrentUser(json.user);
-    } catch {
-      // ignore
-    }
+  const refreshUsers = useCallback(() => {
+    setUsers(getAllUsersSafe());
   }, []);
 
   useEffect(() => {
-    fetchUsers();
-    fetchCurrentUser();
-  }, [fetchUsers, fetchCurrentUser]);
+    initializeAuth();
+    refreshUsers();
+    setCurrentUser(getSession());
+    setLoading(false);
+  }, [refreshUsers]);
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM });
     setDialogOpen(true);
   };
 
-  const openEdit = (user: User) => {
+  const openEdit = (user: AuthUser) => {
     setEditingId(user.id);
     setForm({
       name: user.name || "",
@@ -259,11 +259,12 @@ export default function UsersAdminPage() {
       phone: user.phone || "",
       employeeId: user.employeeId || "",
       isActive: user.isActive,
+      enrolledCourses: user.enrolledCourses || [],
     });
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.email.trim() || !form.name.trim()) {
       toast.error("Missing required fields", {
         description: "Name and email are required.",
@@ -284,38 +285,48 @@ export default function UsersAdminPage() {
     }
 
     setSaving(true);
-    const payload: Record<string, unknown> = {
-      name: form.name.trim(),
-      email: form.email.trim().toLowerCase(),
-      role: form.role,
-      department: form.department.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-      employeeId: form.employeeId.trim() || undefined,
-      isActive: form.isActive,
-    };
-    if (form.password.trim()) {
-      payload.password = form.password.trim();
-    }
-
     try {
-      const url = editingId
-        ? `/api/admin/users/${editingId}`
-        : "/api/admin/users";
-      const method = editingId ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to save user");
+      const trimmedEmail = form.email.trim().toLowerCase();
+      if (editingId) {
+        const updatePayload: Parameters<typeof updateUser>[1] = {
+          name: form.name.trim(),
+          email: trimmedEmail,
+          role: form.role,
+          department: form.department.trim(),
+          phone: form.phone.trim(),
+          employeeId: form.employeeId.trim(),
+          isActive: form.isActive,
+        };
+        if (form.password.trim()) {
+          updatePayload.password = form.password.trim();
+        }
+        if (form.role === "STUDENT") {
+          updatePayload.enrolledCourses = form.enrolledCourses;
+        }
+        const result = updateUser(editingId, updatePayload);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to update user");
+        }
+        toast.success("User updated", { description: trimmedEmail });
+      } else {
+        const createPayload: Parameters<typeof createUser>[0] = {
+          name: form.name.trim(),
+          email: trimmedEmail,
+          password: form.password.trim(),
+          role: form.role,
+          department: form.department.trim() || undefined,
+          phone: form.phone.trim() || undefined,
+          employeeId: form.employeeId.trim() || undefined,
+          enrolledCourses: form.role === "STUDENT" ? form.enrolledCourses : [],
+        };
+        const result = createUser(createPayload);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to create user");
+        }
+        toast.success("User created", { description: trimmedEmail });
       }
-      toast.success(editingId ? "User updated" : "User created", {
-        description: payload.email as string,
-      });
       setDialogOpen(false);
-      fetchUsers();
+      refreshUsers();
     } catch (err) {
       toast.error("Save failed", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -325,33 +336,22 @@ export default function UsersAdminPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    // Client-side guards (server enforces too)
     if (currentUser && deleteTarget.id === currentUser.id) {
       toast.error("Cannot delete your own account");
-      return;
-    }
-    if (
-      deleteTarget.role === "SUPER_ADMIN" &&
-      users.filter((u) => u.role === "SUPER_ADMIN" && u.isActive).length <= 1
-    ) {
-      toast.error("Cannot delete the last super admin");
       return;
     }
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/users/${deleteTarget.id}`, {
-        method: "DELETE",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to delete user");
-      toast.success("User deleted", {
-        description: deleteTarget.email,
-      });
+      const result = deleteUser(deleteTarget.id);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to delete user");
+      }
+      toast.success("User deleted", { description: deleteTarget.email });
       setDeleteTarget(null);
-      fetchUsers();
+      refreshUsers();
     } catch (err) {
       toast.error("Delete failed", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -359,6 +359,59 @@ export default function UsersAdminPage() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleSuspend = () => {
+    if (!suspendTarget) return;
+    if (currentUser && suspendTarget.id === currentUser.id) {
+      toast.error("Cannot suspend your own account");
+      setSuspendTarget(null);
+      return;
+    }
+
+    setSuspending(true);
+    try {
+      const result = suspendUser(suspendTarget.id);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to suspend user");
+      }
+      toast.success("User suspended", { description: suspendTarget.email });
+      setSuspendTarget(null);
+      refreshUsers();
+    } catch (err) {
+      toast.error("Suspend failed", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    } finally {
+      setSuspending(false);
+    }
+  };
+
+  const handleReactivate = (user: AuthUser) => {
+    try {
+      const result = reactivateUser(user.id);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to reactivate user");
+      }
+      toast.success("User reactivated", { description: user.email });
+      refreshUsers();
+    } catch (err) {
+      toast.error("Reactivate failed", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    }
+  };
+
+  const toggleEnrolledCourse = (courseId: string) => {
+    setForm((p) => {
+      const exists = p.enrolledCourses.includes(courseId);
+      return {
+        ...p,
+        enrolledCourses: exists
+          ? p.enrolledCourses.filter((c) => c !== courseId)
+          : [...p.enrolledCourses, courseId],
+      };
+    });
   };
 
   // ---------- Derived data ----------
@@ -378,6 +431,7 @@ export default function UsersAdminPage() {
     users.filter((u) => u.role === role).length;
 
   const activeCount = users.filter((u) => u.isActive).length;
+  const suspendedCount = users.length - activeCount;
 
   return (
     <div className="space-y-6">
@@ -429,6 +483,16 @@ export default function UsersAdminPage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Active vs Suspended summary */}
+      <div className="flex flex-wrap gap-3 text-sm">
+        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+          {activeCount} Active
+        </Badge>
+        <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800">
+          {suspendedCount} Suspended
+        </Badge>
       </div>
 
       {/* Search + Filter + Table */}
@@ -503,6 +567,7 @@ export default function UsersAdminPage() {
                     <TableHead>Role</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Enrolled Courses</TableHead>
                     <TableHead>Last Login</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -564,12 +629,39 @@ export default function UsersAdminPage() {
                               Active
                             </Badge>
                           ) : (
-                            <Badge
-                              variant="outline"
-                              className="text-slate-500 border-slate-300 dark:border-slate-700"
-                            >
-                              Inactive
+                            <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800">
+                              Suspended
                             </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.role === "STUDENT" ? (
+                            <div className="flex flex-wrap gap-1 max-w-[220px]">
+                              {user.enrolledCourses &&
+                              user.enrolledCourses.length > 0 ? (
+                                user.enrolledCourses.map((cid) => {
+                                  const course = AVAILABLE_COURSES.find(
+                                    (c) => c.id === cid,
+                                  );
+                                  return (
+                                    <Badge
+                                      key={cid}
+                                      variant="outline"
+                                      className="font-normal text-[10px] py-0 px-1.5 gap-1"
+                                    >
+                                      <BookOpen className="h-3 w-3" />
+                                      {course?.title.split(" ")[0] || cid}
+                                    </Badge>
+                                  );
+                                })
+                              ) : (
+                                <span className="text-xs text-slate-400">
+                                  No courses
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
                           )}
                         </TableCell>
                         <TableCell className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
@@ -577,6 +669,32 @@ export default function UsersAdminPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-1">
+                            {user.isActive ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                                onClick={() => setSuspendTarget(user)}
+                                title={
+                                  isSelf
+                                    ? "Cannot suspend yourself"
+                                    : "Suspend user"
+                                }
+                                disabled={isSelf}
+                              >
+                                <PauseCircle className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                onClick={() => handleReactivate(user)}
+                                title="Reactivate user"
+                              >
+                                <PlayCircle className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -607,7 +725,7 @@ export default function UsersAdminPage() {
               </Table>
               <div className="mt-3 text-xs text-slate-500 px-2">
                 Showing {filtered.length} of {users.length} users ·{" "}
-                {activeCount} active
+                {activeCount} active · {suspendedCount} suspended
               </div>
             </div>
           )}
@@ -618,9 +736,7 @@ export default function UsersAdminPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingId ? "Edit User" : "Add User"}
-            </DialogTitle>
+            <DialogTitle>{editingId ? "Edit User" : "Add User"}</DialogTitle>
             <DialogDescription>
               {editingId
                 ? "Update account details and role. Leave password blank to keep current."
@@ -674,7 +790,9 @@ export default function UsersAdminPage() {
                 Password{" "}
                 {!editingId && <span className="text-red-500">*</span>}{" "}
                 <span className="text-xs font-normal text-slate-500">
-                  {editingId ? "(leave blank to keep current)" : "(min 6 chars)"}
+                  {editingId
+                    ? "(leave blank to keep current)"
+                    : "(min 6 chars)"}
                 </span>
               </Label>
               <div className="relative">
@@ -698,9 +816,7 @@ export default function UsersAdminPage() {
               <Label>Role</Label>
               <Select
                 value={form.role}
-                onValueChange={(v) =>
-                  setForm((p) => ({ ...p, role: v as Role }))
-                }
+                onValueChange={(v) => setForm((p) => ({ ...p, role: v as Role }))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select role" />
@@ -773,6 +889,33 @@ export default function UsersAdminPage() {
               </div>
             </div>
 
+            {/* Enrolled Courses (students only) */}
+            {form.role === "STUDENT" && (
+              <div className="sm:col-span-2 space-y-2">
+                <Label>Enrolled Courses</Label>
+                <div className="space-y-2 rounded-lg border border-slate-200 dark:border-slate-800 p-3">
+                  {AVAILABLE_COURSES.map((course) => {
+                    const checked = form.enrolledCourses.includes(course.id);
+                    return (
+                      <label
+                        key={course.id}
+                        className="flex items-center gap-3 cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={() => toggleEnrolledCourse(course.id)}
+                        />
+                        <span className="text-sm flex items-center gap-2">
+                          <BookOpen className="h-3.5 w-3.5 text-slate-400" />
+                          {course.title}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Active checkbox */}
             <div className="sm:col-span-2 flex items-center gap-2 pt-2">
               <Checkbox
@@ -801,11 +944,7 @@ export default function UsersAdminPage() {
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              <Save className="h-4 w-4" />
               {editingId ? "Save Changes" : "Create User"}
             </Button>
           </DialogFooter>
@@ -813,58 +952,84 @@ export default function UsersAdminPage() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <Dialog
+      <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(o) =>
-          !deleting && setDeleteTarget(o ? deleteTarget : null)
-        }
+        onOpenChange={(o) => !deleting && !o && setDeleteTarget(null)}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
                 <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
               </div>
               Delete User?
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            You are about to delete{" "}
-            <span className="font-semibold text-slate-900 dark:text-white">
-              {deleteTarget?.name || deleteTarget?.email}
-            </span>{" "}
-            ({deleteTarget?.email}). This will also remove related progress,
-            certificates, and audit logs. This action cannot be undone.
-          </p>
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to delete{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {deleteTarget?.name || deleteTarget?.email}
+              </span>{" "}
+              ({deleteTarget?.email}). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           {deleteTarget?.role === "SUPER_ADMIN" && (
             <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-md p-2">
               Warning: This is a Super Admin account. At least one Super Admin
               must remain.
             </p>
           )}
-          <DialogFooter className="pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteTarget(null)}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
               disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleting}
+              {deleting ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Suspend Confirmation */}
+      <AlertDialog
+        open={!!suspendTarget}
+        onOpenChange={(o) => !suspending && !o && setSuspendTarget(null)}
+      >
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                <PauseCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              Suspend User?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to suspend{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {suspendTarget?.name || suspendTarget?.email}
+              </span>
+              . Suspended users cannot sign in until reactivated.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={suspending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleSuspend();
+              }}
+              disabled={suspending}
+              className="bg-amber-600 hover:bg-amber-700 focus:ring-amber-600"
             >
-              {deleting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-              Delete User
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {suspending ? "Suspending..." : "Suspend User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

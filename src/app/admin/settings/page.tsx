@@ -43,18 +43,24 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+// ============================================================
+// Client-side settings storage (localStorage)
+// ============================================================
+const SETTINGS_KEY = "dgr-academy-settings";
+
+function getSettings(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const data = localStorage.getItem(SETTINGS_KEY);
+  return data ? JSON.parse(data) : {};
+}
+
+function saveSettings(settings: Record<string, string>) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
 // ---------- Types ----------
 type SectionKey = "BRANDING" | "AI" | "EMAIL" | "INTEGRATION" | "GENERAL";
-
-interface SettingEntry {
-  value: unknown;
-  category: string;
-  updatedAt: string;
-}
-
-interface SettingsResponse {
-  data: Record<string, SettingEntry>;
-}
 
 // Settings stored as flat key -> string for editing
 type FormState = Record<string, string>;
@@ -205,6 +211,7 @@ function valueToString(v: unknown): string {
   if (typeof v === "boolean") return v ? "true" : "false";
   return String(v);
 }
+void valueToString; // kept for downstream compatibility
 
 export default function SettingsAdminPage() {
   const [activeSection, setActiveSection] = useState<SectionKey>("BRANDING");
@@ -219,15 +226,13 @@ export default function SettingsAdminPage() {
     GENERAL: false,
   });
 
-  const fetchSettings = useCallback(async () => {
+  const fetchSettings = useCallback(() => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/settings");
-      if (!res.ok) throw new Error("Failed to fetch settings");
-      const json: SettingsResponse = await res.json();
+      const stored = getSettings();
       const next: FormState = { ...DEFAULTS };
-      for (const [key, entry] of Object.entries(json.data || {})) {
-        next[key] = valueToString(entry.value);
+      for (const [key, value] of Object.entries(stored)) {
+        next[key] = value;
       }
       setValues(next);
       setDirty({
@@ -265,16 +270,13 @@ export default function SettingsAdminPage() {
     updateField(key, val ? "true" : "false");
   };
 
-  const handleSaveSection = async (section: SectionKey) => {
+  const handleSaveSection = (section: SectionKey) => {
     const keys = SECTION_KEYS[section];
-    const settingsObj: Record<string, unknown> = {};
+    const settingsObj: Record<string, string> = {};
     for (const k of keys) {
       const raw = values[k] ?? "";
       if (BOOL_KEYS.has(k)) {
-        settingsObj[k] = raw === "true";
-      } else if (k === "passMark" || k === "smtpPort" || k === "quizDefaultCount") {
-        const n = Number(raw);
-        settingsObj[k] = Number.isNaN(n) ? 0 : n;
+        settingsObj[k] = raw === "true" ? "true" : "false";
       } else {
         settingsObj[k] = raw;
       }
@@ -282,25 +284,14 @@ export default function SettingsAdminPage() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings: settingsObj, category: section }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to save settings");
+      // Merge into existing localStorage settings and persist
+      const current = getSettings();
+      const merged = { ...current, ...settingsObj };
+      saveSettings(merged);
       toast.success("Settings saved", {
         description: `${SECTIONS.find((s) => s.key === section)?.label} section updated.`,
       });
       setDirty((prev) => ({ ...prev, [section]: false }));
-      // Merge any server-returned values
-      if (json.data) {
-        const next: FormState = { ...values };
-        for (const k of keys) {
-          if (json.data[k]) next[k] = valueToString(json.data[k].value);
-        }
-        setValues(next);
-      }
     } catch (err) {
       toast.error("Save failed", {
         description: err instanceof Error ? err.message : "Unknown error",

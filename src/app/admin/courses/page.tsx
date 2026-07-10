@@ -52,6 +52,8 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { initializeAuth } from "@/lib/client-auth";
+import { allCourses } from "@/lib/courses-registry";
 
 // ---------- Types ----------
 interface Course {
@@ -74,6 +76,53 @@ interface Course {
   updatedAt: string;
   modulesCount: number;
   enrollmentsCount: number;
+}
+
+// ---------- localStorage helpers ----------
+const COURSES_KEY = "dgr-academy-courses-data";
+
+function loadCoursesFromStorage(): Course[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem(COURSES_KEY);
+  if (!data) {
+    // Initialize from registry
+    const initial: Course[] = allCourses.map((c, idx) => ({
+      id: `course-${idx + 1}`,
+      title: c.title,
+      slug: c.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, ""),
+      description: c.description || c.subtitle || "",
+      category: "Cabin Crew Training",
+      difficulty: c.difficulty || "Professional",
+      duration: c.duration || 0,
+      icon: null,
+      color: "#0ea5e9",
+      coverImage: null,
+      isPublished: true,
+      isFeatured: idx === 0,
+      order: idx,
+      objectives: c.objectives || [],
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      modulesCount: c.modules?.length || 0,
+      enrollmentsCount: 0,
+    }));
+    localStorage.setItem(COURSES_KEY, JSON.stringify(initial));
+    return initial;
+  }
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+function persistCourses(courses: Course[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(COURSES_KEY, JSON.stringify(courses));
 }
 
 interface CourseFormData {
@@ -165,13 +214,11 @@ export default function CoursesAdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchCourses = useCallback(async () => {
+  const fetchCourses = useCallback(() => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/courses");
-      if (!res.ok) throw new Error("Failed to fetch courses");
-      const json = await res.json();
-      setCourses(json.data || []);
+      const list = loadCoursesFromStorage();
+      setCourses(list);
     } catch (err) {
       toast.error("Failed to load courses", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -182,6 +229,7 @@ export default function CoursesAdminPage() {
   }, []);
 
   useEffect(() => {
+    initializeAuth();
     fetchCourses();
   }, [fetchCourses]);
 
@@ -221,7 +269,7 @@ export default function CoursesAdminPage() {
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (
       !form.title.trim() ||
       !form.slug.trim() ||
@@ -258,22 +306,32 @@ export default function CoursesAdminPage() {
     };
 
     try {
-      const url = editingId
-        ? `/api/admin/courses/${editingId}`
-        : "/api/admin/courses";
-      const method = editingId ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to save course");
+      const list = loadCoursesFromStorage();
+      if (editingId) {
+        const idx = list.findIndex((c) => c.id === editingId);
+        if (idx < 0) {
+          throw new Error("Course not found");
+        }
+        list[idx] = {
+          ...list[idx],
+          ...payload,
+          updatedAt: new Date().toISOString(),
+        };
+        toast.success("Course updated", { description: payload.title });
+      } else {
+        const newCourse: Course = {
+          id: `course-${Date.now()}`,
+          ...payload,
+          order: list.length,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          modulesCount: 0,
+          enrollmentsCount: 0,
+        };
+        list.push(newCourse);
+        toast.success("Course created", { description: payload.title });
       }
-      toast.success(editingId ? "Course updated" : "Course created", {
-        description: payload.title,
-      });
+      persistCourses(list);
       setDialogOpen(false);
       fetchCourses();
     } catch (err) {
@@ -285,15 +343,13 @@ export default function CoursesAdminPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/courses/${deleteTarget.id}`, {
-        method: "DELETE",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to delete course");
+      const list = loadCoursesFromStorage();
+      const filtered = list.filter((c) => c.id !== deleteTarget.id);
+      persistCourses(filtered);
       toast.success("Course deleted", { description: deleteTarget.title });
       setDeleteTarget(null);
       fetchCourses();

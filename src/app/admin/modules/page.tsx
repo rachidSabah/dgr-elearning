@@ -44,6 +44,8 @@ import {
   GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
+import { initializeAuth } from "@/lib/client-auth";
+import { allCourses } from "@/lib/courses-registry";
 
 // ---------- Types ----------
 interface Course {
@@ -67,6 +69,87 @@ interface ModuleItem {
   course?: { id: string; title: string; slug: string };
   _count?: { lessons: number };
 }
+
+// ---------- localStorage helpers ----------
+const MODULES_KEY = "dgr-academy-modules-data";
+
+function loadModulesFromStorage(): ModuleItem[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem(MODULES_KEY);
+  if (!data) {
+    // Initialize from registry: flatten allCourses modules
+    const initial: ModuleItem[] = [];
+    let order = 0;
+    allCourses.forEach((c, cIdx) => {
+      const courseId = `course-${cIdx + 1}`;
+      c.modules.forEach((m) => {
+        initial.push({
+          id: `module-${courseId}-${m.id}`,
+          courseId,
+          title: m.title,
+          code: m.code,
+          description: m.description,
+          icon: m.icon,
+          color: m.color,
+          order: order++,
+          isPublished: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          course: {
+            id: courseId,
+            title: c.title,
+            slug: c.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, ""),
+          },
+          _count: { lessons: m.lessons?.length || 0 },
+        });
+      });
+    });
+    localStorage.setItem(MODULES_KEY, JSON.stringify(initial));
+    return initial;
+  }
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+function persistModules(modules: ModuleItem[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(MODULES_KEY, JSON.stringify(modules));
+}
+
+function loadCoursesList(): Course[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem("dgr-academy-courses-data");
+  if (!data) {
+    // Initialize from registry (mirror courses page logic)
+    return allCourses.map((c, idx) => ({
+      id: `course-${idx + 1}`,
+      title: c.title,
+      slug: c.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, ""),
+    }));
+  }
+  try {
+    const parsed = JSON.parse(data);
+    return parsed.map((c: any) => ({
+      id: c.id,
+      title: c.title,
+      slug: c.slug,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ---------- Types ----------
+// (Course and ModuleItem interfaces are declared above)
 
 interface ModuleFormData {
   title: string;
@@ -108,17 +191,10 @@ export default function ModulesAdminPage() {
   // Reordering
   const [reorderingId, setReorderingId] = useState<string | null>(null);
 
-  const fetchCourses = useCallback(async () => {
+  const fetchCourses = useCallback(() => {
     setCoursesLoading(true);
     try {
-      const res = await fetch("/api/admin/courses");
-      if (!res.ok) throw new Error("Failed to fetch courses");
-      const json = await res.json();
-      const list: Course[] = (json.data || []).map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        slug: c.slug,
-      }));
+      const list = loadCoursesList();
       setCourses(list);
       if (list.length && !selectedCourseId) {
         setSelectedCourseId(list[0].id);
@@ -132,19 +208,24 @@ export default function ModulesAdminPage() {
     }
   }, [selectedCourseId]);
 
-  const fetchModules = useCallback(async () => {
+  const fetchModules = useCallback(() => {
     if (!selectedCourseId) {
       setModules([]);
       return;
     }
     setModulesLoading(true);
     try {
-      const res = await fetch(
-        `/api/admin/modules?courseId=${encodeURIComponent(selectedCourseId)}`
-      );
-      if (!res.ok) throw new Error("Failed to fetch modules");
-      const json = await res.json();
-      setModules(json.data || []);
+      const all = loadModulesFromStorage();
+      const course = courses.find((c) => c.id === selectedCourseId);
+      const filtered = all
+        .filter((m) => m.courseId === selectedCourseId)
+        .map((m) => ({
+          ...m,
+          course: course
+            ? { id: course.id, title: course.title, slug: course.slug }
+            : m.course,
+        }));
+      setModules(filtered);
     } catch (err) {
       toast.error("Failed to load modules", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -152,9 +233,10 @@ export default function ModulesAdminPage() {
     } finally {
       setModulesLoading(false);
     }
-  }, [selectedCourseId]);
+  }, [selectedCourseId, courses]);
 
   useEffect(() => {
+    initializeAuth();
     fetchCourses();
   }, [fetchCourses]);
 
@@ -184,7 +266,7 @@ export default function ModulesAdminPage() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.title.trim()) {
       toast.error("Missing required fields", {
         description: "Title is required.",
@@ -208,22 +290,31 @@ export default function ModulesAdminPage() {
     };
 
     try {
-      const url = editingId
-        ? `/api/admin/modules/${editingId}`
-        : "/api/admin/modules";
-      const method = editingId ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to save module");
+      const all = loadModulesFromStorage();
+      if (editingId) {
+        const idx = all.findIndex((m) => m.id === editingId);
+        if (idx < 0) {
+          throw new Error("Module not found");
+        }
+        all[idx] = {
+          ...all[idx],
+          ...payload,
+          updatedAt: new Date().toISOString(),
+        };
+        toast.success("Module updated", { description: payload.title });
+      } else {
+        const newModule: ModuleItem = {
+          id: `module-${Date.now()}`,
+          ...payload,
+          isPublished: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          _count: { lessons: 0 },
+        };
+        all.push(newModule);
+        toast.success("Module created", { description: payload.title });
       }
-      toast.success(editingId ? "Module updated" : "Module created", {
-        description: payload.title,
-      });
+      persistModules(all);
       setDialogOpen(false);
       fetchModules();
     } catch (err) {
@@ -235,15 +326,13 @@ export default function ModulesAdminPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/modules/${deleteTarget.id}`, {
-        method: "DELETE",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to delete module");
+      const all = loadModulesFromStorage();
+      const filtered = all.filter((m) => m.id !== deleteTarget.id);
+      persistModules(filtered);
       toast.success("Module deleted", { description: deleteTarget.title });
       setDeleteTarget(null);
       fetchModules();
@@ -256,7 +345,7 @@ export default function ModulesAdminPage() {
     }
   };
 
-  const moveModule = async (mod: ModuleItem, direction: "up" | "down") => {
+  const moveModule = (mod: ModuleItem, direction: "up" | "down") => {
     const sorted = [...modules].sort((a, b) => a.order - b.order);
     const idx = sorted.findIndex((m) => m.id === mod.id);
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
@@ -265,20 +354,15 @@ export default function ModulesAdminPage() {
     const other = sorted[swapIdx];
     setReorderingId(mod.id);
     try {
-      // Swap orders in parallel
-      const [res1, res2] = await Promise.all([
-        fetch(`/api/admin/modules/${mod.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order: other.order }),
-        }),
-        fetch(`/api/admin/modules/${other.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order: mod.order }),
-        }),
-      ]);
-      if (!res1.ok || !res2.ok) throw new Error("Reorder failed");
+      const all = loadModulesFromStorage();
+      const i1 = all.findIndex((m) => m.id === mod.id);
+      const i2 = all.findIndex((m) => m.id === other.id);
+      if (i1 >= 0 && i2 >= 0) {
+        const tmp = all[i1].order;
+        all[i1].order = all[i2].order;
+        all[i2].order = tmp;
+        persistModules(all);
+      }
       toast.success("Module reordered");
       fetchModules();
     } catch (err) {
