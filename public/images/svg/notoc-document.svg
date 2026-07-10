@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750">
+  <rect x="20" y="20" width="560" height="710" fill="#ffffff" stroke="#64748b" stroke-width="1.5" rx="4"/>
+  <rect x="20" y="20" width="560" height="50" fill="#0c4a6e" rx="4"/>
+  <text x="300" y="48" text-anchor="middle" font-family="Arial Black" font-size="18" font-weight="900" fill="#ffffff">NOTOC - NOTIFICATION TO COMMANDER</text>
+  <text x="300" y="90" text-anchor="middle" font-family="Arial" font-size="10" fill="#64748b">Special Load Notification - Dangerous Goods</text>
+  <g font-family="Arial" font-size="10" fill="#0f172a">
+    <rect x="40" y="105" width="520" height="80" fill="#e2e8f0" opacity="0.5" rx="2"/>
+    <text x="50" y="122" font-weight="bold">FLIGHT INFORMATION</text>
+    <text x="50" y="140">Flight No: _________   Date: _________   Route: ______ - ______</text>
+    <text x="50" y="158">Aircraft Reg: _________   Departure: ______ Z   Arrival: ______ Z</text>
+    <text x="50" y="176">Prepared by: _________   Signature: ____________</text>
+  </g>
+  <g font-family="Arial" font-size="8" fill="#0f172a">
+    <text x="40" y="205" font-weight="bold" font-size="10">DANGEROUS GOODS MANIFEST</text>
+    <rect x="40" y="212" width="520" height="22" fill="#0c4a6e"/>
+    <text x="50" y="226" fill="#ffffff" font-weight="bold">Pos</text>
+    <text x="90" y="226" fill="#ffffff" font-weight="bold">Code</text>
+    <text x="140" y="226" fill="#ffffff" font-weight="bold">UN/ID</text>
+    <text x="190" y="226" fill="#ffffff" font-weight="bold">Proper Shipping Name</text>
+    <text x="380" y="226" fill="#ffffff" font-weight="bold">Class</text>
+    <text x="430" y="226" fill="#ffffff" font-weight="bold">PG</text>
+    <text x="470" y="226" fill="#ffffff" font-weight="bold">Qty</text>
+    <text x="520" y="226" fill="#ffffff" font-weight="bold">TI</text>
+    <rect x="40" y="234" width="520" height="20" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="50" y="248">11P</text><text x="90" y="248" font-weight="bold">RRY</text>
+    <text x="140" y="248">2910</text><text x="190" y="248">Radioactive Material Type A</text>
+    <text x="380" y="248">7</text><text x="430" y="248">-</text>
+    <text x="470" y="248">2 pkg</text><text x="520" y="248">3.0</text>
+    <rect x="40" y="254" width="520" height="20" fill="#e2e8f0" opacity="0.3" stroke="#e2e8f0"/>
+    <text x="50" y="268">4</text><text x="90" y="268" font-weight="bold">ICE</text>
+    <text x="140" y="268">1845</text><text x="190" y="268">Dry Ice</text>
+    <text x="380" y="268">9</text><text x="430" y="268">III</text>
+    <text x="470" y="268">150 kg</text><text x="520" y="268">-</text>
+  </g>
+  <g font-family="Arial" font-size="10">
+    <rect x="380" y="304" width="180" height="24" fill="#f59e0b" opacity="0.2" stroke="#f59e0b"/>
+    <text x="395" y="320" font-weight="bold" fill="#b45309">Total Transport Index:</text>
+    <text x="530" y="320" font-weight="bold" fill="#dc2626">3.0</text>
+  </g>
+  <g font-family="Arial" font-size="10" fill="#0f172a">
+    <rect x="40" y="345" width="520" height="120" fill="#e2e8f0" opacity="0.5" rx="2"/>
+    <text x="50" y="362" font-weight="bold">AUTHORIZATION and SIGNATURES</text>
+    <text x="50" y="385">Acceptance Staff: ___________________ Signed: ____________ Time: _____</text>
+    <text x="50" y="405">Loading Staff: ______________________ Signed: ____________ Time: _____</text>
+    <text x="50" y="425">Ramp Agent: _______________________ Signed: ____________ Time: _____</text>
+    <text x="50" y="445">Commander: _______________________ Signed: ____________ Time: _____</text>
+  </g>
+  <g font-family="Arial" font-size="9" fill="#0f172a">
+    <rect x="40" y="480" width="520" height="100" fill="#fef3c7" stroke="#f59e0b" rx="2"/>
+    <text x="50" y="498" font-weight="bold" fill="#b45309">! SPECIAL INSTRUCTIONS</text>
+    <text x="50" y="516">- RRY packages stowed on compartment floor, max distance to passengers</text>
+    <text x="50" y="532">- ICE: Compartments must be ventilated before entering</text>
+    <text x="50" y="548">- In emergency, notify ATC with UN/ID numbers from this document</text>
+    <text x="50" y="564">- This NOTOC must be available to Commander during entire flight</text>
+  </g>
+</svg>

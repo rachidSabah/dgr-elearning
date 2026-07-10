@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300">
+  <text x="400" y="25" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#991b1b">Dangerous Goods Incident Reporting Timeline</text>
+  <line x1="50" y1="150" x2="750" y2="150" stroke="#64748b" stroke-width="3"/>
+  <circle cx="80" cy="150" r="12" fill="#dc2626" stroke="#ffffff" stroke-width="3"/>
+  <text x="80" y="125" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#991b1b">T=0</text>
+  <text x="80" y="180" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#0f172a">Incident</text>
+  <text x="80" y="195" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">occurs</text>
+  <circle cx="240" cy="150" r="12" fill="#ea580c" stroke="#ffffff" stroke-width="3"/>
+  <text x="240" y="125" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#b45309">IMMEDIATE</text>
+  <text x="240" y="180" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#0f172a">Notify</text>
+  <text x="240" y="195" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">Commander, Cargo,</text>
+  <text x="240" y="207" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">Engineer</text>
+  <circle cx="400" cy="150" r="12" fill="#f59e0b" stroke="#ffffff" stroke-width="3"/>
+  <text x="400" y="125" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#b45309">IN-FLIGHT</text>
+  <text x="400" y="180" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#0f172a">Notify ATC</text>
+  <text x="400" y="195" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">UN/ID numbers</text>
+  <text x="400" y="207" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">from NOTOC</text>
+  <circle cx="560" cy="150" r="12" fill="#0ea5e9" stroke="#ffffff" stroke-width="3"/>
+  <text x="560" y="125" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#0369a1">AFTER LANDING</text>
+  <text x="560" y="180" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#0f172a">File ASR</text>
+  <text x="560" y="195" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">Aircraft Tech Log</text>
+  <text x="560" y="207" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">entry</text>
+  <circle cx="720" cy="150" r="15" fill="#dc2626" stroke="#ffffff" stroke-width="3"/>
+  <text x="720" y="118" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#991b1b">72 HOURS</text>
+  <text x="720" y="180" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#0f172a">Report to</text>
+  <text x="720" y="195" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">DGCA</text>
+  <text x="720" y="207" text-anchor="middle" font-family="Arial" font-size="9" fill="#991b1b" font-weight="bold">DEADLINE!</text>
+  <rect x="50" y="240" width="700" height="40" rx="6" fill="#dc2626" opacity="0.1" stroke="#dc2626" stroke-width="1"/>
+  <text x="400" y="258" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#991b1b">! MANDATORY: Written report to DGCA within 72 hours of incident</text>
+  <text x="400" y="273" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">Unless exceptional circumstances prevent this - all types must be reported</text>
+</svg>

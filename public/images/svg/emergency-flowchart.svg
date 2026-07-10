@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <polygon points="0,0 10,5 0,10" fill="#64748b"/>
+    </marker>
+  </defs>
+  <text x="350" y="25" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#991b1b">Cabin Crew DG Incident Response Flow</text>
+  <ellipse cx="350" cy="60" rx="80" ry="25" fill="#dc2626" stroke="#991b1b" stroke-width="2"/>
+  <text x="350" y="65" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#ffffff">DG INCIDENT DETECTED</text>
+  <rect x="250" y="105" width="200" height="50" rx="8" fill="#0ea5e9" stroke="#0369a1" stroke-width="2"/>
+  <text x="350" y="125" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">1. NOTIFY COMMANDER</text>
+  <text x="350" y="142" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Inform flight deck immediately</text>
+  <line x1="350" y1="85" x2="350" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="250" y="175" width="200" height="50" rx="8" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+  <text x="350" y="195" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">2. IDENTIFY THE ITEM</text>
+  <text x="350" y="212" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Check NOTOC, labels, markings</text>
+  <line x1="350" y1="155" x2="350" y2="175" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <polygon points="350,245 450,295 350,345 250,295" fill="#eab308" stroke="#b45309" stroke-width="2"/>
+  <text x="350" y="290" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#0f172a">Type of</text>
+  <text x="350" y="305" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#0f172a">Incident?</text>
+  <line x1="350" y1="225" x2="350" y2="245" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="50" y="370" width="180" height="60" rx="8" fill="#dc2626" stroke="#991b1b" stroke-width="2"/>
+  <text x="140" y="390" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">FIRE</text>
+  <text x="140" y="405" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Use BCF/water</text>
+  <text x="140" y="420" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Check water compatibility</text>
+  <line x1="280" y1="290" x2="180" y2="370" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="260" y="370" width="180" height="60" rx="8" fill="#7c3aed" stroke="#5b21b6" stroke-width="2"/>
+  <text x="350" y="390" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">SPILLAGE/LEAK</text>
+  <text x="350" y="405" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Gloves + smoke hood</text>
+  <text x="350" y="420" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Polythene bags, move pax</text>
+  <line x1="350" y1="345" x2="350" y2="370" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="470" y="370" width="180" height="60" rx="8" fill="#ea580c" stroke="#b45309" stroke-width="2"/>
+  <text x="560" y="390" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">SMOKE/FUMES</text>
+  <text x="560" y="405" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">PBE, oxygen</text>
+  <text x="560" y="420" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Identify source</text>
+  <line x1="420" y1="290" x2="520" y2="370" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="150" y="460" width="400" height="40" rx="8" fill="#0c4a6e" stroke="#0369a1" stroke-width="2"/>
+  <text x="350" y="478" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">3. DETERMINE EMERGENCY RESPONSE DRILL CODE</text>
+  <text x="350" y="493" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Use ICAO Emergency Response Guidance (Doc 9481)</text>
+  <rect x="150" y="525" width="400" height="50" rx="8" fill="#16a34a" stroke="#15803d" stroke-width="2"/>
+  <text x="350" y="545" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">4. CONSIDER LANDING ASAP</text>
+  <text x="350" y="562" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Notify ATC with UN/ID numbers - File ASR after landing</text>
+</svg>

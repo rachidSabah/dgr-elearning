@@ -76,6 +76,10 @@ export function LandingView() {
           backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
           backgroundSize: '50px 50px'
         }} />
+        {/* Aircraft silhouette overlay */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
+          <embed src="/images/svg/hero-aircraft.svg" type="image/svg+xml" className="w-full max-w-4xl" />
+        </div>
 
         <div className="relative container mx-auto px-4 py-20 md:py-28">
           <div className="max-w-4xl mx-auto text-center text-white">

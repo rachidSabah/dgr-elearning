@@ -240,3 +240,87 @@
     display: none !important;
   }
 }
+
+/* Reduced motion mode */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast mode */
+.high-contrast {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0 0 0);
+  --primary: oklch(0 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0 0 0);
+}
+.high-contrast.dark {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0 0 0);
+  --card-foreground: oklch(1 0 0);
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --border: oklch(1 0 0);
+  --input: oklch(1 0 0);
+  --ring: oklch(1 0 0);
+}
+.high-contrast * {
+  border-color: currentColor !important;
+}
+.high-contrast button:focus-visible,
+.high-contrast a:focus-visible,
+.high-contrast input:focus-visible {
+  outline: 3px solid currentColor !important;
+  outline-offset: 2px !important;
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip to content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 8px 16px;
+  z-index: 100;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* Perspective for 3D card flips */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* Improved focus indicators */
+*:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 2px;
+}

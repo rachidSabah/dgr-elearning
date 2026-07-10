@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   RotateCcw,
   Check,
+  Zap,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +52,10 @@ export function SettingsView() {
     setFontScale,
     focusMode,
     toggleFocusMode,
+    reducedMotion,
+    toggleReducedMotion,
+    highContrast,
+    toggleHighContrast,
     studentName,
     setStudentName,
     resetProgress,
@@ -157,6 +163,30 @@ export function SettingsView() {
                 </div>
               </div>
               <Switch checked={focusMode} onCheckedChange={toggleFocusMode} />
+            </div>
+
+            {/* Reduced motion */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Zap className="h-5 w-5" />
+                <div>
+                  <div className="font-medium text-sm">Reduced Motion</div>
+                  <div className="text-xs text-muted-foreground">Minimize animations and transitions</div>
+                </div>
+              </div>
+              <Switch checked={reducedMotion} onCheckedChange={toggleReducedMotion} />
+            </div>
+
+            {/* High contrast */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Eye className="h-5 w-5" />
+                <div>
+                  <div className="font-medium text-sm">High Contrast</div>
+                  <div className="text-xs text-muted-foreground">Enhanced visibility for low-vision users</div>
+                </div>
+              </div>
+              <Switch checked={highContrast} onCheckedChange={toggleHighContrast} />
             </div>
           </CardContent>
         </Card>

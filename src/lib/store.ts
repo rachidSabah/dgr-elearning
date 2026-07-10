@@ -18,6 +18,8 @@ interface AppState {
   fontScale: "small" | "medium" | "large";
   focusMode: boolean;
   sidebarOpen: boolean;
+  reducedMotion: boolean;
+  highContrast: boolean;
 
   // Progress
   progress: ProgressState;
@@ -35,6 +37,8 @@ interface AppState {
   setFontScale: (scale: "small" | "medium" | "large") => void;
   toggleFocusMode: () => void;
   toggleSidebar: () => void;
+  toggleReducedMotion: () => void;
+  toggleHighContrast: () => void;
   setStudentName: (name: string) => void;
 
   // Progress actions
@@ -82,6 +86,8 @@ export const useAppStore = create<AppState>()(
       language: "en",
       fontScale: "medium",
       focusMode: false,
+      reducedMotion: false,
+      highContrast: false,
       sidebarOpen: false,
 
       progress: initialProgress,
@@ -97,6 +103,8 @@ export const useAppStore = create<AppState>()(
       setFontScale: (fontScale) => set({ fontScale }),
       toggleFocusMode: () => set((s) => ({ focusMode: !s.focusMode })),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+      toggleReducedMotion: () => set((s) => ({ reducedMotion: !s.reducedMotion })),
+      toggleHighContrast: () => set((s) => ({ highContrast: !s.highContrast })),
       setStudentName: (studentName) => set({ studentName }),
 
       completeLesson: (lessonId, duration = 0) =>

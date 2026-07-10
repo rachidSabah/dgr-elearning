@@ -22,6 +22,8 @@ export default function Home() {
   const language = useAppStore((s) => s.language);
   const fontScale = useAppStore((s) => s.fontScale);
   const focusMode = useAppStore((s) => s.focusMode);
+  const reducedMotion = useAppStore((s) => s.reducedMotion);
+  const highContrast = useAppStore((s) => s.highContrast);
 
   // Apply theme
   useEffect(() => {
@@ -45,6 +47,20 @@ export default function Home() {
       document.documentElement.classList.add(`font-scale-${fontScale}`);
     }
   }, [fontScale]);
+
+  // Apply reduced motion
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.classList.toggle("reduce-motion", reducedMotion);
+    }
+  }, [reducedMotion]);
+
+  // Apply high contrast
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.classList.toggle("high-contrast", highContrast);
+    }
+  }, [highContrast]);
 
   // Apply focus mode
   useEffect(() => {

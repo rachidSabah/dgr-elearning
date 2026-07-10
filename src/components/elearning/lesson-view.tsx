@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
 import { courseData } from "@/lib/course-data";
+import { getEnhancedContent } from "@/lib/lesson-enhancements";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -31,6 +32,10 @@ import {
   Lightbulb,
   NotebookPen,
   ZoomIn,
+  Plane,
+  GraduationCap,
+  ClipboardList,
+  CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +54,22 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { ContentBlock, Lesson } from "@/lib/types";
+import { ProfessionalNarrator } from "./professional-narrator";
+import {
+  ClickToReveal,
+  KnowledgeCheck,
+  DragDropMatching,
+  SequenceOrdering,
+  InlineFlashcard,
+  InteractiveTimeline,
+} from "./interactive-components";
+import { HazardClassExplorer } from "./hazard-class-explorer";
+import { CabinLayoutExplorer } from "./cabin-layout-explorer";
+import {
+  AnimatedDoorArming,
+  AnimatedEvacuationFlow,
+  AnimatedFireFighting,
+} from "./animated-procedures";
 
 const calloutStyles = {
   info: { icon: Info, className: "border-blue-500/30 bg-blue-500/5 text-blue-900 dark:text-blue-100", iconClass: "text-blue-500" },
@@ -271,13 +292,16 @@ export function LessonView() {
 
   const lessonNotes = progress.notes[lesson.id] || [];
 
+  // Merge enhanced interactive content with base lesson content
+  const enhancedContent = [...lesson.content, ...getEnhancedContent(lesson.id)];
+
   // Filter content for search
   const filteredContent = searchQuery
-    ? lesson.content.filter((block) => {
+    ? enhancedContent.filter((block) => {
         if ("text" in block) return block.text.toLowerCase().includes(searchQuery.toLowerCase());
         return false;
       })
-    : lesson.content;
+    : enhancedContent;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-5xl">
@@ -334,54 +358,16 @@ export function LessonView() {
         </div>
       </motion.div>
 
-      {/* Voice narration controls */}
-      <Card className="mb-6 overflow-hidden">
-        <div className="bg-gradient-to-r from-primary/5 to-chart-4/5 p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              {!isNarrating ? (
-                <Button size="sm" onClick={startNarration} className="gap-2">
-                  <Play className="h-4 w-4" />
-                  {isPaused ? t(lang, "narration") : t(lang, "narration")}
-                </Button>
-              ) : (
-                <Button size="sm" variant="default" onClick={pauseNarration} className="gap-2">
-                  <Pause className="h-4 w-4" />
-                  {t(lang, "pauseNarration")}
-                </Button>
-              )}
-              <Button size="sm" variant="ghost" onClick={stopNarration}>
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Speed:</span>
-              {[0.75, 1, 1.25, 1.5].map((rate) => (
-                <Button
-                  key={rate}
-                  size="sm"
-                  variant={narrationRate === rate ? "default" : "ghost"}
-                  className="h-7 px-2 text-xs"
-                  onClick={() => {
-                    setNarrationRate(rate);
-                    if (isNarrating) {
-                      stopNarration();
-                      setTimeout(() => startNarration(), 100);
-                    }
-                  }}
-                >
-                  {rate}x
-                </Button>
-              ))}
-            </div>
-            {isNarrating && (
-              <div className="text-xs text-muted-foreground ml-auto">
-                Paragraph {currentParagraphIdx + 1} of {textBlocks.length}
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
+      {/* Professional Voice Narration */}
+      <div className="mb-6">
+        <ProfessionalNarrator
+          text={textBlocks.map((b) => b.text).join(" ")}
+          lessonId={lesson.id}
+          lang={lang}
+          onProgress={(p) => updateVoiceProgress(lesson.id, p)}
+          className="shadow-sm"
+        />
+      </div>
 
       {/* Search bar */}
       <AnimatePresence>
@@ -436,6 +422,39 @@ export function LessonView() {
             </TabsList>
 
             <TabsContent value="content" className="space-y-4">
+              {/* Pre-Briefing Section */}
+              <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <GraduationCap className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-amber-700 dark:text-amber-400">Pre-Briefing</h3>
+                      <p className="text-xs text-muted-foreground">Instructor introduction & lesson overview</p>
+                    </div>
+                  </div>
+                  <div className="text-sm space-y-2">
+                    <p className="font-medium">Welcome to {lesson.title}</p>
+                    <p className="text-muted-foreground">
+                      This lesson covers section <strong>{lesson.code}</strong> of the Dangerous Goods Regulations.
+                      Duration: approximately {lesson.duration} minutes.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <Clock className="h-3 w-3" />{lesson.duration} min
+                      </Badge>
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <Target className="h-3 w-3" />{lesson.objectives.length} objectives
+                      </Badge>
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <ClipboardList className="h-3 w-3" />{lesson.reviewQuestions.length} review questions
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Objectives */}
               <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="pt-6">
@@ -483,6 +502,38 @@ export function LessonView() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Debriefing Section */}
+              <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <CheckCheck className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-green-700 dark:text-green-400">Debriefing</h3>
+                      <p className="text-xs text-muted-foreground">Key takeaways & competency check</p>
+                    </div>
+                  </div>
+                  <div className="text-sm space-y-2">
+                    <p className="font-medium">Lesson Complete - Key Takeaways:</p>
+                    <ul className="space-y-1">
+                      {lesson.summary.slice(0, 3).map((point, i) => (
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <p className="text-xs">
+                        <strong>Competency Validation:</strong> Complete the quiz to verify your understanding of this lesson.
+                        Score 70% or higher to demonstrate competency.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="summary" className="space-y-4">
@@ -833,6 +884,81 @@ function ContentBlockRenderer({
         </Card>
       );
 
+    case "svg":
+      return (
+        <figure className="my-4">
+          <div className="rounded-xl overflow-hidden border bg-card p-4">
+            <div className="flex items-center justify-center">
+              <embed src={block.src} type="image/svg+xml" className="w-full max-w-3xl" />
+            </div>
+          </div>
+          {block.caption && (
+            <figcaption className="text-xs text-muted-foreground mt-2 text-center italic">
+              {block.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
+
+    case "interactive":
+      return <InteractiveComponentRenderer component={block.component} />;
+
+    case "knowledgeCheck":
+      return (
+        <KnowledgeCheck
+          question={block.question}
+          options={block.options}
+          correctAnswer={block.correctAnswer}
+          explanation={block.explanation}
+          questionId={`kc-${block.question.substring(0, 20)}`}
+        />
+      );
+
+    case "clickToReveal":
+      return (
+        <ClickToReveal
+          title={block.title}
+          variant={block.variant || "info"}
+        >
+          {block.content}
+        </ClickToReveal>
+      );
+
+    case "matching":
+      return (
+        <DragDropMatching
+          title={block.title}
+          pairs={{ left: block.left, right: block.right }}
+        />
+      );
+
+    case "sequence":
+      return (
+        <SequenceOrdering
+          title={block.title}
+          steps={block.steps}
+          correctOrder={block.correctOrder}
+        />
+      );
+
+    default:
+      return null;
+  }
+}
+
+// Renderer for special interactive components
+function InteractiveComponentRenderer({ component }: { component: string }) {
+  switch (component) {
+    case "hazardExplorer":
+      return <HazardClassExplorer />;
+    case "cabinExplorer":
+      return <CabinLayoutExplorer />;
+    case "animatedDoorArming":
+      return <AnimatedDoorArming />;
+    case "animatedEvacuation":
+      return <AnimatedEvacuationFlow />;
+    case "animatedFireFighting":
+      return <AnimatedFireFighting />;
     default:
       return null;
   }

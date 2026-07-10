@@ -22,7 +22,13 @@ export type ContentBlock =
   | { type: "table"; headers: string[]; rows: string[][]; caption?: string }
   | { type: "definition"; term: string; definition: string }
   | { type: "image"; src: string; caption?: string; alt?: string }
-  | { type: "keyTerms"; terms: { term: string; definition: string }[] };
+  | { type: "keyTerms"; terms: { term: string; definition: string }[] }
+  | { type: "svg"; src: string; caption?: string }
+  | { type: "interactive"; component: string; props?: Record<string, any> }
+  | { type: "knowledgeCheck"; question: string; options: string[]; correctAnswer: number; explanation: string }
+  | { type: "clickToReveal"; title: string; content: string; variant?: "info" | "warning" | "tip" | "danger" }
+  | { type: "matching"; title: string; left: string[]; right: string[] }
+  | { type: "sequence"; title: string; steps: string[]; correctOrder: number[] };
 
 export interface QuizQuestion {
   id: string;

@@ -53,53 +53,176 @@ function buildKnowledgeBase(): string {
 
 const knowledgeBase = buildKnowledgeBase();
 
-// Simple keyword-based search to find relevant content
-function findRelevantContent(query: string): string {
+// Enhanced search that returns content with lesson citations
+interface SearchResult {
+  text: string;
+  score: number;
+  lessonCode?: string;
+  lessonTitle?: string;
+  moduleCode?: string;
+}
+
+function findRelevantContentWithCitations(query: string): SearchResult[] {
   const queryLower = query.toLowerCase();
   const keywords = queryLower.split(/\s+/).filter((w) => w.length > 3);
 
-  // Search through knowledge base paragraphs
-  const paragraphs = knowledgeBase.split("\n");
-  const scored = paragraphs.map((p) => {
-    const pLower = p.toLowerCase();
-    let score = 0;
-    keywords.forEach((kw) => {
-      if (pLower.includes(kw)) score += 1;
+  const results: SearchResult[] = [];
+
+  courseData.modules.forEach((mod) => {
+    mod.lessons.forEach((lesson) => {
+      lesson.content.forEach((block) => {
+        let text = "";
+        if (block.type === "paragraph") text = block.text;
+        else if (block.type === "callout") text = `${block.title || ""}: ${block.text}`;
+        else if (block.type === "list") text = block.items.join(" ");
+        else if (block.type === "table") text = `${block.caption || ""} ${block.rows.map(r => r.join(" ")).join(" ")}`;
+        else if (block.type === "definition") text = `${block.term}: ${block.definition}`;
+        else if (block.type === "keyTerms") text = block.terms.map(t => `${t.term}: ${t.definition}`).join(" ");
+
+        if (!text) return;
+
+        const textLower = text.toLowerCase();
+        let score = 0;
+        keywords.forEach((kw) => {
+          if (textLower.includes(kw)) score += 1;
+        });
+
+        // Also check lesson title and summary
+        const titleLower = lesson.title.toLowerCase();
+        const summaryLower = lesson.summary.join(" ").toLowerCase();
+        keywords.forEach((kw) => {
+          if (titleLower.includes(kw)) score += 2;
+          if (summaryLower.includes(kw)) score += 1;
+        });
+
+        if (score > 0) {
+          results.push({
+            text,
+            score,
+            lessonCode: lesson.code,
+            lessonTitle: lesson.title,
+            moduleCode: mod.code,
+          });
+        }
+      });
+
+      // Also add summary as searchable content
+      const summaryText = lesson.summary.join(" ");
+      const summaryLower = summaryText.toLowerCase();
+      let summaryScore = 0;
+      keywords.forEach((kw) => {
+        if (summaryLower.includes(kw)) summaryScore += 1;
+      });
+      if (summaryScore > 0) {
+        results.push({
+          text: `Summary: ${summaryText}`,
+          score: summaryScore,
+          lessonCode: lesson.code,
+          lessonTitle: lesson.title,
+          moduleCode: mod.code,
+        });
+      }
     });
-    return { text: p, score };
   });
 
-  const relevant = scored
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map((s) => s.text)
-    .join("\n\n");
+  // Add glossary search
+  courseData.glossary.forEach((g) => {
+    const text = `${g.term}: ${g.definition}`;
+    const textLower = text.toLowerCase();
+    let score = 0;
+    keywords.forEach((kw) => {
+      if (textLower.includes(kw)) score += 1;
+    });
+    if (score > 0) {
+      results.push({ text, score, lessonCode: "Glossary", lessonTitle: "Glossary", moduleCode: "—" });
+    }
+  });
 
-  return relevant || "I couldn't find specific information about that. Try asking about hazard classes, NOTOC, dangerous goods categories, packing groups, or emergency procedures.";
+  return results.sort((a, b) => b.score - a.score).slice(0, 4);
 }
 
-function generateResponse(query: string): string {
+// Simple keyword-based search to find relevant content (legacy, kept for compat)
+function findRelevantContent(query: string): string {
+  const results = findRelevantContentWithCitations(query);
+  return results.map(r => r.text).join("\n\n") || "";
+}
+
+// Weak area analysis based on quiz performance
+function analyzeWeakAreas(progress: any): string {
+  if (!progress || !progress.quizScores) return "";
+
+  const topicScores: Record<string, { correct: number; total: number }> = {};
+
+  // Analyze lesson quiz scores
+  Object.entries(progress.quizScores).forEach(([lessonId, scores]: [string, any]) => {
+    if (scores.length === 0) return;
+    const last = scores[scores.length - 1];
+    const lesson = courseData.modules.flatMap(m => m.lessons).find(l => l.id === lessonId);
+    if (!lesson) return;
+
+    // Extract topic from lesson code
+    const topic = lesson.moduleId === "mod-1" ? "Awareness & Regulations" :
+                  lesson.moduleId === "mod-2" ? "Classification & Transport" :
+                  lesson.moduleId === "mod-3" ? "NOTOC & Emergencies" : "General";
+
+    if (!topicScores[topic]) topicScores[topic] = { correct: 0, total: 0 };
+    topicScores[topic].correct += last.score;
+    topicScores[topic].total += last.total;
+  });
+
+  const weakTopics = Object.entries(topicScores)
+    .map(([topic, scores]) => ({
+      topic,
+      pct: scores.total > 0 ? (scores.correct / scores.total) * 100 : 0,
+    }))
+    .filter(t => t.pct < 70)
+    .sort((a, b) => a.pct - b.pct);
+
+  if (weakTopics.length === 0) return "";
+
+  const weakest = weakTopics[0];
+  return `Based on your quiz performance, your weakest area is **${weakest.topic}** (${Math.round(weakest.pct)}% average score). I recommend reviewing the related lessons and retaking the quizzes. Would you like me to suggest specific lessons to review?`;
+}
+
+function generateResponse(query: string, progress?: any): string {
   const queryLower = query.toLowerCase();
+
+  // Weak areas analysis request
+  if (/weak|improve|struggle|difficult|recommend|review|where.*focus|what.*study/i.test(query)) {
+    const analysis = analyzeWeakAreas(progress);
+    if (analysis) {
+      return analysis;
+    }
+    return "Take some quizzes first so I can analyze your weak areas. Once you've completed a few lesson quizzes, I can identify which topics you should focus on and recommend specific lessons to review.";
+  }
 
   // Greeting
   if (/^(hi|hello|hey|bonjour|salut|salam|مرحبا|Bonjour)/i.test(query.trim())) {
-    return `Hello! I'm your AI Tutor for Dangerous Goods Regulations training. I can help you with:
-- The nine hazard classes and their IATA codes
+    return `Hello! I'm your AI Learning Coach for Dangerous Goods Regulations training. I'm trained exclusively on your course content and can help you with:
+
+**Core Topics:**
+- The nine hazard classes and their IATA codes (RFL, RCM, RRW, etc.)
 - NOTOC procedures and Commander responsibilities
 - Loading, stowage, and segregation rules
-- Emergency response procedures
-- Reporting requirements
+- Emergency response procedures and checklists
+- Reporting requirements (72-hour rule)
 - Weapons and ammunition carriage rules
 - Dry ice, radioactive materials, and other special items
+
+**How I can help:**
+- Answer questions with lesson citations
+- Explain difficult concepts
+- Identify your weak areas from quiz performance
+- Recommend lessons to review
+- Generate practice scenarios
 
 What would you like to learn about?`;
   }
 
-  // Find relevant content
-  const relevant = findRelevantContent(query);
+  // Find relevant content with citations
+  const results = findRelevantContentWithCitations(query);
 
-  if (relevant.length < 20) {
+  if (results.length === 0) {
     return `I don't have specific information about that in the course content. Here are some topics I can help with:
 
 1. **Hazard Classes** - Ask about any of the 9 classes (Explosives, Gases, Flammable Liquids, etc.)
@@ -109,15 +232,25 @@ What would you like to learn about?`;
 5. **Weapons** - Sporting weapons and ammunition rules
 6. **Packing** - Packing groups and requirements
 7. **Labelling** - Hazard and handling labels
+8. **Weak Areas** - Ask "what are my weak areas?" for personalized recommendations
 
 Try rephrasing your question or ask about one of these topics.`;
   }
 
-  // Format response with context
-  let response = `Based on the Dangerous Goods Regulations training material:\n\n${relevant}`;
+  // Format response with citations
+  let response = "Based on the Dangerous Goods Regulations training material:\n\n";
+  response += results.map((r) => r.text).join("\n\n");
+
+  // Add citations
+  const citations = results
+    .filter((r, i, arr) => arr.findIndex(x => x.lessonCode === r.lessonCode) === i)
+    .map((r) => `📖 ${r.lessonCode} - ${r.lessonTitle} (Module ${r.moduleCode})`)
+    .join("\n");
+
+  response += `\n\n**📚 Source Lessons:**\n${citations}`;
 
   // Add follow-up suggestion
-  response += "\n\n💡 *You can ask me to explain any of this in more detail, or take the related quiz to test your understanding.*";
+  response += "\n\n💡 *You can ask me to explain any of this in more detail, take the related quiz to test your understanding, or ask 'what are my weak areas?' for personalized recommendations.*";
 
   return response;
 }
@@ -128,11 +261,11 @@ const suggestedQuestions = [
   "Which explosives are allowed on passenger aircraft?",
   "What is the maximum dry ice per hold?",
   "How should damaged dangerous goods be handled?",
-  "What are the reporting requirements for DG incidents?",
+  "What are my weak areas?",
 ];
 
 export function AITutorView() {
-  const { language } = useAppStore();
+  const { language, progress } = useAppStore();
   const lang = language || "en";
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -166,7 +299,7 @@ export function AITutorView() {
 
     // Simulate AI response with delay
     setTimeout(() => {
-      const response = generateResponse(message);
+      const response = generateResponse(message, progress);
       setMessages((prev) => [
         ...prev,
         {
