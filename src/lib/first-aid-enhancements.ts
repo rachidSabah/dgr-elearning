@@ -29,6 +29,7 @@ export const firstAidLessonEnhancements: Record<string, any[]> = {
     { type: "knowledgeCheck", question: "How is malaria transmitted?", options: ["Contaminated food", "Mosquitoes", "Open wounds", "Airborne"], correctAnswer: 1, explanation: "Malaria is transmitted by mosquitoes carrying malarial parasites." },
   ],
   "fa-lesson-3-1": [
+    { type: "svg", src: "/images/fa-svg/vital-signs-table.svg", caption: "Normal Vital Signs by Age Group - pulse and breathing rates for adults, children, and infants" },
     { type: "image", src: "/images/first-aid/pulse-checking.jpg", caption: "Checking the radial pulse at the wrist — place 2-3 fingers above the wrist creases at the base of the thumb", alt: "Checking radial pulse at wrist" },
     { type: "image", src: "/images/first-aid/blood-pressure.jpg", caption: "Blood pressure and vital signs assessment equipment", alt: "Blood pressure measurement" },
     { type: "image", src: "/images/fa-nblm/artifact2-img01.jpg", caption: "Vital signs assessment — pulse, breathing rates, and neurological checks", alt: "Vital signs and stroke assessment" },
@@ -59,6 +60,7 @@ export const firstAidLessonEnhancements: Record<string, any[]> = {
     { type: "knowledgeCheck", question: "What medication does an asthma passenger typically use?", options: ["Insulin", "Ventolin inhaler", "Nitroglycerin", "Aspirin"], correctAnswer: 1, explanation: "Asthma passengers typically use a Ventolin (salbutamol) inhaler to treat their condition." },
   ],
   "fa-lesson-6-2": [
+    { type: "svg", src: "/images/fa-svg/heimlich-steps.svg", caption: "Heimlich Manoeuvre - 4-step sequence: encourage cough, back slaps, abdominal thrusts, alternate" },
     { type: "image", src: "/images/first-aid/heimlich-maneuver.jpg", caption: "The Heimlich manoeuvre — stand behind, interlock fingers around waist, fist above navel, pull sharply inwards and upwards", alt: "Heimlich manoeuvre demonstration" },
     { type: "image", src: "/images/first-aid/choking-first-aid.jpg", caption: "Choking response sequence: encourage cough, back slaps, then Heimlich manoeuvre", alt: "Choking first aid procedure" },
     { type: "image", src: "/images/first-aid/choking-infant.jpg", caption: "Infant choking treatment — lay baby along forearm, 5 back slaps + 5 chest thrusts", alt: "Infant choking treatment" },
@@ -72,6 +74,7 @@ export const firstAidLessonEnhancements: Record<string, any[]> = {
     { type: "knowledgeCheck", question: "What should you do if a fainting passenger doesn't regain consciousness quickly?", options: ["Give them water", "Open airway, check breathing, recovery position", "Shake them vigorously", "Stand them up"], correctAnswer: 1, explanation: "If not recovering quickly: open the airway, check breathing and pulse, be ready to resuscitate, place in recovery position." },
   ],
   "fa-lesson-7-2": [
+    { type: "svg", src: "/images/fa-svg/drabc-flowchart.svg", caption: "DRABC Emergency Assessment Flowchart - step-by-step decision tree" },
     { type: "image", src: "/images/first-aid/cpr-training.jpg", caption: "CPR training — chest compressions and rescue breaths can save lives", alt: "CPR training" },
     { type: "image", src: "/images/fa-nblm/artifact4-img03.jpg", caption: "DRABC emergency resuscitation procedure — step-by-step assessment", alt: "DRABC resuscitation procedure" },
     { type: "knowledgeCheck", question: "How long should you check for breathing?", options: ["5 seconds", "10 seconds", "15 seconds", "20 seconds"], correctAnswer: 1, explanation: "Check for breathing for approximately 10 seconds using Look, Listen, Feel." },
@@ -82,9 +85,11 @@ export const firstAidLessonEnhancements: Record<string, any[]> = {
     { type: "knowledgeCheck", question: "How long without oxygen can cause permanent brain damage?", options: ["1-2 minutes", "3-4 minutes", "5-7 minutes", "10 minutes"], correctAnswer: 1, explanation: "3-4 minutes without breathing may cause permanent brain damage." },
   ],
   "fa-lesson-7-4": [
+    { type: "svg", src: "/images/fa-svg/cpr-comparison.svg", caption: "CPR Technique Comparison - Adult vs Child vs Infant hand positions, ratios, and depths" },
     { type: "image", src: "/images/first-aid/cpr-chest-compressions.jpg", caption: "Correct hand placement for adult chest compressions — heel of hand on breastbone", alt: "CPR chest compressions" },
     { type: "image", src: "/images/first-aid/cpr-infant.jpg", caption: "Infant CPR uses two fingers only, with gentle pressure on the chest", alt: "Infant CPR technique" },
     { type: "image", src: "/images/fa-nblm/artifact1-img09.jpg", caption: "CPR procedure — compression ratios for adults, children, and infants", alt: "CPR compression ratios" },
+    { type: "svg", src: "/images/fa-svg/chain-of-survival.svg", caption: "Chain of Survival - Early Access, Early CPR, Early Defibrillation, Early Advanced Care" },
     { type: "image", src: "/images/fa-nblm/artifact3-img10.jpg", caption: "Chain of Survival — Early Access, Early CPR, Early Defibrillation, Early Advanced Care", alt: "Chain of survival" },
     { type: "knowledgeCheck", question: "What is the correct CPR ratio for adults?", options: ["15:2", "30:2", "5:1", "20:2"], correctAnswer: 1, explanation: "Adult CPR: 30 chest compressions followed by 2 breaths." },
     { type: "knowledgeCheck", question: "For child/infant CPR, what do you start with?", options: ["30 compressions", "5 rescue breaths", "2 breaths", "10 compressions"], correctAnswer: 1, explanation: "For children and infants: 5 rescue breaths first, then 30 compressions and 2 breaths." },
@@ -97,6 +102,7 @@ export const firstAidLessonEnhancements: Record<string, any[]> = {
     { type: "knowledgeCheck", question: "Should you give an unconscious passenger anything by mouth?", options: ["Yes, water", "Yes, medication", "No, nothing by mouth", "Only if they ask"], correctAnswer: 2, explanation: "Never give an unconscious passenger anything by mouth. Maintain airway and place in recovery position." },
   ],
   "fa-lesson-8-2": [
+    { type: "svg", src: "/images/fa-svg/recovery-position-stages.svg", caption: "Recovery Position - 5 detailed stages with step-by-step instructions" },
     { type: "image", src: "/images/first-aid/recovery-position.jpg", caption: "The recovery position maintains an open airway and allows fluids to drain from the mouth", alt: "Recovery position demonstration" },
     { type: "image", src: "/images/fa-nblm/artifact3-img10.jpg", caption: "Recovery position stages — protecting the airway in unconscious patients", alt: "Recovery position stages" },
     { type: "knowledgeCheck", question: "Why is the recovery position the safest for unconscious casualties?", options: ["It keeps them warm", "It maintains an open airway and allows fluid drainage", "It prevents fractures", "It helps circulation"], correctAnswer: 1, explanation: "The recovery position keeps the airway open, allows fluids to drain, and keeps the body stable." },
@@ -139,6 +145,7 @@ export const firstAidLessonEnhancements: Record<string, any[]> = {
     { type: "clickToReveal", title: "How should you treat neck or spine injuries?", content: "Do NOT move the passenger unless absolutely essential. Pad around with pillows and blankets and stay with the passenger. Do not give medication. Seek medical aid as soon as possible.", variant: "danger" },
   ],
   "fa-lesson-11-3": [
+    { type: "svg", src: "/images/fa-svg/rice-treatment.svg", caption: "RICE Treatment - Rest, Ice, Compress, Elevate for strains and sprains" },
     { type: "image", src: "/images/fa-nblm/artifact3-img15.jpg", caption: "Strains and sprains — RICE treatment (Rest, Ice, Compress, Elevate)", alt: "RICE treatment for strains and sprains" },
     { type: "knowledgeCheck", question: "What does RICE stand for?", options: ["Rest, Ice, Compress, Elevate", "Relax, Immobilize, Cover, Examine", "Rest, Investigate, Clean, Evaluate", "Recovery, Ice, Care, Exercise"], correctAnswer: 0, explanation: "RICE: Rest, Ice (10-15 min), Compress, Elevate - for strains and sprains." },
   ],
@@ -195,6 +202,7 @@ export const firstAidLessonEnhancements: Record<string, any[]> = {
     { type: "clickToReveal", title: "Who can open the Emergency Medical Kit (EMK)?", content: "The EMK can only be opened with explicit instructions and authorization of the Commander. Drugs must not be administered except by qualified doctors, nurses, or similarly qualified personnel.", variant: "danger" },
   ],
   "fa-lesson-14-3": [
+    { type: "svg", src: "/images/fa-svg/aed-procedure.svg", caption: "AED Procedure - 6-step process with contraindications and battery indicators" },
     { type: "image", src: "/images/first-aid/aed-defibrillator.jpg", caption: "AED (Automated External Defibrillator) — portable unit for treating cardiac arrest", alt: "AED defibrillator" },
     { type: "image", src: "/images/first-aid/aed-use.jpg", caption: "AED procedure — apply pads, follow voice prompts, deliver shock when advised", alt: "AED usage" },
     { type: "image", src: "/images/fa-nblm/artifact1-img15.jpg", caption: "AED contraindications and safety precautions — when NOT to use the defibrillator", alt: "AED contraindications" },

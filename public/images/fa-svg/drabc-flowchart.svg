@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600">
+  <defs><marker id="a1" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="#64748b"/></marker></defs>
+  <text x="350" y="25" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#991b1b">DRABC Emergency Assessment Flowchart</text>
+  <ellipse cx="350" cy="60" rx="80" ry="25" fill="#dc2626" stroke="#991b1b" stroke-width="2"/>
+  <text x="350" y="65" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#ffffff">D - DANGER</text>
+  <text x="350" y="95" text-anchor="middle" font-family="Arial" font-size="10" fill="#64748b">Assess situation. Move passenger only if danger present.</text>
+  <line x1="350" y1="85" x2="350" y2="110" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <rect x="250" y="110" width="200" height="40" rx="8" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+  <text x="350" y="128" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#ffffff">R - RESPONSE</text>
+  <text x="350" y="142" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Voice, Touch, Pain</text>
+  <line x1="350" y1="150" x2="350" y2="170" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <polygon points="350,170 450,210 350,250 250,210" fill="#eab308" stroke="#b45309" stroke-width="2"/>
+  <text x="350" y="205" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#0f172a">Response?</text>
+  <text x="350" y="220" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#0f172a">NO</text>
+  <rect x="100" y="190" width="120" height="40" rx="8" fill="#dc2626" stroke="#991b1b" stroke-width="2"/>
+  <text x="160" y="215" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#ffffff">CALL FOR HELP</text>
+  <line x1="250" y1="210" x2="220" y2="210" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <line x1="350" y1="250" x2="350" y2="270" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <rect x="250" y="270" width="200" height="40" rx="8" fill="#0ea5e9" stroke="#0369a1" stroke-width="2"/>
+  <text x="350" y="288" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#ffffff">A - AIRWAY</text>
+  <text x="350" y="302" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Check obstruction. Open airway.</text>
+  <line x1="350" y1="310" x2="350" y2="330" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <rect x="250" y="330" width="200" height="40" rx="8" fill="#16a34a" stroke="#15803d" stroke-width="2"/>
+  <text x="350" y="348" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#ffffff">B - BREATHING</text>
+  <text x="350" y="362" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Look, Listen, Feel (10 sec)</text>
+  <line x1="350" y1="370" x2="350" y2="390" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <polygon points="350,390 450,430 350,470 250,430" fill="#eab308" stroke="#b45309" stroke-width="2"/>
+  <text x="350" y="425" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#0f172a">Breathing?</text>
+  <rect x="100" y="410" width="120" height="40" rx="8" fill="#16a34a" stroke="#15803d" stroke-width="2"/>
+  <text x="160" y="428" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#ffffff">RECOVERY</text>
+  <text x="160" y="440" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#ffffff">POSITION</text>
+  <line x1="250" y1="430" x2="220" y2="430" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <rect x="480" y="410" width="160" height="40" rx="8" fill="#dc2626" stroke="#991b1b" stroke-width="2"/>
+  <text x="560" y="428" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#ffffff">START CPR</text>
+  <text x="560" y="440" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">30 compressions : 2 breaths</text>
+  <line x1="450" y1="430" x2="480" y2="430" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+  <rect x="250" y="490" width="200" height="40" rx="8" fill="#7c3aed" stroke="#5b21b6" stroke-width="2"/>
+  <text x="350" y="508" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#ffffff">C - CIRCULATION</text>
+  <text x="350" y="522" text-anchor="middle" font-family="Arial" font-size="9" fill="#ffffff">Check bleeding, major injuries</text>
+  <rect x="200" y="550" width="300" height="35" rx="8" fill="#0c4a6e" stroke="#0369a1" stroke-width="2"/>
+  <text x="350" y="572" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#ffffff">Continue until signs of life or medical help</text>
+  <line x1="350" y1="530" x2="350" y2="550" stroke="#64748b" stroke-width="2" marker-end="url(#a1)"/>
+</svg>

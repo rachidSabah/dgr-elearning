@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <text x="400" y="25" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#0c4a6e">CPR Technique Comparison: Adult, Child and Infant</text>
+  <g font-family="Arial" font-size="10" text-anchor="middle">
+    <rect x="30" y="50" width="240" height="420" rx="12" fill="#0ea5e9" opacity="0.1" stroke="#0ea5e9" stroke-width="2"/>
+    <rect x="30" y="50" width="240" height="50" rx="12" fill="#0ea5e9"/>
+    <text x="150" y="80" font-family="Arial Black" font-size="18" font-weight="900" fill="#ffffff">ADULT (8+ yr)</text>
+    <text x="150" y="125" font-weight="bold" fill="#0369a1">Hand Position</text>
+    <text x="150" y="145" fill="#0f172a">Heel of both hands, one on top of other</text>
+    <text x="150" y="185" font-weight="bold" fill="#0369a1">Location</text>
+    <text x="150" y="205" fill="#0f172a">Middle of breastbone, 2 fingers above sternum</text>
+    <text x="150" y="245" font-weight="bold" fill="#0369a1">Ratio</text>
+    <rect x="90" y="255" width="120" height="35" rx="6" fill="#dc2626" stroke="#991b1b" stroke-width="1.5"/>
+    <text x="150" y="278" font-family="Arial Black" font-size="16" font-weight="900" fill="#ffffff">30 : 2</text>
+    <text x="150" y="310" font-weight="bold" fill="#0369a1">Depth</text>
+    <text x="150" y="328" fill="#0f172a">5-6 cm (2 inches)</text>
+    <text x="150" y="355" font-weight="bold" fill="#0369a1">Start With</text>
+    <text x="150" y="373" fill="#0f172a">30 compressions then 2 breaths</text>
+    <text x="150" y="458" fill="#64748b" font-size="9">If over 8 years, treat as adult</text>
+  </g>
+  <g font-family="Arial" font-size="10" text-anchor="middle">
+    <rect x="280" y="50" width="240" height="420" rx="12" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="2"/>
+    <rect x="280" y="50" width="240" height="50" rx="12" fill="#f59e0b"/>
+    <text x="400" y="80" font-family="Arial Black" font-size="18" font-weight="900" fill="#ffffff">CHILD (1-7 yr)</text>
+    <text x="400" y="125" font-weight="bold" fill="#b45309">Hand Position</text>
+    <text x="400" y="145" fill="#0f172a">Heel of ONE hand only</text>
+    <text x="400" y="185" font-weight="bold" fill="#b45309">Location</text>
+    <text x="400" y="205" fill="#0f172a">Middle of breastbone, 2 fingers above sternum</text>
+    <text x="400" y="245" font-weight="bold" fill="#b45309">Ratio</text>
+    <rect x="310" y="255" width="180" height="35" rx="6" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"/>
+    <text x="400" y="278" font-family="Arial Black" font-size="14" font-weight="900" fill="#ffffff">5 breaths then 30:2</text>
+    <text x="400" y="310" font-weight="bold" fill="#b45309">Depth</text>
+    <text x="400" y="328" fill="#0f172a">4-5 cm (1.5 inches)</text>
+    <text x="400" y="355" font-weight="bold" fill="#b45309">Start With</text>
+    <text x="400" y="373" fill="#0f172a">5 RESCUE BREATHS then 30 compressions</text>
+    <text x="400" y="458" fill="#64748b" font-size="9">Over 8 years = treat as adult</text>
+  </g>
+  <g font-family="Arial" font-size="10" text-anchor="middle">
+    <rect x="530" y="50" width="240" height="420" rx="12" fill="#ec4899" opacity="0.1" stroke="#ec4899" stroke-width="2"/>
+    <rect x="530" y="50" width="240" height="50" rx="12" fill="#ec4899"/>
+    <text x="650" y="80" font-family="Arial Black" font-size="18" font-weight="900" fill="#ffffff">INFANT (under 1 yr)</text>
+    <text x="650" y="125" font-weight="bold" fill="#be185d">Hand Position</text>
+    <text x="650" y="145" fill="#0f172a">TWO FINGERS only</text>
+    <text x="650" y="185" font-weight="bold" fill="#be185d">Location</text>
+    <text x="650" y="205" fill="#0f172a">1 finger width below imaginary line between nipples</text>
+    <text x="650" y="245" font-weight="bold" fill="#be185d">Ratio</text>
+    <rect x="560" y="255" width="180" height="35" rx="6" fill="#ec4899" stroke="#be185d" stroke-width="1.5"/>
+    <text x="650" y="278" font-family="Arial Black" font-size="14" font-weight="900" fill="#ffffff">5 breaths then 30:2</text>
+    <text x="650" y="310" font-weight="bold" fill="#be185d">Depth</text>
+    <text x="650" y="328" fill="#0f172a">3-4 cm (1/3 chest depth)</text>
+    <text x="650" y="355" font-weight="bold" fill="#be185d">Start With</text>
+    <text x="650" y="373" fill="#0f172a">5 RESCUE BREATHS then 30 compressions</text>
+    <text x="650" y="458" fill="#64748b" font-size="9">Gentle pressure - no hard surface needed</text>
+  </g>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <text x="400" y="25" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#0369a1">AED Procedure - Step by Step</text>
+  <text x="400" y="42" text-anchor="middle" font-family="Arial" font-size="10" fill="#991b1b" font-weight="bold">Every minute delay = 7-10% decrease in survival</text>
+  <g font-family="Arial" font-size="9" text-anchor="middle">
+    <rect x="20" y="60" width="120" height="140" rx="8" fill="#dc2626" opacity="0.1" stroke="#dc2626" stroke-width="1.5"/>
+    <circle cx="80" cy="85" r="18" fill="#dc2626"/><text x="80" y="90" fill="#ffffff" font-weight="bold" font-size="12">1</text>
+    <text x="80" y="120" fill="#0f172a" font-weight="bold">DRABC</text><text x="80" y="140" fill="#64748b">Assess casualty</text><text x="80" y="155" fill="#64748b">Start CPR</text><text x="80" y="170" fill="#64748b">Call for AED</text>
+    <rect x="155" y="60" width="120" height="140" rx="8" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="1.5"/>
+    <circle cx="215" cy="85" r="18" fill="#f59e0b"/><text x="215" y="90" fill="#ffffff" font-weight="bold" font-size="12">2</text>
+    <text x="215" y="120" fill="#0f172a" font-weight="bold">SWITCH ON</text><text x="215" y="140" fill="#64748b">Connect electrodes</text><text x="215" y="155" fill="#64748b">Press On/Off</text>
+    <rect x="290" y="60" width="120" height="140" rx="8" fill="#0ea5e9" opacity="0.1" stroke="#0ea5e9" stroke-width="1.5"/>
+    <circle cx="350" cy="85" r="18" fill="#0ea5e9"/><text x="350" y="90" fill="#ffffff" font-weight="bold" font-size="12">3</text>
+    <text x="350" y="120" fill="#0f172a" font-weight="bold">APPLY PADS</text><text x="350" y="140" fill="#64748b">On bare chest</text><text x="350" y="155" fill="#64748b">Free of moisture</text><text x="350" y="170" fill="#64748b">and hair</text>
+    <rect x="425" y="60" width="120" height="140" rx="8" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1.5"/>
+    <circle cx="485" cy="85" r="18" fill="#7c3aed"/><text x="485" y="90" fill="#ffffff" font-weight="bold" font-size="12">4</text>
+    <text x="485" y="120" fill="#0f172a" font-weight="bold">ANALYSE</text><text x="485" y="140" fill="#64748b">Follow voice</text><text x="485" y="155" fill="#64748b">prompts</text><text x="485" y="170" fill="#64748b">Push to Analyse</text>
+    <rect x="560" y="60" width="120" height="140" rx="8" fill="#eab308" opacity="0.2" stroke="#b45309" stroke-width="1.5"/>
+    <circle cx="620" cy="85" r="18" fill="#b45309"/><text x="620" y="90" fill="#ffffff" font-weight="bold" font-size="12">5</text>
+    <text x="620" y="120" fill="#0f172a" font-weight="bold">STAND CLEAR</text><text x="620" y="140" fill="#64748b">If shock advised:</text><text x="620" y="155" fill="#64748b">Nobody touch</text><text x="620" y="170" fill="#64748b">the passenger</text>
+    <rect x="695" y="60" width="90" height="140" rx="8" fill="#dc2626" opacity="0.1" stroke="#dc2626" stroke-width="1.5"/>
+    <circle cx="740" cy="85" r="18" fill="#dc2626"/><text x="740" y="90" fill="#ffffff" font-weight="bold" font-size="12">6</text>
+    <text x="740" y="120" fill="#0f172a" font-weight="bold">SHOCK</text><text x="740" y="140" fill="#64748b">Press Shock</text><text x="740" y="155" fill="#64748b">3 shocks</text><text x="740" y="170" fill="#64748b">+ 1 min CPR</text>
+  </g>
+  <g font-family="Arial" font-size="9">
+    <rect x="20" y="220" width="370" height="160" rx="8" fill="#dc2626" opacity="0.05" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="205" y="245" text-anchor="middle" fill="#991b1b" font-weight="bold" font-size="11">CONTRAINDICATIONS - DO NOT USE IF:</text>
+    <text x="40" y="270" fill="#0f172a">- Child younger than 8 years old</text>
+    <text x="40" y="288" fill="#0f172a">- Weighing less than 22 kg (55 lbs)</text>
+    <text x="40" y="306" fill="#0f172a">- Passenger is not motionless</text>
+    <text x="40" y="324" fill="#0f172a">- Wet area (remove wet clothing first)</text>
+    <text x="40" y="342" fill="#0f172a">- Anyone touching the passenger</text>
+    <text x="40" y="360" fill="#991b1b" font-weight="bold">Inform flight crew to limit VHF/HF/SATCOM</text>
+  </g>
+  <g font-family="Arial" font-size="9">
+    <rect x="410" y="220" width="370" height="160" rx="8" fill="#16a34a" opacity="0.05" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="595" y="245" text-anchor="middle" fill="#15803d" font-weight="bold" font-size="11">BATTERY STATUS INDICATORS</text>
+    <text x="430" y="270" fill="#15803d" font-weight="bold">OK icon ON = Ready to use</text>
+    <text x="430" y="290" fill="#b45309" font-weight="bold">LOW BATTERY icon = Can still use</text>
+    <text x="430" y="310" fill="#b45309">Flashing LOW BATTERY = Cannot use</text>
+    <text x="430" y="330" fill="#991b1b" font-weight="bold">SERVICE icon = Cannot use - service required</text>
+    <text x="430" y="355" fill="#64748b" font-size="8">Pre-flight: Check OK icon on handle</text>
+    <text x="430" y="367" fill="#64748b" font-size="8">Two yellow seals must be intact</text>
+  </g>
+</svg>
