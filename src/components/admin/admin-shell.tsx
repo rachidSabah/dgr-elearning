@@ -19,6 +19,8 @@ import {
   Shield,
   ChevronDown,
   GraduationCap,
+  Bot,
+  Cpu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,11 +53,13 @@ interface NavItem {
 
 const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/ai-builder", label: "AI Course Builder", icon: Bot },
   { href: "/admin/courses", label: "Course Management", icon: BookOpen },
   { href: "/admin/modules", label: "Module Management", icon: FolderTree },
   { href: "/admin/content-editor", label: "Content Editor", icon: FileEdit },
   { href: "/admin/users", label: "User Management", icon: Users },
   { href: "/admin/media-library", label: "Media Library", icon: ImageIcon },
+  { href: "/admin/ai-providers", label: "AI Providers", icon: Cpu },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
