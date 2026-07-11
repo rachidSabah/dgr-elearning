@@ -619,7 +619,7 @@ export interface GeneratedCourse {
   }[];
 }
 
-const COURSE_GENERATION_SYSTEM_PROMPT = `You are an expert aviation training course designer. You create professional, interactive eLearning courses for cabin crew and aviation professionals.
+const COURSE_GENERATION_SYSTEM_PROMPT_BASE = `You are an expert aviation training course designer. You create professional, interactive eLearning courses for cabin crew and aviation professionals.
 
 Given a PDF's text content and a user's instructions, you must generate a complete, structured course in JSON format.
 
@@ -640,6 +640,22 @@ CRITICAL RULES:
 - The output must be valid JSON
 
 Return ONLY the JSON, no markdown formatting, no explanation.`;
+
+// Dynamic system prompt with skills context
+function getSystemPrompt(): string {
+  let prompt = COURSE_GENERATION_SYSTEM_PROMPT_BASE;
+  // Import skills context dynamically to avoid circular deps
+  try {
+    const { buildSkillsContext } = require("./agent-skills");
+    const skillsCtx = buildSkillsContext();
+    if (skillsCtx) {
+      prompt += skillsCtx;
+    }
+  } catch {
+    // Skills module not available, continue without
+  }
+  return prompt;
+}
 
 export async function generateCourse(
   request: CourseGenerationRequest
@@ -724,7 +740,7 @@ Return ONLY valid JSON. No markdown, no code fences, no explanation.`;
     providerId,
     model,
     [
-      { role: "system", content: COURSE_GENERATION_SYSTEM_PROMPT },
+      { role: "system", content: getSystemPrompt() },
       { role: "user", content: userPrompt },
     ],
     { temperature: 0.7, maxTokens: 8192, jsonMode: true }

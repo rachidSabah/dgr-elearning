@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Settings, Plus, Trash2, Eye, EyeOff, Check, ExternalLink,
-  Bot, Cable, Zap, X, RefreshCw
+  Bot, Cable, Zap, X, RefreshCw, Sparkles, Notebook
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
   getProviderById, type ProviderConfig,
   getMCPConnections, saveMCPConnection, deleteMCPConnection, type MCPConnection
 } from "@/lib/ai-providers";
+import { ALL_SKILL_PACKS, getEnabledSkills, toggleSkill, buildSkillsContext } from "@/lib/agent-skills";
 
 export default function AIProvidersPage() {
   const [configs, setConfigs] = useState<ProviderConfig[]>([]);
@@ -131,6 +132,7 @@ export default function AIProvidersPage() {
       <Tabs defaultValue="providers">
         <TabsList>
           <TabsTrigger value="providers" className="gap-1.5"><Bot className="h-3.5 w-3.5" /> AI Providers</TabsTrigger>
+          <TabsTrigger value="skills" className="gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Agent Skills</TabsTrigger>
           <TabsTrigger value="mcp" className="gap-1.5"><Cable className="h-3.5 w-3.5" /> MCP Connections</TabsTrigger>
         </TabsList>
 
@@ -272,6 +274,93 @@ export default function AIProvidersPage() {
               );
             })}
           </div>
+        </TabsContent>
+
+        {/* === AGENT SKILLS TAB === */}
+        <TabsContent value="skills" className="space-y-4">
+          <Card>
+            <CardContent className="pt-5">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center text-white">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">Agent Skills</h3>
+                  <p className="text-xs text-slate-500">Extend the AI Course Builder with specialized skills. Skills follow the Agent Skills specification (agentskills.io) and are compatible with Claude Code, Codex, and OpenCode.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {ALL_SKILL_PACKS.map((pack) => (
+            <Card key={pack.id} className="overflow-hidden">
+              <div className="h-1" style={{ backgroundColor: pack.color }} />
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: pack.color }}>
+                      <Notebook className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-sm">{pack.name}</CardTitle>
+                      <p className="text-xs text-slate-500 mt-0.5">{pack.description.substring(0, 120)}...</p>
+                    </div>
+                  </div>
+                  <a href={pack.sourceUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm" className="gap-1 text-xs">
+                      <ExternalLink className="h-3 w-3" /> Source
+                    </Button>
+                  </a>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {pack.skills.map((skill) => {
+                  const enabled = getEnabledSkills().includes(skill.id);
+                  return (
+                    <div key={skill.id} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-900">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-medium">{skill.name}</h4>
+                            <Badge variant="outline" className="text-xs capitalize">{skill.category}</Badge>
+                            {enabled && <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">Active</Badge>}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">{skill.description}</p>
+                        </div>
+                        <Switch checked={enabled} onCheckedChange={() => { toggleSkill(skill.id); setConfigs(getProviderConfigs()); toast.success(`${skill.name} ${enabled ? "disabled" : "enabled"}`); }} />
+                      </div>
+                      {enabled && skill.capabilities && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {skill.capabilities.map((cap, i) => (
+                            <Badge key={i} variant="secondary" className="text-[10px]">{cap}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {enabled && skill.workflow && (
+                        <details className="mt-2 text-xs">
+                          <summary className="cursor-pointer text-slate-500 hover:text-slate-700">View workflow</summary>
+                          <ol className="list-decimal list-inside mt-1 space-y-0.5 text-slate-500">
+                            {skill.workflow.map((step, i) => <li key={i}>{step}</li>)}
+                          </ol>
+                        </details>
+                      )}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          ))}
+
+          <Card className="border-purple-200 bg-purple-50/30">
+            <CardContent className="pt-4">
+              <p className="text-xs text-slate-600">
+                <strong>How skills work:</strong> When the AI Course Builder generates a course, enabled skills are injected into the AI's system prompt. This teaches the AI agent how to use Obsidian-flavored Markdown (wikilinks, callouts, embeds), create .base database views, build .canvas visual diagrams, and interact with vaults via the Obsidian CLI. Generated courses can use these formats for richer content.
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                To install these skills in OpenCode: <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">git clone https://github.com/kepano/obsidian-skills.git ~/.opencode/skills/obsidian-skills</code>
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* === MCP CONNECTIONS TAB === */}
