@@ -1,0 +1,464 @@
+     1→              "Covers all 22 content modules",
+     2→              "Mix of recall, application, and scenario questions",
+     3→              "Each question has 4 options, one correct answer",
+     4→              "Explanations provided after each answer for learning",
+     5→            ]},
+     6→            { type: "heading", text: "Study Tips", level: 3 },
+     7→            { type: "list", items: [
+     8→              "Review lesson summaries — they capture key points",
+     9→              "Practise with flashcards for terminology",
+    10→              "Revisit review questions at the end of each lesson",
+    11→              "Review quiz questions you missed earlier",
+    12→              "Focus on application, not just memorisation",
+    13→              "Use scenarios to test integrated understanding",
+    14→              "Allow sufficient time — don't cram",
+    15→            ]},
+    16→            { type: "table", headers: ["Topic Area", "Approx. Questions", "Focus"], rows: [
+    17→              ["Communication & Teamwork", "4-5", "Closed-loop, barriers, Tuckman, groupthink"],
+    18→              ["SA & Decision Making", "4-5", "SA levels, FOR-DEC, biases, hazardous attitudes"],
+    19→              ["TEM", "3-4", "Threats, errors, countermeasures"],
+    20→              ["Leadership & Assertiveness", "3-4", "Styles, P.A.C.E., followership"],
+    21→              ["Fatigue, Workload & Stress", "3-4", "FRMS, workload management, coping"],
+    22→              ["Culture & Safety", "3-4", "Hofstede, safety culture, Just Culture"],
+    23→              ["Emergencies & Case Studies", "2-3", "Evacuation CRM, lessons from accidents"],
+    24→            ], caption: "Final exam topic distribution"},
+    25→            { type: "callout", variant: "tip", title: "Exam Strategy", text: "Read each question carefully. Eliminate obviously wrong options. Consider what CRM principle the question tests. If unsure, choose the answer that prioritises safety, communication, and crew coordination — these are the consistent CRM themes." },
+    26→            { type: "callout", variant: "info", title: "Beyond the Exam", text: "The exam is one assessment. The real test is applying CRM in daily operations. Carry these principles into every flight: communicate clearly, work as a team, maintain SA, manage threats, support each other, and contribute to a strong safety culture." },
+    27→            { type: "callout", variant: "warning", title: "Certification", text: "Successful completion of this CRM course is required for cabin crew qualification under EASA Part-CC and Part-ORO, and ICAO Annex 6. The certificate demonstrates your competence in CRM principles and is part of your professional credentials." },
+    28→          ],
+    29→          summary: [
+    30→            "The final exam has 25 MCQs covering all 22 content modules",
+    31→            "Study by reviewing summaries, flashcards, review questions, and quizzes",
+    32→            "Topic distribution spans communication, SA, TEM, leadership, fatigue, culture, emergencies",
+    33→            "Exam strategy: read carefully, eliminate wrong options, choose safety/communication/teamwork",
+    34→            "The real test is applying CRM in daily operations, not just passing the exam",
+    35→          ],
+    36→          reviewQuestions: [
+    37→            "How many questions are in the final exam?",
+    38→            "What study strategies should you use to prepare?",
+    39→            "What topic areas does the exam cover?",
+    40→            "What is the passing score requirement for certification?",
+    41→          ],
+    42→        },
+    43→      ],
+    44→    },
+    45→  ],
+    46→
+    47→  // ============================================================================
+    48→  // LESSON QUIZZES
+    49→  // ============================================================================
+    50→  quizzes: {
+    51→    "crm-lesson-1-1": [
+    52→      { id: "crmq1-1a", type: "mcq", question: "What is the primary purpose of CRM?", options: ["Increase airline profits", "Reduce human-error incidents and improve coordination", "Replace technical training", "Standardise passenger service"], correctAnswer: 1, explanation: "CRM's primary purpose is to reduce human-error incidents and improve crew coordination through effective use of all resources.", difficulty: "easy", topic: "CRM Definition" },
+    53→      { id: "crmq1-1b", type: "mcq", question: "Does CRM apply to all cabin crew members?", options: ["No, only the CSD/CS", "No, only senior crew", "Yes, every crew member regardless of seniority", "Only on long-haul flights"], correctAnswer: 2, explanation: "CRM applies to every crew member regardless of seniority — all contribute to crew collective performance.", difficulty: "easy", topic: "CRM Scope" },
+    54→    ],
+    55→    "crm-lesson-1-3": [
+    56→      { id: "crmq1-3a", type: "mcq", question: "Which regulations mandate CRM training for cabin crew?", options: ["FAA Part 61 only", "ICAO Annex 6 and EASA Regulation (EU) No 965/2012", "Only local labour laws", "No regulations require it"], correctAnswer: 1, explanation: "ICAO Annex 6 Part I and EASA Regulation (EU) No 965/2012 mandate CRM training for cabin crew.", difficulty: "medium", topic: "Regulations" },
+    57→    ],
+    58→    "crm-lesson-2-1": [
+    59→      { id: "crmq2-1a", type: "mcq", question: "Which 1978 accident directly triggered the first CRM training programme?", options: ["Tenerife", "United Airlines Flight 173 (Portland)", "Air Florida 90", "Kegworth"], correctAnswer: 1, explanation: "United Airlines Flight 173 in Portland (1978) ran out of fuel while the crew fixated on a landing gear issue. United then developed the first CRM programme.", difficulty: "medium", topic: "CRM History" },
+    60→      { id: "crmq2-1b", type: "mcq", question: "Which organisation hosted the 1979 workshop that formalised CRM?", options: ["FAA", "ICAO", "NASA", "IATA"], correctAnswer: 2, explanation: "NASA hosted the 1979 workshop that formalised the CRM concept.", difficulty: "medium", topic: "CRM History" },
+    61→    ],
+    62→    "crm-lesson-2-2": [
+    63→      { id: "crmq2-2a", type: "mcq", question: "How many generations of CRM are commonly recognised?", options: ["3", "4", "5", "6"], correctAnswer: 3, explanation: "CRM has evolved through six generations since the 1980s, each reflecting advances in human factors understanding.", difficulty: "easy", topic: "CRM Generations" },
+    64→    ],
+    65→    "crm-lesson-3-2": [
+    66→      { id: "crmq3-2a", type: "mcq", question: "In the SHELL model, what does the central 'L' stand for?", options: ["Logic", "Liveware (the human)", "Leadership", "Logistics"], correctAnswer: 1, explanation: "The central L in SHELL stands for Liveware — the human element at the centre of the framework.", difficulty: "easy", topic: "SHELL Model" },
+    67→      { id: "crmq3-2b", type: "mcq", question: "Where do most human factors problems occur in the SHELL model?", options: ["Within components themselves", "At the interfaces between components", "Only in the Hardware component", "Only in the Environment component"], correctAnswer: 1, explanation: "Most human factors problems occur at the interfaces between components — particularly between the central Liveware and the other four elements.", difficulty: "medium", topic: "SHELL Model" },
+    68→    ],
+    69→    "crm-lesson-3-3": [
+    70→      { id: "crmq3-3a", type: "mcq", question: "Approximately how many items can short-term memory hold?", options: ["1-2 items", "5-9 items", "15-20 items", "Unlimited"], correctAnswer: 1, explanation: "Short-term memory can hold approximately 5-9 items for about 20 seconds, which is why checklists are essential.", difficulty: "easy", topic: "Human Performance" },
+    71→    ],
+    72→    "crm-lesson-4-1": [
+    73→      { id: "crmq4-1a", type: "mcq", question: "What is closed-loop communication?", options: ["Speaking in a circle", "State → readback → confirm", "Only the sender speaks", "Communication without feedback"], correctAnswer: 1, explanation: "Closed-loop communication: Sender states message → Receiver reads back/acknowledges → Sender confirms. This prevents misunderstandings.", difficulty: "easy", topic: "Communication" },
+    74→      { id: "crmq4-1b", type: "mcq", question: "Which is NOT a common communication barrier?", options: ["Noise", "Language differences", "Closed-loop communication", "Status differences"], correctAnswer: 2, explanation: "Closed-loop communication is a technique to overcome barriers, not a barrier itself. The other three are common barriers.", difficulty: "medium", topic: "Communication Barriers" },
+    75→    ],
+    76→    "crm-lesson-4-2": [
+    77→      { id: "crmq4-2a", type: "mcq", question: "According to the Mehrabian model, approximately what proportion of meaning comes from body language?", options: ["7%", "38%", "55%", "90%"], correctAnswer: 2, explanation: "Approximately 55% of meaning in face-to-face communication comes from body language (with ~38% from tone and ~7% from words).", difficulty: "medium", topic: "Non-Verbal Communication" },
+    78→    ],
+    79→    "crm-lesson-4-3": [
+    80→      { id: "crmq4-3a", type: "mcq", question: "Which is NOT a characteristic of effective feedback?", options: ["Specific", "Timely", "Vague and general", "Behavioural"], correctAnswer: 2, explanation: "Effective feedback is specific, not vague. It should also be timely, behavioural, balanced, and two-way.", difficulty: "easy", topic: "Feedback" },
+    81→    ],
+    82→    "crm-lesson-5-1": [
+    83→      { id: "crmq5-1a", type: "mcq", question: "What are Tuckman's five stages of team development?", options: ["Forming, Storming, Norming, Performing, Adjourning", "Planning, Doing, Checking, Acting", "Initiation, Conflict, Resolution, Completion", "Briefing, Execution, Debriefing"], correctAnswer: 0, explanation: "Tuckman's stages: Forming, Storming, Norming, Performing, Adjourning.", difficulty: "medium", topic: "Team Development" },
+    84→    ],
+    85→    "crm-lesson-5-3": [
+    86→      { id: "crmq5-3a", type: "mcq", question: "What is groupthink?", options: ["A productive team decision process", "When the desire for consensus overrides critical thinking", "When everyone agrees naturally", "A type of communication breakdown"], correctAnswer: 1, explanation: "Groupthink occurs when the desire for consensus overrides critical thinking, causing crew to withhold concerns and leading to flawed decisions.", difficulty: "medium", topic: "Teamwork" },
+    87→    ],
+    88→    "crm-lesson-6-1": [
+    89→      { id: "crmq6-1a", type: "mcq", question: "Which leadership style is most appropriate during an emergency evacuation?", options: ["Participative", "Delegative", "Authoritarian", "Transformational"], correctAnswer: 2, explanation: "Emergencies require clear, directive leadership — the authoritarian style is appropriate when time is critical and clear direction is needed.", difficulty: "medium", topic: "Leadership" },
+    90→    ],
+    91→    "crm-lesson-6-3": [
+    92→      { id: "crmq6-3a", type: "mcq", question: "What does P.A.C.E. stand for?", options: ["Plan, Act, Check, Evaluate", "Probe, Alert, Challenge, Emergency", "Prepare, Approach, Communicate, Execute", "Prioritise, Act, Coordinate, Evaluate"], correctAnswer: 1, explanation: "P.A.C.E. is an escalation framework: Probe, Alert, Challenge, Emergency — providing increasing assertiveness if concerns are not addressed.", difficulty: "medium", topic: "Followership" },
+    93→    ],
+    94→    "crm-lesson-7-1": [
+    95→      { id: "crmq7-1a", type: "mcq", question: "What are the three levels of situational awareness (Endsley)?", options: ["Look, Listen, Feel", "Perception, Comprehension, Projection", "See, Understand, React", "Notice, Think, Act"], correctAnswer: 1, explanation: "Endsley's three levels: Perception (noticing), Comprehension (understanding), Projection (anticipating).", difficulty: "easy", topic: "Situational Awareness" },
+    96→    ],
+    97→    "crm-lesson-7-2": [
+    98→      { id: "crmq7-2a", type: "mcq", question: "Which is a particularly dangerous SA threat after many routine flights?", options: ["Complacency", "Vigilance", "Active scanning", "Briefing"], correctAnswer: 0, explanation: "Complacency is especially dangerous after routine flights without incident — crew may stop actively scanning and assume everything is fine.", difficulty: "medium", topic: "SA Threats" },
+    99→      { id: "crmq7-2b", type: "mcq", question: "What is expectation bias?", options: ["Hearing what we expect to hear", "Hearing everything accurately", "Ignoring all sounds", "Enhanced perception"], correctAnswer: 0, explanation: "Expectation bias: we perceive what we expect to perceive, which can cause us to miss contradicting evidence.", difficulty: "medium", topic: "SA Threats" },
+   100→    ],
+   101→    "crm-lesson-8-1": [
+   102→      { id: "crmq8-1a", type: "mcq", question: "What does FOR-DEC stand for?", options: ["Find, Organise, Report, Decide, Execute, Confirm", "Facts, Options, Risks, Decision, Execution, Check", "Formulate, Order, Review, Decide, Execute, Complete", "Focus, Observe, React, Decide, Execute, Check"], correctAnswer: 1, explanation: "FOR-DEC: Facts, Options, Risks, Decision, Execution, Check — a structured decision-making model used in aviation.", difficulty: "medium", topic: "Decision Making" },
+   103→    ],
+   104→    "crm-lesson-8-2": [
+   105→      { id: "crmq8-2a", type: "mcq", question: "Which is NOT one of the five hazardous attitudes in aviation?", options: ["Anti-authority", "Impulsivity", "Invulnerability", "Perfectionism"], correctAnswer: 3, explanation: "The five hazardous attitudes are: Anti-authority, Impulsivity, Invulnerability, Macho, and Resignation. Perfectionism is not on the list.", difficulty: "medium", topic: "Decision Biases" },
+   106→    ],
+   107→    "crm-lesson-9-1": [
+   108→      { id: "crmq9-1a", type: "mcq", question: "What does TEM stand for?", options: ["Team Error Management", "Threat and Error Management", "Technical Equipment Maintenance", "Task Execution Method"], correctAnswer: 1, explanation: "TEM stands for Threat and Error Management — a framework for managing operational challenges in aviation.", difficulty: "easy", topic: "TEM" },
+   109→    ],
+   110→    "crm-lesson-9-2": [
+   111→      { id: "crmq9-2a", type: "mcq", question: "Which is a category of cabin threats?", options: ["Only weather threats", "Environmental, operational, passenger, crew, external", "Only passenger threats", "Only mechanical threats"], correctAnswer: 1, explanation: "Cabin threats fall into categories: environmental, operational, passenger-related, crew-related, and external.", difficulty: "medium", topic: "TEM Threats" },
+   112→    ],
+   113→    "crm-lesson-9-3": [
+   114→      { id: "crmq9-3a", type: "mcq", question: "What is the modern CRM approach to errors?", options: ["Eliminate all errors through discipline", "Manage errors as inevitable — detect, trap, resolve, learn", "Punish all errors severely", "Ignore errors that don't cause harm"], correctAnswer: 1, explanation: "Modern CRM treats errors as inevitable — the goal is to detect and manage them before harm occurs, and to learn from them.", difficulty: "medium", topic: "Error Management" },
+   115→    ],
+   116→    "crm-lesson-10-2": [
+   117→      { id: "crmq10-2a", type: "mcq", question: "According to the Yerkes-Dodson law, what happens to performance as stress increases beyond optimal?", options: ["Continues to increase", "Stays the same", "Declines sharply", "Becomes perfect"], correctAnswer: 2, explanation: "The Yerkes-Dodson law shows performance increases with stress up to an optimal point, then declines sharply beyond it.", difficulty: "medium", topic: "Stress" },
+   118→    ],
+   119→    "crm-lesson-11-1": [
+   120→      { id: "crmq11-1a", type: "mcq", question: "After 17 hours awake, performance is equivalent to what blood alcohol concentration?", options: ["0.00%", "0.02%", "0.05%", "0.20%"], correctAnswer: 2, explanation: "After 17 hours awake, performance is equivalent to 0.05% BAC. After 24 hours, it equals 0.10% BAC.", difficulty: "medium", topic: "Fatigue" },
+   121→    ],
+   122→    "crm-lesson-11-3": [
+   123→      { id: "crmq11-3a", type: "mcq", question: "What does FRMS stand for?", options: ["Flight Risk Management System", "Fatigue Risk Management System", "Fatigue Reporting and Monitoring Service", "Flight Resource Management Standard"], correctAnswer: 1, explanation: "FRMS stands for Fatigue Risk Management System — a data-driven approach to managing fatigue risk.", difficulty: "easy", topic: "FRMS" },
+   124→      { id: "crmq11-3b", type: "mcq", question: "Is fatigue reporting punitive?", options: ["Yes, always", "No, non-punitive reporting is required by regulation", "Only for repeat reports", "Depends on the airline"], correctAnswer: 1, explanation: "Operators are legally required to have non-punitive fatigue reporting to encourage honest reporting and improve safety.", difficulty: "medium", topic: "FRMS" },
+   125→    ],
+   126→    "crm-lesson-12-2": [
+   127→      { id: "crmq12-2a", type: "mcq", question: "Which conflict resolution strategy is most appropriate when safety is critical and quick decision is needed?", options: ["Collaborating", "Compromising", "Avoiding", "Competing"], correctAnswer: 3, explanation: "Competing is appropriate for safety-critical, time-pressured situations where one party must assert the correct action.", difficulty: "medium", topic: "Conflict Resolution" },
+   128→    ],
+   129→    "crm-lesson-13-1": [
+   130→      { id: "crmq13-1a", type: "mcq", question: "What is the difference between assertiveness and aggression?", options: ["No difference", "Assertiveness respects others; aggression does not", "Aggression is more effective", "Assertiveness is only for seniors"], correctAnswer: 1, explanation: "Assertiveness expresses views clearly while respecting others. Aggression expresses at others' expense. The difference is respect for others.", difficulty: "easy", topic: "Assertiveness" },
+   131→    ],
+   132→    "crm-lesson-13-2": [
+   133→      { id: "crmq13-2a", type: "mcq", question: "What is the final stage of the P.A.C.E. escalation framework?", options: ["Probe", "Alert", "Challenge", "Emergency"], correctAnswer: 3, explanation: "Emergency is the final P.A.C.E. stage — taking action to prevent imminent harm when concerns remain unaddressed.", difficulty: "medium", topic: "Assertiveness" },
+   134→    ],
+   135→    "crm-lesson-14-2": [
+   136→      { id: "crmq14-2a", type: "mcq", question: "What does NITS stand for in cabin crew briefings?", options: ["Numbers, Items, Time, Status", "Nature, Intentions, Time, Special instructions", "Name, Identity, Task, Sequence", "Notice, Inform, Train, Support"], correctAnswer: 1, explanation: "NITS: Nature (what's the situation), Intentions (what Captain plans), Time (how much time), Special instructions (what cabin crew should do).", difficulty: "medium", topic: "Cabin-Flight Deck Coordination" },
+   137→    ],
+   138→    "crm-lesson-14-3": [
+   139→      { id: "crmq14-3a", type: "mcq", question: "The sterile cockpit rule typically applies below what altitude?", options: ["5,000 feet", "10,000 feet", "18,000 feet", "25,000 feet"], correctAnswer: 1, explanation: "Sterile cockpit typically applies below 10,000 feet during climb and descent, and during taxi, take-off, and landing.", difficulty: "easy", topic: "Sterile Cockpit" },
+   140→      { id: "crmq14-3b", type: "mcq", question: "During sterile cockpit, what cabin-to-flight-deck communication is permitted?", options: ["Any communication", "Only safety-critical communications", "Service requests only", "No communication at all"], correctAnswer: 1, explanation: "Only safety-critical communications are permitted during sterile cockpit. Casual conversation and non-urgent matters must wait.", difficulty: "medium", topic: "Sterile Cockpit" },
+   141→    ],
+   142→    "crm-lesson-16-2": [
+   143→      { id: "crmq16-2a", type: "mcq", question: "What is the certification standard for aircraft evacuation?", options: ["30 seconds", "60 seconds", "90 seconds", "120 seconds"], correctAnswer: 2, explanation: "Aircraft must be certifiably evacuable in 90 seconds with half the exits unusable. Crew performance is critical to meeting this in real evacuations.", difficulty: "medium", topic: "Evacuation" },
+   144→    ],
+   145→    "crm-lesson-17-3": [
+   146→      { id: "crmq17-3a", type: "mcq", question: "Physical restraint of an unruly passenger is considered what?", options: ["First response", "Standard practice", "Last resort per SOP", "Never permitted"], correctAnswer: 2, explanation: "Physical restraint is a last resort when other de-escalation has failed and the passenger poses a continuing safety threat. It requires multiple crew, approved equipment, monitoring, and full documentation.", difficulty: "medium", topic: "Unruly Passengers" },
+   147→    ],
+   148→    "crm-lesson-18-1": [
+   149→      { id: "crmq18-1a", type: "mcq", question: "In high power-distance cultures, what CRM concern arises?", options: ["Better communication", "Junior crew reluctance to question seniors", "Faster decision-making", "No effect on CRM"], correctAnswer: 1, explanation: "In high power-distance cultures, junior crew may be reluctant to question seniors, creating a CRM safety concern that requires extra effort to create psychological safety.", difficulty: "medium", topic: "Cultural Awareness" },
+   150→    ],
+   151→    "crm-lesson-19-2": [
+   152→      { id: "crmq19-2a", type: "mcq", question: "Which is NOT one of the five components of safety culture (Reason)?", options: ["Informed", "Reporting", "Just", "Authoritarian"], correctAnswer: 3, explanation: "The five components are: Informed, Reporting, Just, Learning, and Flexible. Authoritarian is not a safety culture component.", difficulty: "medium", topic: "Safety Culture" },
+   153→    ],
+   154→    "crm-lesson-19-3": [
+   155→      { id: "crmq19-3a", type: "mcq", question: "Under Just Culture, how should an honest error (slip/lapse) be treated?", options: ["Disciplinary action", "Criminal prosecution", "Console, learn, improve system", "Termination"], correctAnswer: 2, explanation: "Honest errors (slips/lapses) should be consoled, learned from, and used to improve the system — not punished. Reckless behaviour and sabotage attract discipline/prosecution.", difficulty: "medium", topic: "Just Culture" },
+   156→      { id: "crmq19-3b", type: "mcq", question: "What might a sudden drop in safety reports indicate?", options: ["Improved safety", "Culture problem — fear of reporting", "Fewer incidents occurring", "Better crew performance"], correctAnswer: 1, explanation: "A sudden drop in reports may indicate a culture problem (fear of reporting), not improved safety. Increased reporting indicates healthy culture.", difficulty: "hard", topic: "Reporting Culture" },
+   157→    ],
+   158→    "crm-lesson-20-1": [
+   159→      { id: "crmq20-1a", type: "mcq", question: "What happens to CRM during emergencies?", options: ["CRM is suspended", "CRM becomes most critical", "Only pilots use CRM", "CRM is replaced by SOPs"], correctAnswer: 1, explanation: "CRM is not suspended in emergencies — it becomes most critical. The behaviours developed through CRM training determine emergency outcomes.", difficulty: "easy", topic: "Emergency CRM" },
+   160→    ],
+   161→    "crm-lesson-21-1": [
+   162→      { id: "crmq21-1a", type: "mcq", question: "Which accident is particularly relevant to cabin crew assertiveness?", options: ["Tenerife 1977", "Kegworth 1989", "United 232", "US Airways 1549"], correctAnswer: 1, explanation: "Kegworth 1989 is particularly relevant — cabin crew noticed the wrong engine but did not assert their observation to the cockpit, contributing to the wrong engine being shut down.", difficulty: "medium", topic: "Case Studies" },
+   163→    ],
+   164→    "crm-lesson-21-3": [
+   165→      { id: "crmq21-3a", type: "mcq", question: "What was notable about United 232 (Sioux City) from a CRM perspective?", options: ["Total failure of CRM", "Exemplary CRM saved many lives", "Crew did not communicate", "Standard CRM failure"], correctAnswer: 1, explanation: "United 232 demonstrated exemplary CRM — Captain Haynes delegated flying, communicated continuously, and coordinated with a deadheading instructor. They saved 185 of 296 lives in an 'unsurvivable' situation.", difficulty: "medium", topic: "CRM Success" },
+   166→    ],
+   167→    "crm-lesson-23-1": [
+   168→      { id: "crmq23-1a", type: "mcq", question: "How many questions are in the CRM final exam?", options: ["10", "15", "20", "25"], correctAnswer: 3, explanation: "The CRM final exam consists of 25 multiple-choice questions covering all course modules.", difficulty: "easy", topic: "Exam" },
+   169→    ],
+   170→  },
+   171→
+   172→  // ============================================================================
+   173→  // MODULE QUIZZES
+   174→  // ============================================================================
+   175→  moduleQuizzes: {
+   176→    "crm-mod-1": [
+   177→      { id: "crmmq1-1", type: "mcq", question: "What is the definition of Crew Resource Management?", options: ["A type of passenger service", "The effective use of all available resources to achieve safe and efficient operations", "A pilot training programme only", "A software system for crew scheduling"], correctAnswer: 1, explanation: "CRM is the effective use of all available resources — human, hardware, and information — to achieve safe and efficient flight operations.", difficulty: "easy", topic: "CRM Definition" },
+   178→      { id: "crmmq1-2", type: "mcq", question: "Approximately what percentage of aviation accidents involve human factors?", options: ["10-20%", "30-40%", "70-80%", "95-100%"], correctAnswer: 2, explanation: "Industry studies consistently show approximately 70-80% of aviation accidents involve human factors as a primary or contributing cause.", difficulty: "medium", topic: "Human Factors" },
+   179→    ],
+   180→    "crm-mod-3": [
+   181→      { id: "crmmq3-1", type: "mcq", question: "What is the relationship between Human Factors and CRM?", options: ["They are the same thing", "Human Factors is the science; CRM is the practical application", "CRM is the science; Human Factors is the application", "They are unrelated"], correctAnswer: 1, explanation: "Human Factors is the underlying science; CRM is the practical application of human factors principles to crew operations.", difficulty: "medium", topic: "Human Factors" },
+   182→    ],
+   183→    "crm-mod-4": [
+   184→      { id: "crmmq4-1", type: "mcq", question: "What is closed-loop communication?", options: ["Speaking quietly", "State → readback → confirm", "One-way communication", "Communication in a circle"], correctAnswer: 1, explanation: "Closed-loop communication: Sender states message → Receiver reads back/acknowledges → Sender confirms. This prevents misunderstandings.", difficulty: "easy", topic: "Communication" },
+   185→      { id: "crmmq4-2", type: "mcq", question: "Which technique involves paraphrasing back what the speaker said?", options: ["Passive listening", "Active listening", "Aggressive listening", "Selective listening"], correctAnswer: 1, explanation: "Active listening includes reflecting and paraphrasing back what the speaker said to confirm understanding.", difficulty: "easy", topic: "Active Listening" },
+   186→    ],
+   187→    "crm-mod-7": [
+   188→      { id: "crmmq7-1", type: "mcq", question: "What are the three levels of situational awareness?", options: ["Look, Listen, Feel", "Perception, Comprehension, Projection", "See, Understand, React", "Notice, Think, Act"], correctAnswer: 1, explanation: "Endsley's three levels of SA: Perception (noticing), Comprehension (understanding meaning), Projection (anticipating what's next).", difficulty: "easy", topic: "Situational Awareness" },
+   189→    ],
+   190→    "crm-mod-9": [
+   191→      { id: "crmmq9-1", type: "mcq", question: "What are the components of the TEM framework?", options: ["Threats, Errors, Outcomes, Solutions", "Threats, Errors, Undesired States, Countermeasures", "Tasks, Events, Outcomes, Methods", "Time, Equipment, Materials, Procedures"], correctAnswer: 1, explanation: "TEM components: Threats, Errors, Undesired Aircraft States, and Countermeasures.", difficulty: "medium", topic: "TEM" },
+   192→      { id: "crmmq9-2", type: "mcq", question: "What is error trapping?", options: ["Preventing all errors", "Crew catching each other's errors through cross-checking and open communication", "Hiding errors from management", "Disciplining crew for errors"], correctAnswer: 1, explanation: "Error trapping is when crew catch each other's errors through cross-checking, callouts, and open communication. It requires a non-punitive culture.", difficulty: "medium", topic: "Error Management" },
+   193→    ],
+   194→    "crm-mod-11": [
+   195→      { id: "crmmq11-1", type: "mcq", question: "After 24 hours awake, performance is equivalent to what BAC?", options: ["0.02%", "0.05%", "0.10%", "0.20%"], correctAnswer: 2, explanation: "After 24 hours awake, performance is equivalent to 0.10% BAC — well above legal driving limits in most countries.", difficulty: "medium", topic: "Fatigue" },
+   196→    ],
+   197→    "crm-mod-13": [
+   198→      { id: "crmmq13-1", type: "mcq", question: "Which is an example of assertive (not aggressive) communication?", options: ["'You're wrong, do it my way'", "'I'm concerned about this — can we discuss it?'", "Saying nothing", "Rolling eyes and walking away"], correctAnswer: 1, explanation: "Assertive communication expresses concerns clearly while respecting others: 'I'm concerned about this — can we discuss it?' The other options are aggressive, passive, or passive-aggressive.", difficulty: "easy", topic: "Assertiveness" },
+   199→    ],
+   200→    "crm-mod-14": [
+   201→      { id: "crmmq14-1", type: "mcq", question: "What does NITS stand for?", options: ["Notice, Inform, Train, Support", "Nature, Intentions, Time, Special instructions", "Name, Identity, Task, Sequence", "Number, Item, Time, Status"], correctAnswer: 1, explanation: "NITS: Nature, Intentions, Time, Special instructions — the framework Captains use to brief cabin crew during abnormal/emergency situations.", difficulty: "medium", topic: "Cabin-Flight Deck Coordination" },
+   202→    ],
+   203→    "crm-mod-16": [
+   204→      { id: "crmmq16-1", type: "mcq", question: "What is the 'command voice' used for?", options: ["Routine passenger service", "Emergency and evacuation announcements", "Crew socialising", "Galley coordination"], correctAnswer: 1, explanation: "The command voice — louder, firmer, more directive — is used for emergency and evacuation announcements when passengers need clear direction under stress.", difficulty: "easy", topic: "Emergency Communication" },
+   205→    ],
+   206→    "crm-mod-19": [
+   207→      { id: "crmmq19-1", type: "mcq", question: "What is Just Culture?", options: ["Blaming all errors on individuals", "Fair treatment distinguishing honest errors from reckless behaviour", "No consequences for any actions", "Punishing all mistakes"], correctAnswer: 1, explanation: "Just Culture provides fair treatment of errors, distinguishing blameless errors (system improvements) from blameworthy reckless behaviour (disciplinary action) and sabotage (criminal).", difficulty: "medium", topic: "Just Culture" },
+   208→    ],
+   209→    "crm-mod-20": [
+   210→      { id: "crmmq20-1", type: "mcq", question: "How many seconds is an aircraft required to be certifiably evacuable?", options: ["30 seconds", "60 seconds", "90 seconds", "120 seconds"], correctAnswer: 2, explanation: "Aircraft must be certifiably evacuable in 90 seconds with half the exits unusable. Crew performance is critical to meeting this in real evacuations.", difficulty: "medium", topic: "Evacuation" },
+   211→    ],
+   212→    "crm-mod-22": [
+   213→      { id: "crmmq22-1", type: "mcq", question: "What is the recommended approach if you realise you've lost situational awareness?", options: ["Press on and hope for the best", "Stop, acknowledge, communicate, re-establish, seek help", "Hide it from your colleagues", "Immediately abandon the task"], correctAnswer: 1, explanation: "Regaining lost SA: 1) Stop and acknowledge it. 2) Communicate with crew. 3) Re-establish the big picture. 4) Seek help if needed. Never press on when unsure.", difficulty: "medium", topic: "Situational Awareness" },
+   214→    ],
+   215→  },
+   216→
+   217→  // ============================================================================
+   218→  // FINAL EXAM (25 questions)
+   219→  // ============================================================================
+   220→  finalExam: [
+   221→    { id: "crmfinal-1", type: "mcq", question: "What is the primary purpose of Crew Resource Management (CRM)?", options: ["Increase airline revenue", "Reduce human-error incidents and improve crew coordination", "Replace technical training programmes", "Standardise passenger service across airlines"], correctAnswer: 1, explanation: "CRM's primary purpose is to reduce human-error incidents and improve crew coordination by effectively using all available resources — human, hardware, and information.", difficulty: "easy", topic: "CRM Definition" },
+   222→    { id: "crmfinal-2", type: "mcq", question: "Which 1978 accident directly triggered the development of the first CRM training programme?", options: ["Tenerife (1977)", "United Airlines Flight 173, Portland (1978)", "Air Florida 90 (1982)", "Kegworth (1989)"], correctAnswer: 1, explanation: "United Airlines Flight 173 crashed in Portland (1978) after the crew fixated on a landing gear issue and ran out of fuel. The flight engineer's fuel concerns were not effectively asserted, leading United to develop the first CRM programme.", difficulty: "medium", topic: "CRM History" },
+   223→    { id: "crmfinal-3", type: "mcq", question: "In the SHELL model, what does the central 'L' stand for?", options: ["Logic", "Liveware (the human)", "Leadership", "Logistics"], correctAnswer: 1, explanation: "The central L in SHELL stands for Liveware — the human element at the centre of the framework, interfacing with Software, Hardware, Environment, and other Liveware.", difficulty: "easy", topic: "Human Factors" },
+   224→    { id: "crmfinal-4", type: "mcq", question: "Approximately how many items can short-term memory hold?", options: ["1-2 items", "5-9 items", "15-20 items", "Unlimited"], correctAnswer: 1, explanation: "Short-term memory holds approximately 5-9 items for about 20 seconds, which is why checklists, written notes, and readback are essential for safety-critical information.", difficulty: "easy", topic: "Human Performance" },
+   225→    { id: "crmfinal-5", type: "mcq", question: "What is closed-loop communication?", options: ["Speaking in a circle formation", "State → readback → confirm", "Communication without feedback", "Only the sender speaks"], correctAnswer: 1, explanation: "Closed-loop communication: Sender states message → Receiver reads back/acknowledges → Sender confirms. This prevents misunderstandings for safety-critical information.", difficulty: "easy", topic: "Communication" },
+   226→    { id: "crmfinal-6", type: "mcq", question: "According to the Mehrabian model, what proportion of face-to-face communication comes from body language?", options: ["7%", "38%", "55%", "90%"], correctAnswer: 2, explanation: "Approximately 55% of meaning in face-to-face communication comes from body language, 38% from tone of voice, and 7% from words (Mehrabian model).", difficulty: "medium", topic: "Non-Verbal Communication" },
+   227→    { id: "crmfinal-7", type: "mcq", question: "What are Tuckman's five stages of team development?", options: ["Forming, Storming, Norming, Performing, Adjourning", "Planning, Doing, Checking, Acting, Reviewing", "Initiation, Conflict, Resolution, Completion, Reflection", "Briefing, Execution, Monitoring, Debriefing, Closing"], correctAnswer: 0, explanation: "Tuckman's stages: Forming (polite), Storming (conflict), Norming (cohesion), Performing (high function), Adjourning (completion).", difficulty: "medium", topic: "Teamwork" },
+   228→    { id: "crmfinal-8", type: "mcq", question: "What is groupthink?", options: ["A productive team decision process", "When the desire for consensus overrides critical thinking", "When everyone agrees naturally", "A communication technique"], correctAnswer: 1, explanation: "Groupthink occurs when the desire for consensus overrides critical thinking — crew members withhold concerns to avoid conflict, leading to flawed decisions.", difficulty: "medium", topic: "Teamwork" },
+   229→    { id: "crmfinal-9", type: "mcq", question: "Which leadership style is most appropriate during an emergency evacuation?", options: ["Participative", "Delegative", "Authoritarian", "Transformational"], correctAnswer: 2, explanation: "Emergencies require clear, directive leadership — the authoritarian style is appropriate when time is critical and crew need immediate, clear direction.", difficulty: "medium", topic: "Leadership" },
+   230→    { id: "crmfinal-10", type: "mcq", question: "What does P.A.C.E. stand for in assertiveness training?", options: ["Plan, Act, Check, Evaluate", "Probe, Alert, Challenge, Emergency", "Prepare, Approach, Communicate, Execute", "Prioritise, Act, Coordinate, Evaluate"], correctAnswer: 1, explanation: "P.A.C.E. is an escalation framework: Probe (ask), Alert (state concern), Challenge (strong assertion), Emergency (take action to prevent harm).", difficulty: "medium", topic: "Assertiveness" },
+   231→    { id: "crmfinal-11", type: "mcq", question: "What are the three levels of situational awareness (Endsley)?", options: ["Look, Listen, Feel", "Perception, Comprehension, Projection", "See, Understand, React", "Notice, Think, Act"], correctAnswer: 1, explanation: "Endsley's three levels: Perception (noticing elements), Comprehension (understanding meaning), Projection (anticipating what will happen next).", difficulty: "easy", topic: "Situational Awareness" },
+   232→    { id: "crmfinal-12", type: "mcq", question: "What does FOR-DEC stand for in decision-making?", options: ["Find, Organise, Report, Decide, Execute, Confirm", "Facts, Options, Risks, Decision, Execution, Check", "Formulate, Order, Review, Decide, Execute, Complete", "Focus, Observe, React, Decide, Execute, Check"], correctAnswer: 1, explanation: "FOR-DEC: Facts, Options, Risks, Decision, Execution, Check — a structured decision-making model ensuring no critical step is skipped.", difficulty: "medium", topic: "Decision Making" },
+   233→    { id: "crmfinal-13", type: "mcq", question: "Which is NOT one of the five hazardous attitudes in aviation?", options: ["Anti-authority", "Impulsivity", "Invulnerability", "Perfectionism"], correctAnswer: 3, explanation: "The five hazardous attitudes are: Anti-authority, Impulsivity, Invulnerability, Macho, and Resignation. Perfectionism is not on the list.", difficulty: "medium", topic: "Decision Biases" },
+   234→    { id: "crmfinal-14", type: "mcq", question: "What does TEM stand for?", options: ["Team Error Management", "Threat and Error Management", "Technical Equipment Maintenance", "Task Execution Method"], correctAnswer: 1, explanation: "TEM stands for Threat and Error Management — an ICAO framework for managing operational challenges in aviation.", difficulty: "easy", topic: "TEM" },
+   235→    { id: "crmfinal-15", type: "mcq", question: "What is the modern CRM approach to human errors?", options: ["Eliminate all errors through strict discipline", "Manage errors as inevitable — detect, trap, resolve, learn", "Punish all errors severely", "Ignore errors that don't cause immediate harm"], correctAnswer: 1, explanation: "Modern CRM treats errors as inevitable — the goal is to detect and manage them before harm occurs (detect → trap → resolve → learn), and to learn from them.", difficulty: "medium", topic: "Error Management" },
+   236→    { id: "crmfinal-16", type: "mcq", question: "After 17 hours of wakefulness, performance is equivalent to what blood alcohol concentration?", options: ["0.00%", "0.02%", "0.05%", "0.10%"], correctAnswer: 2, explanation: "After 17 hours awake, performance is equivalent to 0.05% BAC. After 24 hours, it equals 0.10% BAC — well above legal driving limits in most countries.", difficulty: "medium", topic: "Fatigue" },
+   237→    { id: "crmfinal-17", type: "mcq", question: "What does FRMS stand for?", options: ["Flight Risk Management System", "Fatigue Risk Management System", "Fatigue Reporting and Monitoring Service", "Flight Resource Management Standard"], correctAnswer: 1, explanation: "FRMS stands for Fatigue Risk Management System — a data-driven, science-based approach to managing fatigue risk in operations.", difficulty: "easy", topic: "FRMS" },
+   238→    { id: "crmfinal-18", type: "mcq", question: "Which conflict resolution strategy is appropriate when safety is critical and time is short?", options: ["Collaborating", "Compromising", "Avoiding", "Competing"], correctAnswer: 3, explanation: "Competing is appropriate for safety-critical, time-pressured situations where one party must assert the correct action without negotiation.", difficulty: "medium", topic: "Conflict Resolution" },
+   239→    { id: "crmfinal-19", type: "mcq", question: "What does NITS stand for in cabin crew briefings?", options: ["Numbers, Items, Time, Status", "Nature, Intentions, Time, Special instructions", "Name, Identity, Task, Sequence", "Notice, Inform, Train, Support"], correctAnswer: 1, explanation: "NITS: Nature (situation), Intentions (Captain's plan), Time (available), Special instructions (what cabin crew should do). Used for cabin briefings during abnormal/emergency situations.", difficulty: "medium", topic: "Cabin-Flight Deck Coordination" },
+   240→    { id: "crmfinal-20", type: "mcq", question: "Below what altitude does the sterile cockpit rule typically apply?", options: ["5,000 feet", "10,000 feet", "18,000 feet", "25,000 feet"], correctAnswer: 1, explanation: "Sterile cockpit typically applies below 10,000 feet during climb and descent, and during taxi, take-off, and landing — prohibiting non-essential activities and conversation.", difficulty: "easy", topic: "Sterile Cockpit" },
+   241→    { id: "crmfinal-21", type: "mcq", question: "Within what time must an aircraft be certifiably evacuable?", options: ["30 seconds", "60 seconds", "90 seconds", "120 seconds"], correctAnswer: 2, explanation: "Aircraft must be certifiably evacuable in 90 seconds with half the exits unusable. Crew performance, including communication, is critical to meeting this in real evacuations.", difficulty: "medium", topic: "Evacuation" },
+   242→    { id: "crmfinal-22", type: "mcq", question: "Which is NOT one of the five components of safety culture (Reason)?", options: ["Informed", "Reporting", "Just", "Authoritarian"], correctAnswer: 3, explanation: "The five components are: Informed, Reporting, Just, Learning, and Flexible. Authoritarian is not a safety culture component.", difficulty: "medium", topic: "Safety Culture" },
+   243→    { id: "crmfinal-23", type: "mcq", question: "Under Just Culture, how should an honest error (slip/lapse) be treated?", options: ["Disciplinary action", "Criminal prosecution", "Console, learn, improve system", "Termination"], correctAnswer: 2, explanation: "Honest errors (slips/lapses) should be consoled, learned from, and used to improve the system — not punished. Only reckless behaviour and sabotage attract discipline/prosecution.", difficulty: "medium", topic: "Just Culture" },
+   244→    { id: "crmfinal-24", type: "mcq", question: "Which accident is particularly relevant to cabin crew assertiveness with the flight deck?", options: ["Tenerife 1977", "Kegworth 1989", "United 232", "US Airways 1549"], correctAnswer: 1, explanation: "Kegworth 1989 (British Midland Flight 092): cabin crew noticed abnormality from the right engine but did not assert their observation to the cockpit, contributing to the wrong (left) engine being shut down.", difficulty: "medium", topic: "Case Studies" },
+   245→    { id: "crmfinal-25", type: "mcq", question: "What is the recommended action if you realise you've lost situational awareness?", options: ["Press on and hope for the best", "Stop, acknowledge, communicate, re-establish, seek help", "Hide it from your colleagues", "Immediately abandon the task"], correctAnswer: 1, explanation: "Regaining lost SA: 1) Stop and acknowledge it. 2) Step back mentally. 3) Communicate with crew. 4) Re-establish the big picture. 5) Seek help if needed. Never press on when unsure.", difficulty: "medium", topic: "Situational Awareness" },
+   246→  ],
+   247→
+   248→  // ============================================================================
+   249→  // FLASHCARDS (35 cards)
+   250→  // ============================================================================
+   251→  flashcards: [
+   252→    { id: "crmfc-1", front: "What does CRM stand for?", back: "Crew Resource Management — the effective use of all available resources (human, hardware, information) to achieve safe and efficient flight operations", category: "CRM Basics" },
+   253→    { id: "crmfc-2", front: "What is the primary purpose of CRM?", back: "To reduce human-error-related accidents and incidents by improving crew coordination, communication, and decision-making", category: "CRM Basics" },
+   254→    { id: "crmfc-3", front: "Which accident triggered the first CRM training programme?", back: "United Airlines Flight 173, Portland, 1978 — crew fixated on landing gear issue and ran out of fuel; flight engineer's concerns not asserted", category: "CRM History" },
+   255→    { id: "crmfc-4", front: "What organisation hosted the 1979 workshop that formalised CRM?", back: "NASA", category: "CRM History" },
+   256→    { id: "crmfc-5", front: "How many generations of CRM are there?", back: "Six generations, evolving from personality-focused (1980s) to organisational culture and TEM (2000s+)", category: "CRM History" },
+   257→    { id: "crmfc-6", front: "What does SHELL stand for?", back: "Software, Hardware, Environment, Liveware, Liveware — the ICAO human factors framework with the human (Liveware) at the centre", category: "Human Factors" },
+   258→    { id: "crmfc-7", front: "Where do most human factors problems occur in the SHELL model?", back: "At the interfaces between components, particularly between the central Liveware (human) and the other four elements", category: "Human Factors" },
+   259→    { id: "crmfc-8", front: "How many items can short-term memory hold?", back: "Approximately 5-9 items for about 20 seconds — which is why checklists are essential", category: "Human Performance" },
+   260→    { id: "crmfc-9", front: "What is closed-loop communication?", back: "Sender states message → Receiver reads back/acknowledges → Sender confirms. Used for safety-critical information.", category: "Communication" },
+   261→    { id: "crmfc-10", front: "According to the Mehrabian model, what proportion of meaning comes from body language?", back: "Approximately 55% (38% from tone, 7% from words)", category: "Communication" },
+   262→    { id: "crmfc-11", front: "What are the four communication styles?", back: "Passive, Aggressive, Passive-aggressive, Assertive", category: "Communication" },
+   263→    { id: "crmfc-12", front: "What are Tuckman's five stages of team development?", back: "Forming, Storming, Norming, Performing, Adjourning", category: "Teamwork" },
+   264→    { id: "crmfc-13", front: "What is groupthink?", back: "When the desire for consensus overrides critical thinking — crew withhold concerns to avoid conflict, leading to flawed decisions", category: "Teamwork" },
+   265→    { id: "crmfc-14", front: "What are the four leadership styles?", back: "Authoritarian, Participative, Delegative, Transformational", category: "Leadership" },
+   266→    { id: "crmfc-15", front: "What does P.A.C.E. stand for?", back: "Probe, Alert, Challenge, Emergency — escalation framework for assertiveness", category: "Assertiveness" },
+   267→    { id: "crmfc-16", front: "What are Endsley's three levels of situational awareness?", back: "Perception (noticing), Comprehension (understanding meaning), Projection (anticipating what's next)", category: "Situational Awareness" },
+   268→    { id: "crmfc-17", front: "What is expectation bias?", back: "A cognitive bias where we perceive what we expect to perceive, potentially missing contradicting evidence", category: "Situational Awareness" },
+   269→    { id: "crmfc-18", front: "What does FOR-DEC stand for?", back: "Facts, Options, Risks, Decision, Execution, Check — a structured decision-making model", category: "Decision Making" },
+   270→    { id: "crmfc-19", front: "What are the five hazardous attitudes in aviation?", back: "Anti-authority, Impulsivity, Invulnerability, Macho, Resignation", category: "Decision Making" },
+   271→    { id: "crmfc-20", front: "What does TEM stand for?", back: "Threat and Error Management — an ICAO framework for managing operational challenges", category: "TEM" },
+   272→    { id: "crmfc-21", front: "What are the four components of TEM?", back: "Threats, Errors, Undesired Aircraft States, Countermeasures", category: "TEM" },
+   273→    { id: "crmfc-22", front: "What is error trapping?", back: "Crew catching each other's errors through cross-checking, callouts, and open communication — a team responsibility", category: "TEM" },
+   274→    { id: "crmfc-23", front: "After 17 hours awake, performance equals what BAC?", back: "0.05% BAC (after 24 hours, 0.10% BAC — well above legal driving limits)", category: "Fatigue" },
+   275→    { id: "crmfc-24", front: "What are the circadian peak sleepiness windows?", back: "02:00–06:00 and 14:00–16:00", category: "Fatigue" },
+   276→    { id: "crmfc-25", front: "What does FRMS stand for?", back: "Fatigue Risk Management System — a data-driven, science-based approach to managing fatigue risk", category: "Fatigue" },
+   277→    { id: "crmfc-26", front: "What are the five Thomas-Kilmann conflict resolution strategies?", back: "Collaborating, Compromising, Accommodating, Avoiding, Competing", category: "Conflict Resolution" },
+   278→    { id: "crmfc-27", front: "What does NITS stand for?", back: "Nature, Intentions, Time, Special instructions — Captain's briefing framework for cabin crew during abnormal/emergency situations", category: "Cabin-Flight Deck Coordination" },
+   279→    { id: "crmfc-28", front: "Below what altitude does the sterile cockpit rule typically apply?", back: "10,000 feet (during climb and descent, plus taxi, take-off, landing)", category: "Cabin-Flight Deck Coordination" },
+   280→    { id: "crmfc-29", front: "Within what time must an aircraft be certifiably evacuable?", back: "90 seconds, with half the exits unusable", category: "Emergencies" },
+   281→    { id: "crmfc-30", front: "What is Hofstede's power distance dimension?", back: "The degree to which less powerful members of organisations accept unequal power distribution — high power distance inhibits junior crew assertion", category: "Cultural Awareness" },
+   282→    { id: "crmfc-31", front: "What are the five components of safety culture (Reason)?", back: "Informed, Reporting, Just, Learning, Flexible", category: "Safety Culture" },
+   283→    { id: "crmfc-32", front: "What is Just Culture?", back: "Fair treatment of errors distinguishing honest errors (system improvement), risky behaviour (coaching), reckless behaviour (discipline), and sabotage (prosecution)", category: "Safety Culture" },
+   284→    { id: "crmfc-33", front: "Which 1989 accident is particularly relevant to cabin crew assertiveness?", back: "Kegworth (British Midland Flight 092) — cabin crew noticed the wrong engine but did not assert their observation to the cockpit", category: "Case Studies" },
+   285→    { id: "crmfc-34", front: "Which 1989 incident is a CRM success story?", back: "United 232 (Sioux City) — Captain Haynes and crew coordinated exceptionally after total hydraulic failure, saving 185 of 296 lives", category: "Case Studies" },
+   286→    { id: "crmfc-35", front: "What is the Yerkes-Dodson law?", back: "Performance increases with stress up to an optimal point, then declines sharply beyond it — explaining why excessive stress impairs performance", category: "Stress" },
+   287→  ],
+   288→
+   289→  // ============================================================================
+   290→  // SCENARIOS (8 scenarios)
+   291→  // ============================================================================
+   292→  scenarios: [
+   293→    {
+   294→      id: "crmsc-1",
+   295→      title: "Smell of Smoke in the Cabin",
+   296→      situation: "During cruise, a cabin crew member in the aft galley notices a faint smell of smoke with no visible source. The interphone to the flight deck is functioning.",
+   297→      background: "Smoke or fire on board an aircraft is one of the most serious emergencies. Rapid detection, reporting, and coordinated action are critical. The cabin crew member must decide how to respond in the first moments.",
+   298→      choices: [
+   299→        { text: "Ignore it — it's probably just galley equipment", correct: false, feedback: "Incorrect. Any smell of smoke must be investigated and reported. Ignoring it could allow a fire to develop unchecked." },
+   300→        { text: "Investigate alone for several minutes before reporting anything", correct: false, feedback: "Incorrect. While investigation is appropriate, delaying reporting to the flight deck wastes critical time. Inform the CSD and flight deck promptly while investigating." },
+   301→        { text: "Immediately notify the CSD and flight deck, then investigate with another crew member", correct: true, feedback: "Correct. Prompt notification enables the flight deck to assess and decide, while coordinated investigation with a colleague maintains safety and CRM principles." },
+   302→        { text: "Activate the smoke detector and wait for it to confirm", correct: false, feedback: "Incorrect. Waiting for system confirmation wastes valuable time. Crew observation is the primary detection method — report immediately." },
+   303→      ],
+   304→      correctExplanation: "The correct response combines prompt reporting with coordinated investigation: 1) Immediately notify the CSD and flight deck via interphone — this is safety-critical and overrides any hesitation. 2) Investigate with another crew member (teamwork). 3) Locate the source if possible. 4) Report findings to the CSD/flight deck. 5) Prepare for possible emergency procedures. This demonstrates closed-loop communication, situational awareness, and effective CRM.",
+   305→      reference: "Module 9 (TEM) and Module 20 (Emergency CRM)",
+   306→    },
+   307→    {
+   308→      id: "crmsc-2",
+   309→      title: "Junior Crew Notices Pre-Flight Safety Issue",
+   310→      situation: "During boarding, a junior cabin crew member notices that an over-wing exit door appears to have an unusual marking on the arming lever and is unsure if it is properly disarmed. The senior crew member nearby is busy with passengers.",
+   311→      background: "This scenario tests assertiveness and the P.A.C.E. framework. Junior crew must be able to raise safety concerns, even when seniors are busy, and seniors must be receptive to such input.",
+   312→      choices: [
+   313→        { text: "Assume it's fine — the senior would have noticed", correct: false, feedback: "Incorrect. Complacency and assumption are dangerous. The senior may genuinely have missed it, or you may have information they don't." },
+   314→        { text: "Wait until after departure to mention it, to avoid delaying the flight", correct: false, feedback: "Incorrect. Safety issues must be raised before flight, not after. A door issue could be critical during take-off or emergency." },
+   315→        { text: "Approach the senior, state the concern clearly, and ask for verification", correct: true, feedback: "Correct. This is assertive (P.A.C.E. Probe stage) and follows CRM principles: raise the concern clearly, cite the observation, request verification." },
+   316→        { text: "Disarm and re-arm the door yourself without telling anyone", correct: false, feedback: "Incorrect. Acting unilaterally on a safety issue without coordination could create other problems. Communication is essential." },
+   317→      ],
+   318→      correctExplanation: "The correct response uses assertiveness (P.A.C.E. Probe stage): approach the senior, state the concern clearly ('I'm unsure about the arming lever on the over-wing exit — could you verify?'), and request verification. This demonstrates the CRM principle that all crew are responsible for safety. If the senior dismisses the concern, escalate through Alert and Challenge stages. Never ignore a safety concern — errors in door status have caused serious incidents.",
+   319→      reference: "Module 13 (Assertiveness) and Module 6 (Leadership/Followership)",
+   320→    },
+   321→    {
+   322→      id: "crmsc-3",
+   323→      title: "Intoxicated Passenger Becoming Disruptive",
+   324→      situation: "A passenger who has been drinking heavily (including their own alcohol brought on board) becomes verbally aggressive towards crew and other passengers, refusing to follow instructions.",
+   325→      background: "Unruly passengers are a serious safety and security issue. The response must balance de-escalation, crew safety, passenger safety, and legal requirements.",
+   326→      choices: [
+   327→        { text: "Serve more alcohol to calm them down", correct: false, feedback: "Incorrect. Never serve more alcohol to an intoxicated passenger — this is illegal and dangerous." },
+   328→        { text: "Physically restrain them immediately", correct: false, feedback: "Incorrect. Physical restraint is a last resort, used only when de-escalation has failed and the passenger poses a continuing safety threat." },
+   329→        { text: "Stop alcohol service, use verbal de-escalation, inform CSD and flight deck, document", correct: true, feedback: "Correct. This follows the unruly passenger procedure: stop alcohol, de-escalate verbally, escalate to CSD and flight deck, and document. Restraint is reserved for escalation." },
+   330→        { text: "Ignore it — passengers sometimes get loud", correct: false, feedback: "Incorrect. Disruptive behaviour compromises safety and must be managed. Ignoring it allows escalation and endangers the flight." },
+   331→      ],
+   332→      correctExplanation: "Correct response follows the unruly passenger procedure: 1) Stop alcohol service immediately (illegal to serve intoxicated passengers). 2) Use verbal de-escalation (calm tone, acknowledge feelings, set clear limits). 3) Inform CSD and flight deck — Captain has legal authority. 4) Issue verbal warning, then written warning if behaviour continues. 5) Consider restraint as last resort per SOP. 6) Divert if safety seriously compromised. 7) Document fully for legal action. Crew safety is paramount throughout.",
+   333→      reference: "Module 17 (Managing Difficult Passengers)",
+   334→    },
+   335→    {
+   336→      id: "crmsc-4",
+   337→      title: "Crew Member Showing Signs of Fatigue",
+   338→      situation: "On the third sector of a long duty day, a cabin crew colleague is showing signs of fatigue: slow responses, repeated questions, and a near-miss with a hot beverage. They insist they are 'fine' to continue.",
+   339→      background: "Fatigue impairs performance and is a serious safety risk. Crew have a responsibility to monitor each other and address fatigue concerns — both in themselves and colleagues.",
+   340→      choices: [
+   341→        { text: "Say nothing — it's their responsibility to manage their own fatigue", correct: false, feedback: "Incorrect. CRM requires crew to monitor and support each other. Fatigue affects the whole crew's safety, not just the individual." },
+   342→        { text: "Publicly announce to the cabin that your colleague is too tired", correct: false, feedback: "Incorrect. This is unprofessional and inappropriate. Address the concern privately and through proper channels." },
+   343→        { text: "Privately express concern, offer to swap tasks, suggest rest break, inform CSD", correct: true, feedback: "Correct. CRM crew resource check: privately raise concern, offer practical support, involve the CSD for workload adjustment or rest break." },
+   344→        { text: "Report them to the Captain for discipline", correct: false, feedback: "Incorrect. This is not a disciplinary matter initially. It's a safety issue requiring supportive management. Discipline is a last resort." },
+   345→      ],
+   346→      correctExplanation: "Correct response demonstrates CRM mutual support and the crew resource check: 1) Privately express concern ('I've noticed you seem tired — are you okay?'). 2) Offer practical support (swap tasks, cover a station). 3) Suggest a rest break during a quiet period. 4) Inform the CSD — they can adjust workload or arrange rest. 5) If seriously fatigued, the CSD should consider reporting unfit to fly. Non-punitive fatigue reporting is required by regulation. Fatigue after 17 hours equals 0.05% BAC — it's a real impairment.",
+   347→      reference: "Module 11 (Fatigue Awareness) and Module 10 (Workload/Stress)",
+   348→    },
+   349→    {
+   350→      id: "crmsc-5",
+   351→      title: "Conflicting Instructions During Emergency",
+   352→      situation: "During an emergency descent, the flight deck announces 'brace for impact' in 2 minutes. The CSD shouts one instruction over the PA while a senior crew member in your zone is shouting a different instruction to passengers.",
+   353→      background: "Conflicting instructions during emergencies cause confusion and delay. This scenario tests CRM principles of leadership, communication, and coordinated action under extreme pressure.",
+   354→      choices: [
+   355→        { text: "Follow the senior in your zone — they're closer", correct: false, feedback: "Incorrect. The CSD has overall cabin authority and is coordinated with the flight deck. Conflicting instructions must be resolved, not multiplied." },
+   356→        { text: "Shout your own instructions to add clarity", correct: false, feedback: "Incorrect. Adding a third voice worsens confusion. The issue is coordination, not volume." },
+   357→        { text: "Acknowledge the conflict to the senior, follow CSD's instruction (aligned with flight deck), brief passengers clearly", correct: true, feedback: "Correct. CRM: recognise the conflict, resolve it by following the chain of authority (CSD, who is coordinated with flight deck), and communicate clearly to passengers." },
+   358→        { text: "Freeze and do nothing, hoping someone clarifies", correct: false, feedback: "Incorrect. Inaction during an emergency is dangerous. Take decisive action based on the proper authority." },
+   359→      ],
+   360→      correctExplanation: "Correct response demonstrates CRM under pressure: 1) Recognise the conflict (situational awareness). 2) Quickly acknowledge to the senior ('CSD's instruction was X — let's align'). 3) Follow the CSD's instruction, which should be coordinated with the flight deck (chain of authority). 4) Communicate clearly and consistently to passengers using the command voice. 5) After the immediate crisis, debrief the conflict to prevent recurrence. This scenario highlights why pre-flight briefings must establish clear command and communication protocols.",
+   361→      reference: "Module 20 (Emergency CRM) and Module 6 (Leadership)",
+   362→    },
+   363→    {
+   364→      id: "crmsc-6",
+   365→      title: "Cultural Misunderstanding with Passenger",
+   366→      situation: "A passenger from a high-context culture nods and smiles while you explain the exit row responsibilities, but you're unsure if they actually understood. The passenger speaks limited English.",
+   367→      background: "Cultural awareness is essential in international aviation. Nodding and smiling may indicate politeness, not comprehension. Verifying understanding of safety-critical information is essential.",
+   368→      choices: [
+   369→        { text: "Assume they understood — they nodded and smiled", correct: false, feedback: "Incorrect. In many cultures, nodding means 'I hear you' or is a politeness gesture, not 'I understand and agree'. Never assume comprehension for safety-critical information." },
+   370→        { text: "Skip the briefing since they seem agreeable", correct: false, feedback: "Incorrect. Exit row briefings are legally required and safety-critical. Skipping them endangers the passenger and others." },
+   371→        { text: "Verify understanding through readback, simple language, demonstration, and consider reseating if needed", correct: true, feedback: "Correct. Verify understanding through multiple means: ask them to repeat key points, use simple language, demonstrate, and consider reseating if comprehension is inadequate for exit row duties." },
+   372→        { text: "Speak louder and slower — that always helps", correct: false, feedback: "Incorrect. Volume and speed don't address language or cultural barriers. Use different verification methods instead." },
+   373→      ],
+   374→      correctExplanation: "Correct response demonstrates cultural awareness and safety verification: 1) Don't assume comprehension from nods/smiles — in many cultures these indicate politeness, not understanding. 2) Ask the passenger to repeat key points (readback). 3) Use simple language, avoid idioms. 4) Demonstrate the actions physically. 5) If comprehension is inadequate for exit row duties (which require quick action in emergencies), consider reseating the passenger to a non-exit row. Safety must not be compromised by cultural politeness. Document if any change is made.",
+   375→      reference: "Module 18 (Cultural Awareness) and Module 15 (Passenger Communication)",
+   376→    },
+   377→    {
+   378→      id: "crmsc-7",
+   379→      title: "Crew Conflict During Pre-Flight Briefing",
+   380→      situation: "During pre-flight briefing, two senior crew members openly disagree about how to handle a service procedure. The CSD is present but hasn't intervened. Junior crew are watching.",
+   381→      background: "Crew conflict during briefings undermines team cohesion and sets a poor tone for the flight. The CSD's role in managing such conflict is critical to establishing CRM culture.",
+   382→      choices: [
+   383→        { text: "Side with one senior openly to end the conflict", correct: false, feedback: "Incorrect. Openly taking sides in front of the team worsens the conflict and damages relationships." },
+   384→        { text: "Ignore it — seniors will sort it out", correct: false, feedback: "Incorrect. Unresolved conflict during briefing affects the whole flight. The CSD should facilitate resolution." },
+   385→        { text: "As CSD, acknowledge both views, defer detailed discussion to post-briefing, and make a clear decision for this flight", correct: true, feedback: "Correct. The CSD manages conflict constructively: acknowledge inputs, defer detailed debate, and make a clear decision to enable team focus on the flight." },
+   386→        { text: "Cancel the briefing until they resolve it", correct: false, feedback: "Incorrect. Cancelling the briefing delays operations and doesn't resolve the conflict. Address it constructively within the briefing." },
+   387→      ],
+   388→      correctExplanation: "Correct response (as CSD) demonstrates leadership and conflict management: 1) Acknowledge both perspectives ('I hear both views — this is a valid discussion'). 2) Defer detailed debate ('Let's discuss this in detail after the briefing — for today, we'll proceed with...'). 3) Make a clear decision so the team has direction. 4) Follow up privately with both seniors to resolve the underlying issue constructively. 5) Model the CRM behaviour expected — open communication, respect, clear leadership. This maintains team cohesion while addressing the conflict.",
+   389→      reference: "Module 12 (Conflict Resolution) and Module 6 (Leadership)",
+   390→    },
+   391→    {
+   392→      id: "crmsc-8",
+   393→      title: "Post-Incident: Should You Continue Flying?",
+   394→      situation: "After a serious in-flight medical emergency where a passenger died despite all resuscitation efforts, you are scheduled to operate the return sector the next day. You feel numb, have trouble sleeping, and keep replaying the event.",
+   395→      background: "Critical incidents can cause trauma. Crew welfare is paramount — both for the individual's wellbeing and for safety. This scenario tests understanding of post-incident support and Just Culture principles.",
+   396→      choices: [
+   397→        { text: "Push through it — crew are expected to be tough and professional", correct: false, feedback: "Incorrect. Trauma is real and ignoring it harms both the individual and future safety. Professionalism includes recognising when you need support." },
+   398→        { text: "Hide your feelings and pretend everything is fine", correct: false, feedback: "Incorrect. Hiding trauma prevents you from getting needed support and risks impaired performance on the next flight." },
+   399→        { text: "Report unfit to fly, access peer support/EAP/CISM, take time to recover before returning", correct: true, feedback: "Correct. Recognise trauma, report unfit, access support systems (peer support, EAP, CISM), and return only when genuinely ready. Welfare is paramount." },
+   400→        { text: "Quit aviation entirely — you're clearly not suited", correct: false, feedback: "Incorrect. Trauma responses are normal human reactions to abnormal events. With proper support, most crew recover and continue their careers." },
+   401→      ],
+   402→      correctExplanation: "Correct response prioritises welfare and follows post-incident best practice: 1) Recognise that trauma responses (numbness, sleep disturbance, intrusive thoughts) are normal reactions to abnormal events — not weakness. 2) Report unfit to fly — operators must support this without penalty. 3) Access support: peer support programmes, Employee Assistance Programme (EAP), Critical Incident Stress Management (CISM). 4) Take adequate time to recover — returning too soon risks impaired performance. 5) Return only when genuinely ready, possibly with a phased return. 6) The operator has a duty of care under safety management systems. Ignoring trauma harms crew and future safety.",
+   403→      reference: "Module 20 (Post-Incident Review) and Module 19 (Safety Culture)",
+   404→    },
+   405→  ],
+   406→
+   407→  // ============================================================================
+   408→  // GLOSSARY (25 terms)
+   409→  // ============================================================================
+   410→  glossary: [
+   411→    { term: "CRM (Crew Resource Management)", definition: "The effective use of all available resources — human, hardware, and information — to achieve safe and efficient flight operations" },
+   412→    { term: "TEM (Threat and Error Management)", definition: "An ICAO framework for managing operational challenges by anticipating, detecting, and managing threats and errors before they cause harm" },
+   413→    { term: "Situational Awareness (SA)", definition: "Perception of elements in the environment, comprehension of their meaning, and projection of their future status (Endsley's three levels)" },
+   414→    { term: "Closed-loop Communication", definition: "Communication pattern where the sender states a message, the receiver reads it back, and the sender confirms — preventing misunderstandings" },
+   415→    { term: "P.A.C.E.", definition: "Probe, Alert, Challenge, Emergency — an escalation framework for assertiveness when concerns are not addressed" },
+   416→    { term: "FOR-DEC", definition: "Facts, Options, Risks, Decision, Execution, Check — a structured aviation decision-making model" },
+   417→    { term: "NITS", definition: "Nature, Intentions, Time, Special instructions — the framework Captains use to brief cabin crew during abnormal/emergency situations" },
+   418→    { term: "SHELL Model", definition: "ICAO human factors framework: Software, Hardware, Environment, Liveware (centre), Liveware (others) — with the human at the centre" },
+   419→    { term: "FRMS (Fatigue Risk Management System)", definition: "A data-driven, science-based approach to managing fatigue risk in aviation operations, complementing regulatory duty limits" },
+   420→    { term: "Just Culture", definition: "A safety culture framework that fairly treats errors by distinguishing honest mistakes (system learning) from reckless behaviour (discipline) and sabotage (prosecution)" },
+   421→    { term: "Sterile Cockpit Rule", definition: "Regulation prohibiting non-essential activities and conversation on the flight deck during critical phases (typically below 10,000 feet)" },
+   422→    { term: "Authority Gradient", definition: "The perceived difference in authority between crew members — steep gradients can inhibit junior crew from speaking up" },
+   423→    { term: "Groupthink", definition: "When the desire for consensus overrides critical thinking, causing crew to withhold concerns and leading to flawed decisions" },
+   424→    { term: "Tuckman's Stages", definition: "Team development model: Forming, Storming, Norming, Performing, Adjourning" },
+   425→    { term: "Yerkes-Dodson Law", definition: "Performance increases with stress up to an optimal point, then declines sharply — explaining the relationship between stress and performance" },
+   426→    { term: "Hofstede's Cultural Dimensions", definition: "Framework for understanding cultural differences including power distance, individualism, uncertainty avoidance, and masculinity/femininity" },
+   427→    { term: "Power Distance", definition: "The degree to which less powerful members of organisations accept unequal power distribution — high power distance can inhibit assertion" },
+   428→    { term: "Behavioural Markers", definition: "Specific, observable behaviours used to assess CRM competence (e.g., 'asks for input', 'verbalises plans')" },
+   429→    { term: "Hazardous Attitudes", definition: "Five attitudes identified by the FAA: anti-authority, impulsivity, invulnerability, macho, resignation — each with a counter-thought" },
+   430→    { term: "Error Trapping", definition: "Crew catching each other's errors through cross-checking, callouts, and open communication — a team responsibility" },
+   431→    { term: "Circadian Rhythm", definition: "The body's 24-hour biological cycle regulating sleepiness and alertness — peak sleepiness at 02:00–06:00 and 14:00–16:00" },
+   432→    { term: "Microsleep", definition: "A brief (1–10 second) involuntary sleep episode that can occur during safety-critical tasks without the person realising" },
+   433→    { term: "Swiss Cheese Model", definition: "James Reason's model showing accidents occur when multiple defence layers' holes align — each layer matters" },
+   434→    { term: "CISM (Critical Incident Stress Management)", definition: "A structured approach to supporting people after critical incidents, including defusing, debriefing, and ongoing support" },
+   435→    { term: "LOSA (Line Operations Safety Audit)", definition: "A data-driven observation programme collecting safety data during normal line operations to identify threats and errors" },
+   436→  ],
+   437→
+   438→  // ============================================================================
+   439→  // FAQ (10 questions)
+   440→  // ============================================================================
+   441→  faq: [
+   442→    { question: "What is CRM and why is it important for cabin crew?", answer: "CRM (Crew Resource Management) is the effective use of all available resources — human, hardware, and information — to achieve safe and efficient flight operations. For cabin crew, CRM is critical because approximately 70-80% of aviation accidents involve human factors. CRM develops the non-technical skills (communication, teamwork, leadership, situational awareness) that complement technical proficiency and prevent human-error incidents." },
+   443→    { question: "Is CRM training mandatory for cabin crew?", answer: "Yes. CRM training is mandated by ICAO Annex 6 Part I and EASA Regulation (EU) No 965/2012 (Part-CC and Part-ORO). Operators must include CRM in initial, conversion, recurrent, and command training programmes. Successful completion is required for cabin crew qualification." },
+   444→    { question: "What is the difference between CRM and TEM?", answer: "CRM and TEM are complementary. CRM is the broader discipline developing behavioural skills (communication, teamwork, leadership, SA, decision-making). TEM (Threat and Error Management) is a specific framework for managing operational challenges — anticipating, detecting, and managing threats and errors. CRM provides the skills; TEM provides the operational framework in which those skills are deployed." },
+   445→    { question: "What is closed-loop communication and when should it be used?", answer: "Closed-loop communication is a three-step process: Sender states message → Receiver reads back/acknowledges → Sender confirms. It should be used for all safety-critical communications, such as cabin secure reports, door status, emergency information, and any communication where misunderstanding could have safety consequences. It prevents the misunderstandings that contribute to incidents." },
+   446→    { question: "How can junior cabin crew be assertive with senior crew?", answer: "Junior crew can use the P.A.C.E. framework: Probe (ask a question), Alert (state the concern directly), Challenge (strong assertive statement), Emergency (take action to prevent harm). Start with Probe, assuming the senior may have information you don't. Escalate only if concerns are not addressed. Operators should create psychological safety so juniors feel comfortable speaking up — this is a leadership responsibility." },
+   447→    { question: "What should I do if I'm too fatigued to operate safely?", answer: "Report unfit to fly due to fatigue. Operators are legally required to have non-punitive fatigue reporting — you will not be disciplined for honest fatigue reports. Hiding fatigue endangers the flight, crew, and passengers. After 17 hours awake, performance equals 0.05% BAC — fatigue is a serious impairment. FRMS (Fatigue Risk Management System) supports crew in managing fatigue through reporting, rest, and operational adjustments." },
+   448→    { question: "What is the sterile cockpit rule and how does it affect cabin crew?", answer: "The sterile cockpit rule prohibits non-essential activities and conversation on the flight deck during critical phases of flight (typically below 10,000 feet during climb/descent, plus taxi, take-off, landing). For cabin crew, this means minimising cockpit contacts to safety-critical only during these phases. However, if you observe a safety-critical situation (smoke, fire, security threat), you MUST contact the flight deck immediately — safety overrides sterile cockpit." },
+   449→    { question: "What is Just Culture and how does it affect reporting?", answer: "Just Culture is a framework for fair treatment of errors. It distinguishes: 1) Normal errors (slips/lapses) — addressed through system improvement, not punishment. 2) Risky behaviour (shortcuts) — coaching and accountability. 3) Reckless behaviour (conscious disregard) — disciplinary action. 4) Sabotage — criminal prosecution. Only reckless behaviour and sabotage attract blame; honest errors drive learning. This encourages reporting, which improves safety." },
+   450→    { question: "How should cabin crew handle a passenger who is becoming disruptive?", answer: "Follow the unruly passenger procedure: 1) Use verbal de-escalation (calm tone, acknowledge feelings, set clear limits). 2) Stop alcohol service if intoxicated. 3) Issue verbal warning, then written warning if behaviour continues. 4) Inform CSD and flight deck — Captain has legal authority. 5) Consider restraint as last resort per SOP, with multiple crew and approved equipment. 6) Divert if safety is seriously compromised. 7) Document fully. Crew safety is paramount — disengage if physically threatened." },
+   451→    { question: "What should happen after a critical incident like an evacuation or serious medical event?", answer: "Post-incident support is essential: 1) Immediate welfare check (medical and emotional). 2) Structured debrief covering facts, what went well, what could improve, lessons learned. 3) Access Critical Incident Stress Management (CISM) — peer support, professional counselling, EAP. 4) Rest — do not operate until genuinely ready. 5) Thorough documentation for learning and legal purposes. Trauma responses are normal reactions to abnormal events — seeking support is professional, not weak." },
+   452→  ],
+   453→
+   454→  // ============================================================================
+   455→  // TESTIMONIALS (4 testimonials)
+   456→  // ============================================================================
+   457→  testimonials: [
+   458→    { name: "Maria Santos", role: "Senior Cabin Supervisor", text: "The CRM course transformed how I lead my cabin crew. The P.A.C.E. framework and Just Culture concepts have made our team communications more open and our safety reporting more honest. I wish I'd had this training earlier in my career.", rating: 5 },
+   459→    { name: "Captain James Whitfield", role: "Line Training Captain", text: "As a training captain, I see the difference CRM-trained cabin crew make. The coordination between cabin and flight deck is smoother, safety reports are more frequent and useful, and the overall safety culture is stronger. This course covers all the essential CRM foundations.", rating: 5 },
+   460→    { name: "Aisha Patel", role: "New Cabin Crew Trainee", text: "The case studies, especially Kegworth and United 232, really brought the CRM concepts to life. I now understand why assertiveness and communication matter so much. The interactive scenarios helped me practise the skills before facing real situations.", rating: 5 },
+   461→    { name: "Dr. Chen Wei", role: "Aviation Human Factors Consultant", text: "This CRM course aligns well with ICAO and EASA requirements and current human factors research. The TEM framework, fatigue management content, and Just Culture sections are particularly well-presented. I recommend it as a solid foundation for cabin crew initial training.", rating: 5 },
+   462→  ],
+   463→};
+   464→

@@ -6,6 +6,9 @@ import { useCurrentCourse } from "@/lib/use-course";
 import { getEnhancedContent } from "@/lib/lesson-enhancements";
 import { getFirstAidEnhancedContent } from "@/lib/first-aid-enhancements";
 import { getCRMEnhancedContent } from "@/lib/crm-enhancements";
+import { getCRMContentExpansion } from "@/lib/crm-content-expansion";
+import { getDGRContentExpansion } from "@/lib/dgr-content-expansion";
+import { getFirstAidContentExpansion } from "@/lib/first-aid-content-expansion";
 import { t } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -315,12 +318,12 @@ export function LessonView() {
   const lessonNotes = progress.notes[lesson.id] || [];
 
   // Merge enhanced interactive content with base lesson content
-  // Check DGR, First Aid, and CRM enhancements based on lesson ID prefix
+  // Check DGR, First Aid, and CRM enhancements + content expansions
   const enhancements = lesson.id.startsWith("fa-")
-    ? getFirstAidEnhancedContent(lesson.id)
+    ? [...getFirstAidEnhancedContent(lesson.id), ...getFirstAidContentExpansion(lesson.id)]
     : lesson.id.startsWith("crm-")
-    ? getCRMEnhancedContent(lesson.id)
-    : getEnhancedContent(lesson.id);
+    ? [...getCRMEnhancedContent(lesson.id), ...getCRMContentExpansion(lesson.id)]
+    : [...getEnhancedContent(lesson.id), ...getDGRContentExpansion(lesson.id)];
   const enhancedContent = [...lesson.content, ...enhancements];
 
   // Filter content for search

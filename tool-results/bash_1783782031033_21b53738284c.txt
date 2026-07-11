@@ -1,0 +1,401 @@
+          content: [
+            { type: "paragraph", text: "Aviation accidents provide painful but invaluable lessons. Each major accident has driven CRM development. Studying these cases helps crew understand why CRM matters and how failures manifest in real operations." },
+            { type: "table", headers: ["Accident", "Year", "CRM Lesson"], rows: [
+              ["Tenerife", "1977", "Communication failure, authority gradient, miscommunication"],
+              ["United 173, Portland", "1978", "Loss of SA, fixation, lack of assertion"],
+              ["Air Florida 90", "1982", "Failure to challenge Captain, poor teamwork"],
+              ["Kegworth, British Midland", "1989", "Wrong engine shut down, no assertion from cabin"],
+              ["British Airways 5390", "1990", "Excellent crew coordination under extreme emergency"],
+              ["United 232, Sioux City", "1989", "Exemplary CRM — crew saved many lives"],
+            ], caption: "Historical accidents with CRM lessons"},
+            { type: "callout", variant: "danger", title: "Kegworth (1989) — Cabin Crew Lesson", text: "British Midland Flight 092 had engine failure. Cabin crew noticed abnormal engine from the right, but the cockpit shut down the left (wrong) engine. Cabin crew did not assert their observation. The aircraft crashed short of the runway. This case directly highlights the need for cabin crew assertiveness and cabin-flight deck communication." },
+            { type: "callout", variant: "info", title: "Tenerife (1977) — Communication Failure", text: "The deadliest aviation accident occurred when two 747s collided on the runway at Tenerife. Miscommunication, time pressure, and authority gradient led the KLM Captain to take off without clearance. This accident is foundational to CRM development and the focus on communication and assertiveness." },
+          ],
+          summary: [
+            "Historical accidents have driven CRM development",
+            "Key cases: Tenerife (communication), Portland (SA/assertion), Kegworth (cabin crew assertion)",
+            "Kegworth 1989 directly highlights cabin crew assertiveness and cabin-flight deck communication",
+            "BA 5390 and United 232 demonstrate excellent CRM under extreme circumstances",
+          ],
+          reviewQuestions: [
+            "Which 1977 accident is foundational to CRM development?",
+            "What was the CRM lesson from United 173 Portland?",
+            "Why is the Kegworth accident particularly relevant to cabin crew?",
+            "What do BA 5390 and United 232 demonstrate about CRM?",
+          ],
+        },
+        {
+          id: "crm-lesson-21-2",
+          moduleId: "crm-mod-21",
+          code: "21.2",
+          title: "Lessons from Aviation Accidents",
+          duration: 25,
+          objectives: [
+            "Identify common CRM failure patterns in accidents",
+            "Apply accident lessons to cabin crew practices",
+            "Recognise the role of cabin crew in preventing accidents",
+          ],
+          content: [
+            { type: "heading", text: "Common CRM Failure Patterns", level: 3 },
+            { type: "list", items: [
+              "Failure of communication — unclear, not closed-loop, not received",
+              "Failure of assertiveness — junior crew noticed but didn't speak up",
+              "Failure of leadership — Captain autocratic, no input sought",
+              "Loss of situational awareness — fixation, distraction",
+              "Plan continuation — pressing on despite warning signs",
+              "Authority gradient too steep — junior couldn't challenge senior",
+              "Inadequate briefings — crew not on same page",
+              "Failure to manage workload — overload, missed tasks",
+            ]},
+            { type: "table", headers: ["Accident Pattern", "Cabin Crew Countermeasure"], rows: [
+              ["Cabin observed abnormality not communicated", "Assertive reporting to flight deck"],
+              ["Passenger behaviour noted but not acted on", "Proactive passenger management"],
+              ["Crew unaware of cabin status during emergency", "Standard cabin reports to flight deck"],
+              ["Evacuation delay or confusion", "Drills, briefings, command voice practice"],
+              ["Medical event mismanaged", "CRM roles (Assessor, Collector, Teller), equipment familiarity"],
+            ], caption: "Accident patterns and cabin crew countermeasures"},
+            { type: "callout", variant: "warning", title: "The Swiss Cheese Model", text: "James Reason's Swiss Cheese Model shows accidents occur when multiple defences align — each layer has holes, and accidents happen when holes line up. CRM training is one defence layer; cabin crew vigilance is another. Removing any layer increases accident risk." },
+            { type: "callout", variant: "tip", title: "Applying Lessons", text: "Crew should reflect: 'What would I have done in that situation? Have I seen early warning signs of similar failures? What can I change in my own practice?' Accident study without personal application is wasted learning." },
+          ],
+          summary: [
+            "Common CRM failure patterns: communication, assertiveness, leadership, SA, plan continuation, authority gradient",
+            "Cabin crew countermeasures address cabin observation, passenger management, evacuation, medical events",
+            "The Swiss Cheese Model shows accidents occur when defence layers align — each layer matters",
+            "Lessons must be applied personally — reflection without application is wasted learning",
+          ],
+          reviewQuestions: [
+            "What are the common CRM failure patterns in accidents?",
+            "What is the Swiss Cheese Model?",
+            "How can cabin crew countermeasures prevent accident patterns?",
+            "How should crew apply accident lessons personally?",
+          ],
+        },
+        {
+          id: "crm-lesson-21-3",
+          moduleId: "crm-mod-21",
+          code: "21.3",
+          title: "Successful CRM Applications",
+          duration: 20,
+          objectives: [
+            "Identify examples of excellent CRM saving lives",
+            "Analyse what made these CRM applications successful",
+            "Apply success principles to own CRM practice",
+          ],
+          content: [
+            { type: "paragraph", text: "Not all CRM stories are tragedies. Many incidents and accidents have been survived or averted through excellent CRM. Studying these success stories shows what good CRM looks like and reinforces the value of training." },
+            { type: "table", headers: ["Incident", "CRM Success Factor"], rows: [
+              ["United 232 (1989) — Sioux City", "Captain delegated flying, communication, teamwork, innovation"],
+              ["BA 5390 (1990) — Captain blown out", "Cabin crew held Captain, cockpit crew landed safely"],
+              ["US Airways 1549 (2009) — Hudson River", "Cabin evacuation in 90 seconds, no panic, no fatalities"],
+              ["Qantas 32 (2010) — A380 engine failure", "Massive crew coordination, all 469 survived"],
+              ["Air France 358 (2005) — Toronto overrun", "Rapid evacuation, all 309 survived"],
+            ], caption: "Successful CRM applications"},
+            { type: "callout", variant: "info", title: "United 232 — CRM Masterclass", text: "After total hydraulic failure, Captain Al Haynes and crew coordinated with a deadheading DC-10 instructor. They divided duties, communicated continuously, adapted constantly. They saved 185 of 296 lives in an 'unsurvivable' situation — credited to CRM at its best." },
+            { type: "callout", variant: "tip", title: "US Airways 1549 — Cabin Excellence", text: "After ditching in the Hudson River, cabin crew executed textbook evacuation: clear commands, double-checked cabin, managed panicked passengers, deployed slides, used raft. All 155 survived. The cabin crew's training, composure, and CRM were decisive." },
+            { type: "callout", variant: "warning", title: "Common Success Factors", text: "Successful CRM applications share: clear leadership, distributed workload, open communication, shared situational awareness, training that held under stress, and crew who supported each other. These are exactly the CRM behaviours this course develops." },
+          ],
+          summary: [
+            "Many incidents survived through excellent CRM — United 232, BA 5390, US Airways 1549, Qantas 32, AF 358",
+            "United 232: Captain Haynes delegated, communicated, adapted — saved 185 lives from 'unsurvivable' situation",
+            "US Airways 1549: cabin crew executed textbook evacuation — all 155 survived",
+            "Common success factors: clear leadership, distributed workload, open comms, shared SA, mutual support",
+          ],
+          reviewQuestions: [
+            "What made United 232 a CRM success story?",
+            "How did cabin crew contribute to US Airways 1549's successful outcome?",
+            "List three incidents where CRM saved lives.",
+            "What factors are common to successful CRM applications?",
+          ],
+        },
+      ],
+    },
+
+    // ============================================================================
+    // MODULE 22 — Final Revision
+    // ============================================================================
+    {
+      id: "crm-mod-22",
+      code: "22",
+      title: "Final Revision",
+      description: "Comprehensive revision of CRM concepts across communication, teamwork, SA, decision-making, TEM, leadership, fatigue, and culture.",
+      icon: "RefreshCw",
+      color: "#0ea5e9",
+      lessons: [
+        {
+          id: "crm-lesson-22-1",
+          moduleId: "crm-mod-22",
+          code: "22.1",
+          title: "Communication & Teamwork Revision",
+          duration: 25,
+          objectives: [
+            "Revise key communication principles and techniques",
+            "Consolidate teamwork concepts",
+            "Apply communication and teamwork skills in integrated scenarios",
+          ],
+          content: [
+            { type: "heading", text: "Communication Key Points", level: 3 },
+            { type: "list", items: [
+              "Communication = sender → message → channel → receiver → feedback",
+              "Closed-loop communication for safety-critical info: state → readback → confirm",
+              "Words (~7%) + tone (~38%) + body language (~55%) = full message",
+              "Active listening: attention, reflecting, clarifying, summarising, not interrupting",
+              "Barriers: noise, language, status, assumptions, fatigue, culture",
+            ]},
+            { type: "heading", text: "Teamwork Key Points", level: 3 },
+            { type: "list", items: [
+              "Teams develop: forming → storming → norming → performing → adjourning",
+              "Pre-flight briefings compress team formation for ad hoc crews",
+              "Effective teams: shared goals, clear roles, trust, communication, psychological safety",
+              "Counter groupthink: invite dissent, ask 'what might we be missing?'",
+              "Role clarity + flexibility = effective crew",
+            ]},
+            { type: "callout", variant: "tip", title: "Integrated Practice", text: "Communication and teamwork are inseparable — every teamwork behaviour requires communication, and effective communication supports teamwork. Practise both together in scenarios: briefings, service coordination, emergency drills." },
+            { type: "callout", variant: "info", title: "Self-Check", text: "After this revision, can you: explain closed-loop communication? List the active listening techniques? Describe Tuckman's stages? Identify groupthink and counter it? If not, revisit Modules 4 and 5." },
+          ],
+          summary: [
+            "Communication: closed-loop for safety, 7/38/55 rule, active listening, recognising barriers",
+            "Teamwork: Tuckman's stages, briefing for ad hoc crews, shared goals, role clarity + flexibility",
+            "Counter groupthink by inviting dissent",
+            "Communication and teamwork are inseparable — practise together in scenarios",
+          ],
+          reviewQuestions: [
+            "What is closed-loop communication?",
+            "What is the 7/38/55 rule of communication?",
+            "List Tuckman's stages of team development.",
+            "How can groupthink be countered?",
+          ],
+        },
+        {
+          id: "crm-lesson-22-2",
+          moduleId: "crm-mod-22",
+          code: "22.2",
+          title: "SA, Decision Making & TEM Revision",
+          duration: 25,
+          objectives: [
+            "Revise situational awareness concepts",
+            "Consolidate decision-making models and biases",
+            "Review the TEM framework",
+          ],
+          content: [
+            { type: "heading", text: "Situational Awareness Key Points", level: 3 },
+            { type: "list", items: [
+              "SA = perception + comprehension + projection (Endsley's 3 levels)",
+              "Shared SA — crew must have common understanding",
+              "SA threats: fatigue, complacency, distraction, workload, stress, expectation bias",
+              "Maintain: scanning, briefings, callouts, workload management, checklists",
+              "Regain lost SA: acknowledge, step back, communicate, re-establish, seek help",
+            ]},
+            { type: "heading", text: "Decision Making Key Points", level: 3 },
+            { type: "list", items: [
+              "Models: FOR-DEC (Facts, Options, Risks, Decision, Execution, Check)",
+              "DECIDE, OODA loop for time-critical decisions",
+              "Biases: confirmation, anchoring, availability, plan continuation, sunk cost, authority",
+              "5 hazardous attitudes: anti-authority, impulsivity, invulnerability, macho, resignation",
+              "Group decisions: benefits of diversity, risks of groupthink",
+            ]},
+            { type: "heading", text: "TEM Key Points", level: 3 },
+            { type: "list", items: [
+              "TEM components: threats, errors, undesired states, countermeasures",
+              "Threats: environmental, operational, passenger, crew, external, latent",
+              "Errors: procedural, communication, proficiency, decision, perception",
+              "Error management: detect → trap → resolve → learn (not avoid)",
+              "Briefing is prime TEM planning opportunity",
+            ]},
+            { type: "callout", variant: "tip", title: "Integrated Application", text: "SA feeds decision-making, decisions affect TEM, TEM feeds back into SA. These three CRM pillars are deeply interrelated. Strong SA enables good decisions; good decisions manage threats; threat management maintains SA." },
+          ],
+          summary: [
+            "SA: perception/comprehension/projection, shared SA, threats, maintenance techniques, recovery",
+            "Decision making: FOR-DEC, biases, hazardous attitudes, group vs individual decisions",
+            "TEM: threats, errors, countermeasures, error management (not avoidance)",
+            "SA, decision-making, and TEM are interrelated CRM pillars",
+          ],
+          reviewQuestions: [
+            "What are the three levels of situational awareness?",
+            "What does FOR-DEC stand for?",
+            "What are the five hazardous attitudes?",
+            "What is the error management process?",
+          ],
+        },
+        {
+          id: "crm-lesson-22-3",
+          moduleId: "crm-mod-22",
+          code: "22.3",
+          title: "Leadership, Fatigue & Culture Revision",
+          duration: 25,
+          objectives: [
+            "Revise leadership and followership concepts",
+            "Consolidate fatigue awareness knowledge",
+            "Review cultural awareness and safety culture principles",
+          ],
+          content: [
+            { type: "heading", text: "Leadership & Followership Key Points", level: 3 },
+            { type: "list", items: [
+              "Leadership styles: authoritarian, participative, delegative, transformational",
+              "Situational leadership — adapt style to situation and team",
+              "CSD/CS sets CRM tone, links cabin to flight deck",
+              "Followership: competent, communicative, supportive, courageous",
+              "P.A.C.E. — Probe, Alert, Challenge, Emergency",
+            ]},
+            { type: "heading", text: "Fatigue Key Points", level: 3 },
+            { type: "list", items: [
+              "Fatigue ≠ tiredness — it impairs function",
+              "17 hrs awake = 0.05% BAC; 24 hrs = 0.10% BAC",
+              "Circadian dips: 02:00–06:00 and 14:00–16:00",
+              "Fatigue accumulates — cumulative fatigue risk",
+              "FRMS: data-driven, multiple defence layers, non-punitive reporting",
+            ]},
+            { type: "heading", text: "Culture Key Points", level: 3 },
+            { type: "list", items: [
+              "Hofstede dimensions: power distance, individualism, uncertainty avoidance, masculinity",
+              "High power distance inhibits assertion — CRM safety concern",
+              "Safety culture: informed, reporting, just, learning, flexible",
+              "Just Culture: normal error → console; risky → coach; reckless → discipline; sabotage → prosecute",
+              "Increased reporting = healthy culture (counterintuitive but true)",
+            ]},
+            { type: "callout", variant: "info", title: "Bringing It All Together", text: "Effective CRM integrates all these elements: a well-led, well-rested, culturally aware crew communicating clearly, maintaining shared SA, managing threats and errors, making sound decisions, and operating within a Just Culture. This is what safe cabin operations look like." },
+            { type: "callout", variant: "tip", title: "Final Self-Check", text: "Before the final exam, ensure you can: explain CRM's purpose, list communication barriers, describe SA levels, apply FOR-DEC, identify TEM components, explain Just Culture, and describe the CSD/CS role. These are the core competencies you'll be assessed on." },
+          ],
+          summary: [
+            "Leadership: 4 styles, situational adaptation, CSD/CS sets tone; Followership with P.A.C.E.",
+            "Fatigue: impairing not just tiredness, equivalent to BAC, circadian dips, cumulative, FRMS",
+            "Culture: Hofstede dimensions, power distance safety concern, safety culture 5 components, Just Culture",
+            "Effective CRM integrates all elements — clear communication, shared SA, TEM, decisions, leadership, culture",
+          ],
+          reviewQuestions: [
+            "What are the four leadership styles?",
+            "How does fatigue compare to blood alcohol concentration?",
+            "What are the five components of safety culture?",
+            "What are the four Just Culture behaviour categories?",
+          ],
+        },
+      ],
+    },
+
+    // ============================================================================
+    // MODULE 23 — Final Examination
+    // ============================================================================
+    {
+      id: "crm-mod-23",
+      code: "23",
+      title: "Final Examination",
+      description: "Final exam preparation, study tips, and assessment overview.",
+      icon: "Award",
+      color: "#dc2626",
+      lessons: [
+        {
+          id: "crm-lesson-23-1",
+          moduleId: "crm-mod-23",
+          code: "23.1",
+          title: "Final Exam Preparation and Tips",
+          duration: 30,
+          objectives: [
+            "Prepare effectively for the CRM final exam",
+            "Apply exam-taking strategies",
+            "Consolidate all course learning for assessment",
+          ],
+          content: [
+            { type: "paragraph", text: "The final exam assesses your understanding of CRM principles and their application to cabin crew operations. It consists of 25 multiple-choice questions covering all modules. A passing score is required to complete the course and receive your CRM certificate." },
+            { type: "heading", text: "Exam Structure", level: 3 },
+            { type: "list", items: [
+              "25 multiple-choice questions",
+              "Covers all 22 content modules",
+              "Mix of recall, application, and scenario questions",
+              "Each question has 4 options, one correct answer",
+              "Explanations provided after each answer for learning",
+            ]},
+            { type: "heading", text: "Study Tips", level: 3 },
+            { type: "list", items: [
+              "Review lesson summaries — they capture key points",
+              "Practise with flashcards for terminology",
+              "Revisit review questions at the end of each lesson",
+              "Review quiz questions you missed earlier",
+              "Focus on application, not just memorisation",
+              "Use scenarios to test integrated understanding",
+              "Allow sufficient time — don't cram",
+            ]},
+            { type: "table", headers: ["Topic Area", "Approx. Questions", "Focus"], rows: [
+              ["Communication & Teamwork", "4-5", "Closed-loop, barriers, Tuckman, groupthink"],
+              ["SA & Decision Making", "4-5", "SA levels, FOR-DEC, biases, hazardous attitudes"],
+              ["TEM", "3-4", "Threats, errors, countermeasures"],
+              ["Leadership & Assertiveness", "3-4", "Styles, P.A.C.E., followership"],
+              ["Fatigue, Workload & Stress", "3-4", "FRMS, workload management, coping"],
+              ["Culture & Safety", "3-4", "Hofstede, safety culture, Just Culture"],
+              ["Emergencies & Case Studies", "2-3", "Evacuation CRM, lessons from accidents"],
+            ], caption: "Final exam topic distribution"},
+            { type: "callout", variant: "tip", title: "Exam Strategy", text: "Read each question carefully. Eliminate obviously wrong options. Consider what CRM principle the question tests. If unsure, choose the answer that prioritises safety, communication, and crew coordination — these are the consistent CRM themes." },
+            { type: "callout", variant: "info", title: "Beyond the Exam", text: "The exam is one assessment. The real test is applying CRM in daily operations. Carry these principles into every flight: communicate clearly, work as a team, maintain SA, manage threats, support each other, and contribute to a strong safety culture." },
+            { type: "callout", variant: "warning", title: "Certification", text: "Successful completion of this CRM course is required for cabin crew qualification under EASA Part-CC and Part-ORO, and ICAO Annex 6. The certificate demonstrates your competence in CRM principles and is part of your professional credentials." },
+          ],
+          summary: [
+            "The final exam has 25 MCQs covering all 22 content modules",
+            "Study by reviewing summaries, flashcards, review questions, and quizzes",
+            "Topic distribution spans communication, SA, TEM, leadership, fatigue, culture, emergencies",
+            "Exam strategy: read carefully, eliminate wrong options, choose safety/communication/teamwork",
+            "The real test is applying CRM in daily operations, not just passing the exam",
+          ],
+          reviewQuestions: [
+            "How many questions are in the final exam?",
+            "What study strategies should you use to prepare?",
+            "What topic areas does the exam cover?",
+            "What is the passing score requirement for certification?",
+          ],
+        },
+      ],
+    },
+  ],
+
+  // ============================================================================
+  // LESSON QUIZZES
+  // ============================================================================
+  quizzes: {
+    "crm-lesson-1-1": [
+      { id: "crmq1-1a", type: "mcq", question: "What is the primary purpose of CRM?", options: ["Increase airline profits", "Reduce human-error incidents and improve coordination", "Replace technical training", "Standardise passenger service"], correctAnswer: 1, explanation: "CRM's primary purpose is to reduce human-error incidents and improve crew coordination through effective use of all resources.", difficulty: "easy", topic: "CRM Definition" },
+      { id: "crmq1-1b", type: "mcq", question: "Does CRM apply to all cabin crew members?", options: ["No, only the CSD/CS", "No, only senior crew", "Yes, every crew member regardless of seniority", "Only on long-haul flights"], correctAnswer: 2, explanation: "CRM applies to every crew member regardless of seniority — all contribute to crew collective performance.", difficulty: "easy", topic: "CRM Scope" },
+    ],
+    "crm-lesson-1-3": [
+      { id: "crmq1-3a", type: "mcq", question: "Which regulations mandate CRM training for cabin crew?", options: ["FAA Part 61 only", "ICAO Annex 6 and EASA Regulation (EU) No 965/2012", "Only local labour laws", "No regulations require it"], correctAnswer: 1, explanation: "ICAO Annex 6 Part I and EASA Regulation (EU) No 965/2012 mandate CRM training for cabin crew.", difficulty: "medium", topic: "Regulations" },
+    ],
+    "crm-lesson-2-1": [
+      { id: "crmq2-1a", type: "mcq", question: "Which 1978 accident directly triggered the first CRM training programme?", options: ["Tenerife", "United Airlines Flight 173 (Portland)", "Air Florida 90", "Kegworth"], correctAnswer: 1, explanation: "United Airlines Flight 173 in Portland (1978) ran out of fuel while the crew fixated on a landing gear issue. United then developed the first CRM programme.", difficulty: "medium", topic: "CRM History" },
+      { id: "crmq2-1b", type: "mcq", question: "Which organisation hosted the 1979 workshop that formalised CRM?", options: ["FAA", "ICAO", "NASA", "IATA"], correctAnswer: 2, explanation: "NASA hosted the 1979 workshop that formalised the CRM concept.", difficulty: "medium", topic: "CRM History" },
+    ],
+    "crm-lesson-2-2": [
+      { id: "crmq2-2a", type: "mcq", question: "How many generations of CRM are commonly recognised?", options: ["3", "4", "5", "6"], correctAnswer: 3, explanation: "CRM has evolved through six generations since the 1980s, each reflecting advances in human factors understanding.", difficulty: "easy", topic: "CRM Generations" },
+    ],
+    "crm-lesson-3-2": [
+      { id: "crmq3-2a", type: "mcq", question: "In the SHELL model, what does the central 'L' stand for?", options: ["Logic", "Liveware (the human)", "Leadership", "Logistics"], correctAnswer: 1, explanation: "The central L in SHELL stands for Liveware — the human element at the centre of the framework.", difficulty: "easy", topic: "SHELL Model" },
+      { id: "crmq3-2b", type: "mcq", question: "Where do most human factors problems occur in the SHELL model?", options: ["Within components themselves", "At the interfaces between components", "Only in the Hardware component", "Only in the Environment component"], correctAnswer: 1, explanation: "Most human factors problems occur at the interfaces between components — particularly between the central Liveware and the other four elements.", difficulty: "medium", topic: "SHELL Model" },
+    ],
+    "crm-lesson-3-3": [
+      { id: "crmq3-3a", type: "mcq", question: "Approximately how many items can short-term memory hold?", options: ["1-2 items", "5-9 items", "15-20 items", "Unlimited"], correctAnswer: 1, explanation: "Short-term memory can hold approximately 5-9 items for about 20 seconds, which is why checklists are essential.", difficulty: "easy", topic: "Human Performance" },
+    ],
+    "crm-lesson-4-1": [
+      { id: "crmq4-1a", type: "mcq", question: "What is closed-loop communication?", options: ["Speaking in a circle", "State → readback → confirm", "Only the sender speaks", "Communication without feedback"], correctAnswer: 1, explanation: "Closed-loop communication: Sender states message → Receiver reads back/acknowledges → Sender confirms. This prevents misunderstandings.", difficulty: "easy", topic: "Communication" },
+      { id: "crmq4-1b", type: "mcq", question: "Which is NOT a common communication barrier?", options: ["Noise", "Language differences", "Closed-loop communication", "Status differences"], correctAnswer: 2, explanation: "Closed-loop communication is a technique to overcome barriers, not a barrier itself. The other three are common barriers.", difficulty: "medium", topic: "Communication Barriers" },
+    ],
+    "crm-lesson-4-2": [
+      { id: "crmq4-2a", type: "mcq", question: "According to the Mehrabian model, approximately what proportion of meaning comes from body language?", options: ["7%", "38%", "55%", "90%"], correctAnswer: 2, explanation: "Approximately 55% of meaning in face-to-face communication comes from body language (with ~38% from tone and ~7% from words).", difficulty: "medium", topic: "Non-Verbal Communication" },
+    ],
+    "crm-lesson-4-3": [
+      { id: "crmq4-3a", type: "mcq", question: "Which is NOT a characteristic of effective feedback?", options: ["Specific", "Timely", "Vague and general", "Behavioural"], correctAnswer: 2, explanation: "Effective feedback is specific, not vague. It should also be timely, behavioural, balanced, and two-way.", difficulty: "easy", topic: "Feedback" },
+    ],
+    "crm-lesson-5-1": [
+      { id: "crmq5-1a", type: "mcq", question: "What are Tuckman's five stages of team development?", options: ["Forming, Storming, Norming, Performing, Adjourning", "Planning, Doing, Checking, Acting", "Initiation, Conflict, Resolution, Completion", "Briefing, Execution, Debriefing"], correctAnswer: 0, explanation: "Tuckman's stages: Forming, Storming, Norming, Performing, Adjourning.", difficulty: "medium", topic: "Team Development" },
+    ],
+    "crm-lesson-5-3": [
+      { id: "crmq5-3a", type: "mcq", question: "What is groupthink?", options: ["A productive team decision process", "When the desire for consensus overrides critical thinking", "When everyone agrees naturally", "A type of communication breakdown"], correctAnswer: 1, explanation: "Groupthink occurs when the desire for consensus overrides critical thinking, causing crew to withhold concerns and leading to flawed decisions.", difficulty: "medium", topic: "Teamwork" },
+    ],
+    "crm-lesson-6-1": [
+      { id: "crmq6-1a", type: "mcq", question: "Which leadership style is most appropriate during an emergency evacuation?", options: ["Participative", "Delegative", "Authoritarian", "Transformational"], correctAnswer: 2, explanation: "Emergencies require clear, directive leadership — the authoritarian style is appropriate when time is critical and clear direction is needed.", difficulty: "medium", topic: "Leadership" },
+    ],
+    "crm-lesson-6-3": [
+      { id: "crmq6-3a", type: "mcq", question: "What does P.A.C.E. stand for?", options: ["Plan, Act, Check, Evaluate", "Probe, Alert, Challenge, Emergency", "Prepare, Approach, Communicate, Execute", "Prioritise, Act, Coordinate, Evaluate"], correctAnswer: 1, explanation: "P.A.C.E. is an escalation framework: Probe, Alert, Challenge, Emergency — providing increasing assertiveness if concerns are not addressed.", difficulty: "medium", topic: "Followership" },
+    ],
+    "crm-lesson-7-1": [
+      { id: "crmq7-1a", type: "mcq", question: "What are the three levels of situational awareness (Endsley)?", options: ["Look, Listen, Feel", "Perception, Comprehension, Projection", "See, Understand, React", "Notice, Think, Act"], correctAnswer: 1, explanation: "Endsley's three levels: Perception (noticing), Comprehension (understanding), Projection (anticipating).", difficulty: "easy", topic: "Situational Awareness" },
+    ],
+    "crm-lesson-7-2": [
+      { id: "crmq7-2a", type: "mcq", question: "Which is a particularly dangerous SA threat after many routine flights?", options: ["Complacency", "Vigilance", "Active scanning", "Briefing"], correctAnswer: 0, explanation: "Complacency is especially dangerous after routine flights without incident — crew may stop actively scanning and assume everything is fine.", difficulty: "medium", topic: "SA Threats" },
+      { id: "crmq7-2b", type: "mcq", question: "What is expectation bias?", options: ["Hearing what we expect to hear", "Hearing everything accurately", "Ignoring all sounds", "Enhanced perception"], correctAnswer: 0, explanation: "Expectation bias: we perceive what we expect to perceive, which can cause us to miss contradicting evidence.", difficulty: "medium", topic: "SA Threats" },
+    ],
+    "crm-lesson-8-1": [

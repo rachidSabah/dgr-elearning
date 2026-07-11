@@ -1,0 +1,502 @@
+     1→import type { CourseData } from "./types";
+     2→
+     3→// Crew Resource Management (CRM) for Cabin Crew — Initial Training
+     4→// Comprehensive CRM foundation content structured for cabin crew initial training.
+     5→
+     6→export const crmCourseData: CourseData = {
+     7→  title: "Crew Resource Management (CRM) for Cabin Crew",
+     8→  subtitle: "Initial Training — Cabin Crew CRM Foundation",
+     9→  description:
+    10→    "Comprehensive Crew Resource Management (CRM) training for cabin crew covering communication, teamwork, leadership, situational awareness, decision-making, threat and error management, workload and stress management, fatigue awareness, cultural awareness, and safety culture. The course follows ICAO Annex 6 and EASA Regulation (EU) No 965/2012 requirements for cabin crew CRM initial training, equipping crew with the human factors knowledge and behavioural skills needed to operate safely and effectively in both normal and emergency operations.",
+    11→  edition: "Edition 2025",
+    12→  duration: 720,
+    13→  difficulty: "Foundation",
+    14→  instructor: "Aviation Training Authority",
+    15→  objectives: [
+    16→    "Define CRM and explain its purpose, principles, and regulatory basis for cabin crew operations",
+    17→    "Apply effective communication techniques including closed-loop communication, active listening, and assertiveness",
+    18→    "Demonstrate teamwork behaviours that build and maintain high-performing cabin crews",
+    19→    "Recognise leadership and followership responsibilities within the cabin crew hierarchy",
+    20→    "Develop and maintain situational awareness, and identify threats to SA in the cabin environment",
+    21→    "Apply structured decision-making models to normal, abnormal, and emergency situations",
+    22→    "Implement Threat and Error Management (TEM) principles to anticipate and manage operational threats",
+    23→    "Manage workload and stress to maintain performance during high-demand situations",
+    24→    "Recognise the effects of fatigue and apply fatigue risk management strategies",
+    25→    "Demonstrate cultural awareness and contribute to a positive safety culture and Just Culture environment",
+    26→  ],
+    27→  modules: [
+    28→    // ============================================================================
+    29→    // MODULE 1 — Introduction to CRM
+    30→    // ============================================================================
+    31→    {
+    32→      id: "crm-mod-1",
+    33→      code: "1",
+    34→      title: "Introduction to CRM",
+    35→      description: "Definition, purpose, and core principles of Crew Resource Management for cabin crew.",
+    36→      icon: "Users",
+    37→      color: "#0ea5e9",
+    38→      lessons: [
+    39→        {
+    40→          id: "crm-lesson-1-1",
+    41→          moduleId: "crm-mod-1",
+    42→          code: "1.1",
+    43→          title: "What is CRM? Definition and Purpose",
+    44→          duration: 20,
+    45→          objectives: [
+    46→            "Define Crew Resource Management (CRM)",
+    47→            "Explain the purpose of CRM in aviation operations",
+    48→            "Identify who CRM applies to within the cabin crew environment",
+    49→          ],
+    50→          content: [
+    51→            { type: "paragraph", text: "Crew Resource Management (CRM) is the effective use of all available resources — human, hardware, and information — to achieve safe and efficient flight operations. For cabin crew, CRM means coordinating people, procedures, equipment, and communication to maximise safety and passenger service." },
+    52→            { type: "heading", text: "Core Purpose of CRM", level: 3 },
+    53→            { type: "list", items: [
+    54→              "Reduce human-error-related accidents and incidents",
+    55→              "Improve teamwork and coordination among crew members",
+    56→              "Make better use of all available resources on board",
+    57→              "Enhance communication between cabin, flight deck, and passengers",
+    58→            ]},
+    59→            { type: "callout", variant: "info", title: "CRM Is for Everyone", text: "CRM is not just for pilots or senior crew. Every cabin crew member, regardless of seniority, plays a role in the crew's collective performance. CRM behaviours are expected of all crew on every flight." },
+    60→            { type: "callout", variant: "tip", title: "Key Idea", text: "CRM focuses on the non-technical skills (soft skills) that complement technical proficiency: communication, teamwork, leadership, situational awareness, and decision-making." },
+    61→          ],
+    62→          summary: [
+    63→            "CRM is the effective use of all available resources to achieve safe and efficient operations",
+    64→            "Its primary purpose is to reduce human-error incidents and improve crew coordination",
+    65→            "CRM applies to every crew member, not just senior staff or pilots",
+    66→            "CRM focuses on non-technical (behavioural) skills alongside technical competence",
+    67→          ],
+    68→          reviewQuestions: [
+    69→            "What is the definition of Crew Resource Management?",
+    70→            "What are the main purposes of CRM?",
+    71→            "Does CRM apply only to senior crew? Explain your answer.",
+    72→            "What type of skills does CRM primarily develop?",
+    73→          ],
+    74→        },
+    75→        {
+    76→          id: "crm-lesson-1-2",
+    77→          moduleId: "crm-mod-1",
+    78→          code: "1.2",
+    79→          title: "The Need for CRM in Aviation",
+    80→          duration: 20,
+    81→          objectives: [
+    82→            "Understand why CRM was developed",
+    83→            "Identify the role of human error in aviation accidents",
+    84→            "Recognise the cabin crew contribution to flight safety",
+    85→          ],
+    86→          content: [
+    87→            { type: "paragraph", text: "Historically, investigations revealed that the majority of aviation accidents were not caused by technical failures but by breakdowns in communication, teamwork, and decision-making. CRM was developed to address these human factors directly." },
+    88→            { type: "table", headers: ["Era", "Primary Accident Causes"], rows: [
+    89→              ["Pre-1970s", "Technical failures, mechanical issues"],
+    90→              ["1970s–1980s", "Human error, crew coordination failures"],
+    91→              ["1990s–present", "Organisational, systemic, and human factors"],
+    92→            ], caption: "Evolution of accident causation focus"},
+    93→            { type: "callout", variant: "warning", title: "Human Error Statistic", text: "Industry studies consistently show that approximately 70–80% of aviation accidents involve human factors as a primary or contributing cause. CRM directly targets these factors." },
+    94→            { type: "paragraph", text: "Cabin crew are safety-critical personnel. Their timely detection of threats — a smell of smoke, an unusual noise, a suspicious passenger, a medical emergency — can prevent incidents escalating into accidents. CRM equips cabin crew to act effectively on these safety inputs." },
+    95→          ],
+    96→          summary: [
+    97→            "Most aviation accidents involve human factors, not just mechanical failure",
+    98→            "CRM was created to address crew coordination and decision-making failures",
+    99→            "Cabin crew are safety-critical and contribute directly to flight safety",
+   100→            "Early detection and effective reporting of threats by cabin crew can prevent accidents",
+   101→          ],
+   102→          reviewQuestions: [
+   103→            "Why was CRM developed?",
+   104→            "Approximately what percentage of aviation accidents involve human factors?",
+   105→            "Give two examples of safety threats cabin crew might detect.",
+   106→            "How do cabin crew contribute to flight safety beyond service duties?",
+   107→          ],
+   108→        },
+   109→        {
+   110→          id: "crm-lesson-1-3",
+   111→          moduleId: "crm-mod-1",
+   112→          code: "1.3",
+   113→          title: "CRM Principles and Objectives",
+   114→          duration: 20,
+   115→          objectives: [
+   116→            "State the core principles of CRM",
+   117→            "Identify the key CRM objectives for cabin crew",
+   118→            "Recognise the regulatory basis for CRM training",
+   119→          ],
+   120→          content: [
+   121→            { type: "heading", text: "Core CRM Principles", level: 3 },
+   122→            { type: "list", items: [
+   123→              "Safety is the highest priority in all operations",
+   124→              "All crew members are responsible for safety",
+   125→              "Effective communication underpins all CRM behaviours",
+   126→              "Crew should manage threats proactively, not reactively",
+   127→              "Continuous learning and improvement from every flight",
+   128→            ]},
+   129→            { type: "heading", text: "CRM Objectives for Cabin Crew", level: 3 },
+   130→            { type: "list", ordered: true, items: [
+   131→              "Develop situational awareness in the cabin environment",
+   132→              "Communicate clearly and assertively when safety is at stake",
+   133→              "Work as an integrated team with flight deck and ground staff",
+   134→              "Manage workload, stress, and fatigue effectively",
+   135→              "Make sound decisions under time pressure",
+   136→              "Contribute to and reinforce a strong safety culture",
+   137→            ]},
+   138→            { type: "callout", variant: "info", title: "Regulatory Basis", text: "CRM training for cabin crew is mandated by ICAO Annex 6 Part I and EASA Regulation (EU) No 965/2012 (Part-CC and Part-ORO). Operators must include CRM in initial, conversion, recurrent, and command training programmes." },
+   139→          ],
+   140→          summary: [
+   141→            "CRM principles place safety above all else and make every crew member responsible for it",
+   142→            "Cabin crew CRM objectives span SA, communication, teamwork, workload, decisions, and culture",
+   143→            "CRM training is mandated by ICAO and EASA regulations",
+   144→            "CRM must be integrated into initial, conversion, and recurrent training",
+   145→          ],
+   146→          reviewQuestions: [
+   147→            "What is the highest priority in CRM?",
+   148→            "List three CRM objectives specific to cabin crew.",
+   149→            "Which regulations mandate CRM training for cabin crew?",
+   150→            "What training phases must include CRM?",
+   151→          ],
+   152→        },
+   153→      ],
+   154→    },
+   155→
+   156→    // ============================================================================
+   157→    // MODULE 2 — History and Evolution of CRM
+   158→    // ============================================================================
+   159→    {
+   160→      id: "crm-mod-2",
+   161→      code: "2",
+   162→      title: "History and Evolution of CRM",
+   163→      description: "Origins, generational development, and modern direction of CRM in commercial aviation.",
+   164→      icon: "History",
+   165→      color: "#16a34a",
+   166→      lessons: [
+   167→        {
+   168→          id: "crm-lesson-2-1",
+   169→          moduleId: "crm-mod-2",
+   170→          code: "2.1",
+   171→          title: "Origins of CRM",
+   172→          duration: 20,
+   173→          objectives: [
+   174→            "Describe the events that led to the development of CRM",
+   175→            "Identify key milestones in CRM history",
+   176→            "Understand the role of NASA and the aviation industry in CRM creation",
+   177→          ],
+   178→          content: [
+   179→            { type: "paragraph", text: "CRM emerged in the late 1970s after a series of high-profile accidents revealed serious failures in crew coordination. The 1977 Tenerife disaster — the deadliest accident in aviation history — and the 1978 United Airlines Flight 173 crash in Portland were pivotal in highlighting the need for improved crew interaction." },
+   180→            { type: "callout", variant: "danger", title: "Portland 1978 — Trigger for CRM", text: "United Airlines Flight 173 ran out of fuel while the crew focused on a landing gear problem. The flight engineer's concerns about fuel were not effectively asserted. This accident directly led United Airlines to develop the first CRM training programme, originally called Cockpit Resource Management." },
+   181→            { type: "paragraph", text: "In 1979, NASA hosted a workshop that formalised the concept of CRM. The original focus was on the flight deck, but it quickly expanded to include cabin crew, dispatchers, maintenance, and air traffic controllers — becoming Crew Resource Management." },
+   182→            { type: "list", items: [
+   183→              "1977 — Tenerife disaster highlights communication failures",
+   184→              "1978 — Portland crash drives United Airlines to pioneer CRM",
+   185→              "1979 — NASA workshop formalises the CRM concept",
+   186→              "1980s — CRM training begins spreading across major airlines",
+   187→            ]},
+   188→          ],
+   189→          summary: [
+   190→            "CRM originated in the late 1970s after major accidents exposed crew coordination failures",
+   191→            "The 1978 Portland crash was a direct trigger for the first CRM programme",
+   192→            "NASA's 1979 workshop formalised CRM as a discipline",
+   193→            "CRM evolved from a flight-deck-only concept to include all operational personnel",
+   194→          ],
+   195→          reviewQuestions: [
+   196→            "Which accident directly triggered the first CRM training programme?",
+   197→            "What organisation hosted the 1979 workshop that formalised CRM?",
+   198→            "What did CRM originally stand for, and why did it change?",
+   199→            "Why was CRM developed in the late 1970s?",
+   200→          ],
+   201→        },
+   202→        {
+   203→          id: "crm-lesson-2-2",
+   204→          moduleId: "crm-mod-2",
+   205→          code: "2.2",
+   206→          title: "Generations of CRM",
+   207→          duration: 25,
+   208→          objectives: [
+   209→            "Identify the six generations of CRM",
+   210→            "Understand how CRM focus has evolved over time",
+   211→            "Recognise the shift from individual to organisational focus",
+   212→          ],
+   213→          content: [
+   214→            { type: "paragraph", text: "CRM has evolved through six distinct generations, each reflecting advances in understanding of human factors and operational needs." },
+   215→            { type: "table", headers: ["Generation", "Era", "Focus"], rows: [
+   216→              ["1st", "1980s", "Psychological testing, leadership styles (personality-focused)"],
+   217→              ["2nd", "Late 1980s", "Team building and cockpit dynamics"],
+   218→              ["3rd", "1990s", "Integration with technical training, LOFT"],
+   219→              ["4th", "Mid-1990s", "Advanced qualification programme (AQP), human factors"],
+   220→              ["5th", "Late 1990s", "Error management and TEM integration"],
+   221→              ["6th", "2000s+", "Organisational culture, Just Culture, systemic CRM"],
+   222→            ], caption: "Six generations of CRM development"},
+   223→            { type: "callout", variant: "info", title: "Key Shift", text: "The most significant evolution has been from blaming individuals for errors (1st generation) to managing errors as inevitable organisational outcomes (5th–6th generation). Modern CRM treats human error as something to be anticipated and managed, not eliminated." },
+   224→            { type: "callout", variant: "tip", title: "Cabin Crew Integration", text: "Cabin crew were formally integrated into CRM training in the 3rd generation. Modern CRM requires joint flight deck and cabin crew training to ensure seamless coordination." },
+   225→          ],
+   226→          summary: [
+   227→            "CRM has evolved through six generations since the 1980s",
+   228→            "Early generations focused on personality and individual psychology",
+   229→            "Later generations emphasise error management, TEM, and organisational culture",
+   230→            "Cabin crew were formally integrated into CRM in the 3rd generation",
+   231→          ],
+   232→          reviewQuestions: [
+   233→            "How many generations of CRM are commonly recognised?",
+   234→            "What was the focus of first-generation CRM?",
+   235→            "What shift characterises 5th and 6th generation CRM?",
+   236→            "When were cabin crew formally integrated into CRM training?",
+   237→          ],
+   238→        },
+   239→        {
+   240→          id: "crm-lesson-2-3",
+   241→          moduleId: "crm-mod-2",
+   242→          code: "2.3",
+   243→          title: "Modern CRM and Future Directions",
+   244→          duration: 20,
+   245→          objectives: [
+   246→            "Understand modern CRM concepts and practices",
+   247→            "Identify emerging trends in CRM training",
+   248→            "Recognise the role of data and technology in CRM evolution",
+   249→          ],
+   250→          content: [
+   251→            { type: "paragraph", text: "Modern CRM integrates Threat and Error Management (TEM), fatigue risk management, and a strong safety culture. It treats CRM not as a separate training topic but as a way of operating that is embedded in every procedure and decision." },
+   252→            { type: "heading", text: "Emerging Trends", level: 3 },
+   253→            { type: "list", items: [
+   254→              "Data-driven CRM using flight data monitoring and LOSA (Line Operations Safety Audit)",
+   255→              "Integration of CRM with TEM and fatigue management systems",
+   256→              "Increased use of behavioural markers and observable behaviours in assessment",
+   257→              "Cross-cultural CRM for global operations",
+   258→              "Mental health and wellbeing as part of human performance",
+   259→              "Virtual reality and simulator-based CRM training",
+   260→            ]},
+   261→            { type: "callout", variant: "info", title: "Behavioural Markers", text: "Modern CRM assessment uses observable behavioural markers — specific, measurable behaviours that indicate CRM competence. Examples include 'asks for input', 'verbalises plans', and 'acknowledges communications'." },
+   262→            { type: "paragraph", text: "The future of CRM will increasingly involve artificial intelligence for personalised training, real-time data from connected aircraft, and greater integration of crew wellbeing into the safety management system." },
+   263→          ],
+   264→          summary: [
+   265→            "Modern CRM is embedded in operations rather than taught as a separate topic",
+   266→            "TEM, fatigue management, and safety culture are core to current CRM",
+   267→            "Behavioural markers provide observable, measurable CRM assessment",
+   268→            "Future CRM will leverage data, AI, and VR-based training",
+   269→          ],
+   270→          reviewQuestions: [
+   271→            "What is a behavioural marker in CRM?",
+   272→            "Name three emerging trends in CRM training.",
+   273→            "How is CRM integrated with other safety systems today?",
+   274→            "What role does data play in modern CRM?",
+   275→          ],
+   276→        },
+   277→      ],
+   278→    },
+   279→
+   280→    // ============================================================================
+   281→    // MODULE 3 — Human Factors in Aviation
+   282→    // ============================================================================
+   283→    {
+   284→      id: "crm-mod-3",
+   285→      code: "3",
+   286→      title: "Human Factors in Aviation",
+   287→      description: "Human factors concepts, the SHELL model, and human performance limitations relevant to cabin crew.",
+   288→      icon: "Brain",
+   289→      color: "#8b5cf6",
+   290→      lessons: [
+   291→        {
+   292→          id: "crm-lesson-3-1",
+   293→          moduleId: "crm-mod-3",
+   294→          code: "3.1",
+   295→          title: "Introduction to Human Factors",
+   296→          duration: 20,
+   297→          objectives: [
+   298→            "Define human factors in the aviation context",
+   299→            "Explain the relationship between human factors and CRM",
+   300→            "Identify common human factors issues in cabin operations",
+   301→          ],
+   302→          content: [
+   303→            { type: "paragraph", text: "Human Factors is the interdisciplinary study of how humans interact with systems, equipment, procedures, other people, and their environment. In aviation, human factors aims to optimise human performance and wellbeing to enhance safety." },
+   304→            { type: "callout", variant: "info", title: "Human Factors vs CRM", text: "Human Factors is the underlying science; CRM is the practical application of human factors principles to crew operations. CRM is essentially human factors in action." },
+   305→            { type: "heading", text: "Common Cabin Crew Human Factors Issues", level: 3 },
+   306→            { type: "list", items: [
+   307→              "Fatigue from long duty periods and time-zone changes",
+   308→              "Workload peaks during boarding, service, and disembarkation",
+   309→              "Stress from demanding passengers or emergency situations",
+   310→              "Communication barriers in multinational crews",
+   311→              "Limitations of human memory for procedural steps",
+   312→              "Visual and auditory limitations in noisy cabin environments",
+   313→            ]},
+   314→          ],
+   315→          summary: [
+   316→            "Human Factors studies how humans interact with systems and environments",
+   317→            "CRM is the practical application of human factors to crew operations",
+   318→            "Cabin crew face fatigue, workload, stress, and communication challenges",
+   319→            "Understanding human limitations is the foundation of effective CRM",
+   320→          ],
+   321→          reviewQuestions: [
+   322→            "What is human factors in aviation?",
+   323→            "How does CRM relate to human factors?",
+   324→            "List three common human factors issues for cabin crew.",
+   325→            "Why is studying human factors important for safety?",
+   326→          ],
+   327→        },
+   328→        {
+   329→          id: "crm-lesson-3-2",
+   330→          moduleId: "crm-mod-3",
+   331→          code: "3.2",
+   332→          title: "The SHELL Model",
+   333→          duration: 25,
+   334→          objectives: [
+   335→            "Describe the SHELL model and its components",
+   336→            "Explain how the SHELL model applies to cabin operations",
+   337→            "Identify human factors interfaces relevant to cabin crew",
+   338→          ],
+   339→          content: [
+   340→            { type: "paragraph", text: "The SHELL model is a conceptual framework developed by ICAO for understanding human factors. The name is an acronym for the components that surround the human element (the central 'L' for Liveware)." },
+   341→            { type: "table", headers: ["Letter", "Component", "Description"], rows: [
+   342→              ["S", "Software", "Procedures, manuals, checklists, rules, symbology"],
+   343→              ["H", "Hardware", "Equipment, aircraft systems, galley, seats, safety devices"],
+   344→              ["E", "Environment", "Cabin environment, noise, temperature, lighting, turbulence"],
+   345→              ["L (centre)", "Liveware", "The human — cabin crew member, pilot, passenger"],
+   346→              ["L (outer)", "Liveware", "Other people — colleagues, passengers, ground staff"],
+   347→            ], caption: "Components of the SHELL model"},
+   348→            { type: "callout", variant: "tip", title: "Interfaces Are Where Errors Happen", text: "Most human factors problems occur at the interfaces between components — particularly between the central Liveware (the crew member) and the other four elements. Effective CRM strengthens these interfaces." },
+   349→            { type: "paragraph", text: "For cabin crew, the L–L interface (crew-to-crew and crew-to-passenger) is especially critical. Clear communication, mutual support, and shared mental models strengthen this interface and reduce error." },
+   350→            { type: "callout", variant: "info", title: "Example: Cabin Service Procedure", text: "A service procedure (Software) is performed by crew (Liveware) using galley equipment (Hardware) in the cabin (Environment) with colleagues and passengers (Liveware). A breakdown at any interface can lead to error or injury." },
+   351→          ],
+   352→          summary: [
+   353→            "SHELL is an ICAO human factors framework with five components",
+   354→            "The central Liveware (human) interfaces with Software, Hardware, Environment, and other Liveware",
+   355→            "Errors typically occur at the interfaces between components",
+   356→            "The L–L interface (crew-to-crew, crew-to-passenger) is critical for cabin crew",
+   357→          ],
+   358→          reviewQuestions: [
+   359→            "What does SHELL stand for?",
+   360→            "Which component is at the centre of the SHELL model?",
+   361→            "Where do most human factors problems occur in the SHELL model?",
+   362→            "Give a cabin crew example of an L–H interface.",
+   363→          ],
+   364→        },
+   365→        {
+   366→          id: "crm-lesson-3-3",
+   367→          moduleId: "crm-mod-3",
+   368→          code: "3.3",
+   369→          title: "Human Performance and Limitations",
+   370→          duration: 25,
+   371→          objectives: [
+   372→            "Identify key limitations of human performance",
+   373→            "Understand how perception, memory, and attention affect performance",
+   374→            "Apply strategies to mitigate human performance limitations",
+   375→          ],
+   376→          content: [
+   377→            { type: "heading", text: "Cognitive Limitations", level: 3 },
+   378→            { type: "list", items: [
+   379→              "Attention — humans can typically focus on one complex task at a time; multitasking degrades performance",
+   380→              "Memory — short-term memory holds 5–9 items for ~20 seconds; checklists compensate for memory limits",
+   381→              "Perception — what we perceive is filtered by expectations and prior experience",
+   382→              "Decision-making — under stress, humans revert to familiar patterns (bias)",
+   383→            ]},
+   384→            { type: "table", headers: ["Limitation", "Effect on Cabin Crew", "Mitigation"], rows: [
+   385→              ["Fatigue", "Slower reactions, errors", "Rest, fatigue management"],
+   386→              ["Stress", "Tunnel vision, poor decisions", "Stress management, teamwork"],
+   387→              ["Noise", "Miscommunication, missed calls", "Headsets, closed-loop comms"],
+   388→              ["Time pressure", "Skipping steps, errors", "Briefings, prioritisation"],
+   389→            ], caption: "Human performance limitations and mitigations"},
+   390→            { type: "callout", variant: "warning", title: "The 5-9 Rule", text: "Short-term memory can hold approximately 5–9 items at once. This is why checklists, written notes, and verbal readback are essential — never rely on memory for safety-critical sequences." },
+   391→            { type: "callout", variant: "tip", title: "Mitigation Strategy", text: "Use written checklists, closed-loop communication, briefings, and standard calls. These tools externalise memory and reduce reliance on fallible human cognition." },
+   392→          ],
+   393→          summary: [
+   394→            "Human performance is limited by attention, memory, perception, and decision-making",
+   395→            "Short-term memory holds only 5–9 items — never rely on memory for safety tasks",
+   396→            "Stress, fatigue, noise, and time pressure degrade performance",
+   397→            "Checklists, closed-loop communication, and briefings mitigate these limitations",
+   398→          ],
+   399→          reviewQuestions: [
+   400→            "How many items can short-term memory typically hold?",
+   401→            "What effect does stress have on decision-making?",
+   402→            "Name three strategies to mitigate human performance limitations.",
+   403→            "Why should checklists be used instead of memory for critical procedures?",
+   404→          ],
+   405→        },
+   406→      ],
+   407→    },
+   408→
+   409→    // ============================================================================
+   410→    // MODULE 4 — Communication Skills
+   411→    // ============================================================================
+   412→    {
+   413→      id: "crm-mod-4",
+   414→      code: "4",
+   415→      title: "Communication Skills",
+   416→      description: "Communication process, barriers, verbal and non-verbal communication, active listening, and feedback.",
+   417→      icon: "MessageSquare",
+   418→      color: "#0891b2",
+   419→      lessons: [
+   420→        {
+   421→          id: "crm-lesson-4-1",
+   422→          moduleId: "crm-mod-4",
+   423→          code: "4.1",
+   424→          title: "Communication Process and Barriers",
+   425→          duration: 20,
+   426→          objectives: [
+   427→            "Describe the communication process",
+   428→            "Identify common barriers to effective communication",
+   429→            "Apply techniques to overcome communication barriers",
+   430→          ],
+   431→          content: [
+   432→            { type: "paragraph", text: "Communication is the process of transferring information, ideas, or feelings from one person to another. Effective communication is the foundation of CRM — without it, teamwork, leadership, and decision-making all break down." },
+   433→            { type: "heading", text: "The Communication Process", level: 3 },
+   434→            { type: "list", ordered: true, items: [
+   435→              "Sender has a message to convey",
+   436→              "Sender encodes the message into words, tone, gestures",
+   437→              "Message is transmitted through a channel (voice, PA, interphone)",
+   438→              "Receiver decodes and interprets the message",
+   439→              "Receiver provides feedback to confirm understanding",
+   440→            ]},
+   441→            { type: "heading", text: "Common Barriers", level: 3 },
+   442→            { type: "list", items: [
+   443→              "Noise (cabin, engine, galley equipment)",
+   444→              "Language differences in multinational crews",
+   445→              "Stress and fatigue reducing attention",
+   446→              "Assumptions and expectations (hearing what we expect to hear)",
+   447→              "Status differences inhibiting junior crew from speaking up",
+   448→              "Cultural differences in communication style",
+   449→            ]},
+   450→            { type: "callout", variant: "danger", title: "Closed-Loop Communication", text: "Always use closed-loop communication for safety-critical information: Sender states message → Receiver reads back/acknowledges → Sender confirms. Example: 'Cabin secure for take-off' — 'Confirmed, cabin secure'. This prevents misunderstandings." },
+   451→          ],
+   452→          summary: [
+   453→            "Communication involves sender, message, channel, receiver, and feedback",
+   454→            "Common barriers include noise, language, stress, assumptions, status, and culture",
+   455→            "Closed-loop communication (state–readback–confirm) is essential for safety-critical messages",
+   456→            "Recognising barriers is the first step to overcoming them",
+   457→          ],
+   458→          reviewQuestions: [
+   459→            "What are the stages of the communication process?",
+   460→            "List four common barriers to communication in the cabin.",
+   461→            "What is closed-loop communication, and why is it important?",
+   462→            "How can status differences inhibit communication?",
+   463→          ],
+   464→        },
+   465→        {
+   466→          id: "crm-lesson-4-2",
+   467→          moduleId: "crm-mod-4",
+   468→          code: "4.2",
+   469→          title: "Verbal and Non-Verbal Communication",
+   470→          duration: 20,
+   471→          objectives: [
+   472→            "Distinguish verbal and non-verbal communication",
+   473→            "Understand the relative impact of words, tone, and body language",
+   474→            "Apply effective non-verbal communication in cabin operations",
+   475→          ],
+   476→          content: [
+   477→            { type: "paragraph", text: "Communication is far more than the words we speak. Studies suggest that in face-to-face communication, approximately 7% of meaning comes from words, 38% from tone of voice, and 55% from body language (the Mehrabian model). While these figures vary by context, the principle holds: tone and body language matter enormously." },
+   478→            { type: "table", headers: ["Channel", "Examples", "Cabin Crew Application"], rows: [
+   479→              ["Verbal", "Words, language, vocabulary", "Announcements, instructions, briefings"],
+   480→              ["Para-verbal", "Tone, pitch, pace, volume", "Calm voice in emergencies, clear PA delivery"],
+   481→              ["Non-verbal", "Facial expression, posture, gestures, eye contact", "Reassurance, professionalism, command presence"],
+   482→            ], caption: "Three channels of communication"},
+   483→            { type: "callout", variant: "tip", title: "Incongruent Messages", text: "When words and body language conflict, people believe the body language. Saying 'stay calm' in a panicked tone undermines the message. Cabin crew must align verbal and non-verbal signals, especially in emergencies." },
+   484→            { type: "callout", variant: "warning", title: "Cross-Cultural Gesture Risk", text: "Gestures that are friendly in one culture may be offensive in another. Use universally understood gestures (open palm, nodding) and avoid culturally specific ones, especially when communicating with passengers from diverse backgrounds." },
+   485→          ],
+   486→          summary: [
+   487→            "Words carry only part of communication; tone and body language carry most of the meaning",
+   488→            "Para-verbal communication (tone, pace, volume) is critical for cabin crew",
+   489→            "Verbal and non-verbal signals must be congruent to be effective",
+   490→            "Gestures can be misinterpreted across cultures — use caution",
+   491→          ],
+   492→          reviewQuestions: [
+   493→            "Approximately what proportion of meaning comes from body language?",
+   494→            "What is para-verbal communication?",
+   495→            "What happens when words and body language conflict?",
+   496→            "Why should cabin crew be cautious with gestures?",
+   497→          ],
+   498→        },
+   499→        {
+   500→          id: "crm-lesson-4-3",
+
+[showing lines 1-500 of 3563; use offset=501 with limit to continue reading]
