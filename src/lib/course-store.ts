@@ -3,6 +3,7 @@
 import type { CourseData } from "./types";
 import { courseData as dgrCourse } from "./course-data";
 import { firstAidCourseData as faCourse } from "./first-aid-course-data";
+import { crmCourseData as crmCourse } from "./crm-course-data";
 
 // ============================================================
 // UNIFIED COURSE STORE
@@ -11,8 +12,8 @@ import { firstAidCourseData as faCourse } from "./first-aid-course-data";
 // Works on static hosting (Cloudflare Pages) using localStorage.
 // ============================================================
 
-const COURSES_KEY = "dgr-academy-courses-v1";
-const DEFAULT_COURSES: CourseData[] = [dgrCourse, faCourse];
+const COURSES_KEY = "dgr-academy-courses-v2";
+const DEFAULT_COURSES: CourseData[] = [dgrCourse, faCourse, crmCourse];
 
 // Get all courses from localStorage, seeded with defaults
 export function getAllCoursesFromStore(): CourseData[] {

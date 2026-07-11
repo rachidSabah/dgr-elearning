@@ -1,12 +1,14 @@
 import type { CourseData } from "./types";
 import { courseData } from "./course-data";
 import { firstAidCourseData } from "./first-aid-course-data";
+import { crmCourseData } from "./crm-course-data";
 
 // Registry of all available courses in the academy
 // New courses can be added here without changing the platform code
 export const allCourses: CourseData[] = [
   courseData,
   firstAidCourseData,
+  crmCourseData,
 ];
 
 // Get a course by its ID (derived from title slug)
