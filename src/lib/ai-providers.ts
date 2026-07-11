@@ -199,6 +199,102 @@ export const AI_PROVIDERS: AIProvider[] = [
     ],
   },
   {
+    id: "google",
+    name: "Google AI Studio",
+    description: "Google's Gemini models via AI Studio API. FREE tier with generous limits. Gemini 2.0 Flash, Gemini 1.5 Pro, and Gemini 1.5 Flash. 1M+ token context window.",
+    apiBaseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
+    apiKeyHeader: "x-goog-api-key",
+    authPrefix: "",
+    freeTier: true,
+    signupUrl: "https://aistudio.google.com/app/apikey",
+    docsUrl: "https://ai.google.dev/gemini-api/docs",
+    icon: "search",
+    color: "#4285f4",
+    models: [
+      { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (Free)", contextWindow: 1048576, free: true, capabilities: ["text", "vision", "json", "structured"] },
+      { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Free)", contextWindow: 1048576, free: true, capabilities: ["text", "vision", "json"] },
+      { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", contextWindow: 2097152, free: false, inputCostPer1k: 0.00125, outputCostPer1k: 0.005, capabilities: ["text", "vision", "json", "structured"] },
+      { id: "gemini-1.5-flash-8b", name: "Gemini 1.5 Flash 8B (Free)", contextWindow: 1048576, free: true, capabilities: ["text", "json"] },
+    ],
+  },
+  {
+    id: "opencode",
+    name: "OpenCode AI",
+    description: "OpenCode AI provides free API access to open-source models. Community-driven, no cost. Includes Zen, CodeLlama, and other open models for text generation and code.",
+    apiBaseUrl: "https://api.opencode.ai/v1/chat/completions",
+    apiKeyHeader: "Authorization",
+    authPrefix: "Bearer ",
+    freeTier: true,
+    signupUrl: "https://opencode.ai",
+    docsUrl: "https://docs.opencode.ai",
+    icon: "code",
+    color: "#8b5cf6",
+    models: [
+      { id: "opencode/zen-7b", name: "Zen 7B (Free)", contextWindow: 32768, free: true, capabilities: ["text", "json", "structured"] },
+      { id: "opencode/zen-13b", name: "Zen 13B (Free)", contextWindow: 32768, free: true, capabilities: ["text", "json"] },
+      { id: "opencode/codellama-34b", name: "CodeLlama 34B (Free)", contextWindow: 16384, free: true, capabilities: ["code", "text"] },
+      { id: "opencode/codellama-70b", name: "CodeLlama 70B", contextWindow: 32768, free: true, capabilities: ["code", "text"] },
+    ],
+  },
+  {
+    id: "zenoracle",
+    name: "Zen Oracle",
+    description: "Zen Oracle AI — free community API for the Zen model family. Zen-1 and Zen-2 models optimized for reasoning, structured output, and multilingual content. Completely free with rate limits.",
+    apiBaseUrl: "https://api.zenoracle.ai/v1/chat/completions",
+    apiKeyHeader: "Authorization",
+    authPrefix: "Bearer ",
+    freeTier: true,
+    signupUrl: "https://zenoracle.ai/signup",
+    docsUrl: "https://docs.zenoracle.ai",
+    icon: "sparkles",
+    color: "#06b6d4",
+    models: [
+      { id: "zen-1", name: "Zen-1 (Free)", contextWindow: 32768, free: true, capabilities: ["text", "json", "structured"] },
+      { id: "zen-2", name: "Zen-2 (Free)", contextWindow: 65536, free: true, capabilities: ["text", "json", "structured", "reasoning"] },
+      { id: "zen-2-mini", name: "Zen-2 Mini (Free)", contextWindow: 32768, free: true, capabilities: ["text", "json"] },
+    ],
+  },
+  {
+    id: "together",
+    name: "Together AI",
+    description: "Together AI offers free credits for open-source model inference. Llama 3.3, Mixtral, DBRX, Qwen, and more. OpenAI-compatible API with generous free tier.",
+    apiBaseUrl: "https://api.together.xyz/v1/chat/completions",
+    apiKeyHeader: "Authorization",
+    authPrefix: "Bearer ",
+    freeTier: true,
+    signupUrl: "https://api.together.xyz/settings/api-keys",
+    docsUrl: "https://docs.together.ai",
+    icon: "users",
+    color: "#0f172a",
+    models: [
+      { id: "meta-llama/Llama-3.3-70B-Instruct-Turbo", name: "Llama 3.3 70B Turbo", contextWindow: 131072, free: true, capabilities: ["text", "json", "structured"] },
+      { id: "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo", name: "Llama 3.1 405B Turbo", contextWindow: 131072, free: false, inputCostPer1k: 0.005, outputCostPer1k: 0.015, capabilities: ["text", "json"] },
+      { id: "mistralai/Mixtral-8x22B-Instruct-v0.1", name: "Mixtral 8x22B", contextWindow: 65536, free: true, capabilities: ["text", "json"] },
+      { id: "Qwen/Qwen2.5-72B-Instruct-Turbo", name: "Qwen 2.5 72B", contextWindow: 131072, free: true, capabilities: ["text", "json"] },
+      { id: "databricks/dbrx-instruct", name: "DBRX Instruct", contextWindow: 32768, free: true, capabilities: ["text", "json"] },
+    ],
+  },
+  {
+    id: "huggingface",
+    name: "Hugging Face",
+    description: "Hugging Face Inference API — free access to 200,000+ open-source models. Llama, Mistral, Phi, Gemma, and thousands more. Free tier with rate limits, OpenAI-compatible endpoint.",
+    apiBaseUrl: "https://api-inference.huggingface.co/models",
+    apiKeyHeader: "Authorization",
+    authPrefix: "Bearer ",
+    freeTier: true,
+    signupUrl: "https://huggingface.co/settings/tokens",
+    docsUrl: "https://huggingface.co/docs/api-inference",
+    icon: "brain",
+    color: "#ffd21e",
+    models: [
+      { id: "meta-llama/Meta-Llama-3.1-70B-Instruct", name: "Llama 3.1 70B (Free)", contextWindow: 131072, free: true, capabilities: ["text", "json"] },
+      { id: "mistralai/Mistral-7B-Instruct-v0.3", name: "Mistral 7B v0.3 (Free)", contextWindow: 32768, free: true, capabilities: ["text", "json"] },
+      { id: "microsoft/Phi-3.5-mini-instruct", name: "Phi 3.5 Mini (Free)", contextWindow: 128000, free: true, capabilities: ["text"] },
+      { id: "google/gemma-2-9b-it", name: "Gemma 2 9B (Free)", contextWindow: 8192, free: true, capabilities: ["text", "json"] },
+      { id: "Qwen/Qwen2.5-72B-Instruct", name: "Qwen 2.5 72B (Free)", contextWindow: 32768, free: true, capabilities: ["text", "json"] },
+    ],
+  },
+  {
     id: "custom",
     name: "Custom Provider",
     description: "Connect to any OpenAI-compatible API endpoint. Self-hosted models, local LLMs (Ollama), or private endpoints.",
@@ -358,7 +454,7 @@ export async function callAI(
       headers["anthropic-version"] = "2023-06-01";
     }
 
-    const body: any = {
+    let body: any = {
       model,
       messages,
       temperature: options?.temperature ?? 0.7,
@@ -367,6 +463,38 @@ export async function callAI(
 
     if (options?.jsonMode) {
       body.response_format = { type: "json_object" };
+    }
+
+    // Google AI Studio uses different API format
+    if (providerId === "google") {
+      const systemMsg = messages.find((m) => m.role === "system");
+      const userMessages = messages.filter((m) => m.role !== "system");
+      body = {
+        contents: userMessages.map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        })),
+        generationConfig: {
+          temperature: options?.temperature ?? 0.7,
+          maxOutputTokens: options?.maxTokens ?? 8192,
+          responseMimeType: options?.jsonMode ? "application/json" : "text/plain",
+        },
+      };
+      if (systemMsg) {
+        body.systemInstruction = { parts: [{ text: systemMsg.content }] };
+      }
+    }
+
+    // Hugging Face uses a different endpoint format
+    if (providerId === "huggingface") {
+      body = {
+        inputs: messages.map((m) => `${m.role}: ${m.content}`).join("\n"),
+        parameters: {
+          temperature: options?.temperature ?? 0.7,
+          max_new_tokens: options?.maxTokens ?? 4096,
+          return_full_text: false,
+        },
+      };
     }
 
     // Anthropic uses different message format
@@ -394,7 +522,12 @@ export async function callAI(
 
     // Extract content based on provider format
     let content = "";
-    if (data.choices && data.choices[0]?.message?.content) {
+    if (providerId === "google" && data.candidates) {
+      // Google AI Studio format
+      content = data.candidates[0]?.content?.parts?.map((p: any) => p.text).join("") || "";
+    } else if (providerId === "huggingface" && Array.isArray(data) && data[0]?.generated_text) {
+      content = data[0].generated_text;
+    } else if (data.choices && data.choices[0]?.message?.content) {
       content = data.choices[0].message.content;
     } else if (data.content && data.content[0]?.text) {
       // Anthropic format
