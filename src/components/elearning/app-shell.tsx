@@ -5,6 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { getBranding, subscribeToBranding, hexToHslTriple, type BrandingConfig } from "@/lib/branding-store";
 import {
   Plane,
   LayoutDashboard,
@@ -26,6 +27,7 @@ import {
   Trophy,
   Shield,
   UserCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +52,8 @@ const navItems: NavItem[] = [
   { view: "flashcards", icon: Brain, labelKey: "flashcards" },
   { view: "scenarios", icon: Sparkles, labelKey: "scenarios" },
   { view: "exam", icon: GraduationCap, labelKey: "exam" },
+  { view: "leaderboard", icon: Trophy, labelKey: "leaderboard" },
+  { view: "compliance", icon: ShieldCheck, labelKey: "compliance" },
   { view: "analytics", icon: BarChart3, labelKey: "analytics" },
   { view: "glossary", icon: BookMarked, labelKey: "glossary" },
   { view: "aitutor", icon: Bot, labelKey: "aitutor" },
@@ -73,14 +77,52 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const courseData = useCurrentCourse();
 
   const [mounted, setMounted] = useState(false);
+  const [branding, setBranding] = useState<BrandingConfig | null>(null);
 
   // Use useSyncExternalStore pattern to avoid setState in effect
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    setBranding(getBranding());
+    const unsub = subscribeToBranding(() => setBranding(getBranding()));
+    return unsub;
   }, []);
 
+  // Apply branding: primary color CSS variable + favicon
+  useEffect(() => {
+    if (!branding) return;
+    if (branding.primaryColor) {
+      const hsl = hexToHslTriple(branding.primaryColor);
+      if (hsl) {
+        document.documentElement.style.setProperty("--primary", hsl);
+        document.documentElement.style.setProperty("--ring", hsl);
+      }
+    } else {
+      document.documentElement.style.removeProperty("--primary");
+      document.documentElement.style.removeProperty("--ring");
+    }
+    if (branding.accentColor) {
+      const hsl = hexToHslTriple(branding.accentColor);
+      if (hsl) {
+        document.documentElement.style.setProperty("--chart-4", hsl);
+      }
+    } else {
+      document.documentElement.style.removeProperty("--chart-4");
+    }
+    if (branding.faviconUrl) {
+      const existing = document.querySelector<HTMLLinkElement>("link[rel='icon'][data-branding]");
+      if (existing) existing.href = branding.faviconUrl;
+      else {
+        const link = document.createElement("link");
+        link.rel = "icon";
+        link.href = branding.faviconUrl;
+        link.setAttribute("data-branding", "true");
+        document.head.appendChild(link);
+      }
+    }
+  }, [branding]);
+
   const lang = mounted ? language : "en";
+  const academyName = branding?.academyName || "DGR eLearning";
 
   const totalLessons = courseData.modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const completionPct = Math.round((progress.completedLessons.length / totalLessons) * 100);
@@ -109,11 +151,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="relative">
               <div className="absolute inset-0 bg-primary/30 rounded-lg blur-md" />
               <div className="relative bg-primary text-primary-foreground p-1.5 rounded-lg">
-                <Plane className="h-5 w-5" />
+                {branding?.logoUrl ? (
+                  <img src={branding.logoUrl} alt={academyName} className="h-5 w-5 object-contain" />
+                ) : (
+                  <Plane className="h-5 w-5" />
+                )}
               </div>
             </div>
             <span className="hidden sm:inline bg-gradient-to-r from-primary to-chart-4 bg-clip-text text-transparent">
-              DGR eLearning
+              {academyName}
             </span>
           </button>
 
@@ -265,7 +311,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Footer */}
       <footer className="border-t border-border/40 bg-card/30 py-6 px-4 text-center text-sm text-muted-foreground">
         <p className="mb-1">
-          <span className="font-semibold text-foreground">DGR eLearning Platform</span>
+          <span className="font-semibold text-foreground">{academyName} Platform</span>
           {" — "}
           {courseData.title} | {courseData.edition}
         </p>

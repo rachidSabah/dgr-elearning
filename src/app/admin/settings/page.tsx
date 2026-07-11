@@ -47,6 +47,7 @@ import { toast } from "sonner";
 // Client-side settings storage (localStorage)
 // ============================================================
 const SETTINGS_KEY = "dgr-academy-settings";
+const BRANDING_KEY = "dgr-academy-branding";
 
 function getSettings(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -57,6 +58,20 @@ function getSettings(): Record<string, string> {
 function saveSettings(settings: Record<string, string>) {
   if (typeof window === "undefined") return;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+// Branding is mirrored to its own key so the public site can read it
+// without loading the entire settings object.
+const BRANDING_FIELDS = ["academyName", "logoUrl", "primaryColor", "accentColor", "faviconUrl"];
+
+function syncBranding(values: FormState) {
+  if (typeof window === "undefined") return;
+  const branding: Record<string, string> = {};
+  for (const k of BRANDING_FIELDS) {
+    branding[k] = values[k] ?? "";
+  }
+  localStorage.setItem(BRANDING_KEY, JSON.stringify(branding));
+  window.dispatchEvent(new CustomEvent("dgr-branding-updated"));
 }
 
 // ---------- Types ----------
@@ -288,6 +303,11 @@ export default function SettingsAdminPage() {
       const current = getSettings();
       const merged = { ...current, ...settingsObj };
       saveSettings(merged);
+      // Mirror branding fields to the public-site key so the white-label
+      // AppShell can pick them up without re-reading all settings.
+      if (section === "BRANDING") {
+        syncBranding(values);
+      }
       toast.success("Settings saved", {
         description: `${SECTIONS.find((s) => s.key === section)?.label} section updated.`,
       });

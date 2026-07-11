@@ -12,7 +12,9 @@ export type ViewType =
   | "analytics"
   | "glossary"
   | "settings"
-  | "aitutor";
+  | "aitutor"
+  | "leaderboard"
+  | "compliance";
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
@@ -22,6 +24,7 @@ export type ContentBlock =
   | { type: "table"; headers: string[]; rows: string[][]; caption?: string }
   | { type: "definition"; term: string; definition: string }
   | { type: "image"; src: string; caption?: string; alt?: string }
+  | { type: "video"; src: string; caption?: string }
   | { type: "keyTerms"; terms: { term: string; definition: string }[] }
   | { type: "svg"; src: string; caption?: string }
   | { type: "interactive"; component: string; props?: Record<string, any> }
@@ -120,4 +123,13 @@ export interface ProgressState {
   voiceProgress: { [lessonId: string]: number }; // 0-100
   certificateEarned: boolean;
   certificateNumber?: string;
+  completedCourses: string[]; // course IDs that have been fully completed
+  dailyGoal?: number; // lessons per day
+  activityDays: string[]; // ISO date strings of days with study activity
 }
+
+// Map of course ID -> array of prerequisite course IDs.
+// A course is unlocked when all prerequisites appear in ProgressState.completedCourses.
+export const COURSE_PREREQUISITES: Record<string, string[]> = {
+  "cabin-crew-first-aid-training": ["dangerous-goods-regulations"],
+};

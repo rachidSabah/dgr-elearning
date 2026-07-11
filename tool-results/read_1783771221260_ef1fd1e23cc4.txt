@@ -1,0 +1,1178 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useCallback } from "react";
+     4→import {
+     5→  Card,
+     6→  CardContent,
+     7→  CardHeader,
+     8→  CardTitle,
+     9→  CardDescription,
+    10→} from "@/components/ui/card";
+    11→import { Button } from "@/components/ui/button";
+    12→import { Input } from "@/components/ui/input";
+    13→import { Textarea } from "@/components/ui/textarea";
+    14→import {
+    15→  Select,
+    16→  SelectContent,
+    17→  SelectItem,
+    18→  SelectTrigger,
+    19→  SelectValue,
+    20→} from "@/components/ui/select";
+    21→import { Checkbox } from "@/components/ui/checkbox";
+    22→import { Switch } from "@/components/ui/switch";
+    23→import { Label } from "@/components/ui/label";
+    24→import { Badge } from "@/components/ui/badge";
+    25→import { Skeleton } from "@/components/ui/skeleton";
+    26→import { ScrollArea } from "@/components/ui/scroll-area";
+    27→import {
+    28→  Palette,
+    29→  Brain,
+    30→  Mail,
+    31→  Plug,
+    32→  Settings as SettingsIcon,
+    33→  Save,
+    34→  Loader2,
+    35→  Globe,
+    36→  GraduationCap,
+    37→  Award,
+    38→  Wrench,
+    39→  AtSign,
+    40→  Briefcase,
+    41→  ThumbsUp,
+    42→  ShieldCheck,
+    43→} from "lucide-react";
+    44→import { toast } from "sonner";
+    45→
+    46→// ============================================================
+    47→// Client-side settings storage (localStorage)
+    48→// ============================================================
+    49→const SETTINGS_KEY = "dgr-academy-settings";
+    50→
+    51→function getSettings(): Record<string, string> {
+    52→  if (typeof window === "undefined") return {};
+    53→  const data = localStorage.getItem(SETTINGS_KEY);
+    54→  return data ? JSON.parse(data) : {};
+    55→}
+    56→
+    57→function saveSettings(settings: Record<string, string>) {
+    58→  if (typeof window === "undefined") return;
+    59→  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    60→}
+    61→
+    62→// ---------- Types ----------
+    63→type SectionKey = "BRANDING" | "AI" | "EMAIL" | "INTEGRATION" | "GENERAL";
+    64→
+    65→// Settings stored as flat key -> string for editing
+    66→type FormState = Record<string, string>;
+    67→
+    68→interface SectionMeta {
+    69→  key: SectionKey;
+    70→  label: string;
+    71→  description: string;
+    72→  icon: React.ComponentType<{ className?: string }>;
+    73→}
+    74→
+    75→const SECTIONS: SectionMeta[] = [
+    76→  {
+    77→    key: "BRANDING",
+    78→    label: "Branding",
+    79→    description: "Academy identity, colors, and social presence.",
+    80→    icon: Palette,
+    81→  },
+    82→  {
+    83→    key: "AI",
+    84→    label: "AI Configuration",
+    85→    description: "AI tutor, voice, and quiz generation.",
+    86→    icon: Brain,
+    87→  },
+    88→  {
+    89→    key: "EMAIL",
+    90→    label: "Email",
+    91→    description: "SMTP server and email templates.",
+    92→    icon: Mail,
+    93→  },
+    94→  {
+    95→    key: "INTEGRATION",
+    96→    label: "Integrations",
+    97→    description: "Cloudflare R2 and external API keys.",
+    98→    icon: Plug,
+    99→  },
+   100→  {
+   101→    key: "GENERAL",
+   102→    label: "General",
+   103→    description: "Language, pass marks, certificates, maintenance.",
+   104→    icon: SettingsIcon,
+   105→  },
+   106→];
+   107→
+   108→// Field keys per section
+   109→const SECTION_KEYS: Record<SectionKey, string[]> = {
+   110→  BRANDING: [
+   111→    "academyName",
+   112→    "logoUrl",
+   113→    "primaryColor",
+   114→    "accentColor",
+   115→    "faviconUrl",
+   116→    "supportEmail",
+   117→    "footerText",
+   118→    "socialTwitter",
+   119→    "socialLinkedin",
+   120→    "socialFacebook",
+   121→  ],
+   122→  AI: [
+   123→    "aiProvider",
+   124→    "aiModel",
+   125→    "voiceProvider",
+   126→    "aiTutorEnabled",
+   127→    "quizGenerationEnabled",
+   128→    "quizDefaultCount",
+   129→    "quizDefaultDifficulty",
+   130→  ],
+   131→  EMAIL: [
+   132→    "smtpHost",
+   133→    "smtpPort",
+   134→    "smtpUsername",
+   135→    "smtpPassword",
+   136→    "fromEmail",
+   137→    "emailTemplateCertificate",
+   138→    "emailTemplateEnrollment",
+   139→  ],
+   140→  INTEGRATION: [
+   141→    "r2AccountId",
+   142→    "r2AccessKeyId",
+   143→    "r2SecretAccessKey",
+   144→    "r2Bucket",
+   145→    "r2PublicUrl",
+   146→    "externalApiKeyName",
+   147→    "externalApiKeyValue",
+   148→  ],
+   149→  GENERAL: [
+   150→    "defaultLanguage",
+   151→    "passMark",
+   152→    "certificateTemplate",
+   153→    "maintenanceMode",
+   154→  ],
+   155→};
+   156→
+   157→const BOOL_KEYS = new Set<string>([
+   158→  "aiTutorEnabled",
+   159→  "quizGenerationEnabled",
+   160→  "maintenanceMode",
+   161→]);
+   162→
+   163→const DEFAULTS: FormState = {
+   164→  academyName: "DGR Aviation Academy",
+   165→  logoUrl: "",
+   166→  primaryColor: "#0ea5e9",
+   167→  accentColor: "#1e40af",
+   168→  faviconUrl: "",
+   169→  supportEmail: "support@dgr-academy.com",
+   170→  footerText:
+   171→    "DGR Aviation Academy - Dangerous Goods Regulations Training. Certified by IATA & ICAO.",
+   172→  socialTwitter: "",
+   173→  socialLinkedin: "",
+   174→  socialFacebook: "",
+   175→
+   176→  aiProvider: "openai",
+   177→  aiModel: "gpt-4o",
+   178→  voiceProvider: "openai",
+   179→  aiTutorEnabled: "true",
+   180→  quizGenerationEnabled: "true",
+   181→  quizDefaultCount: "5",
+   182→  quizDefaultDifficulty: "Professional",
+   183→
+   184→  smtpHost: "",
+   185→  smtpPort: "587",
+   186→  smtpUsername: "",
+   187→  smtpPassword: "",
+   188→  fromEmail: "no-reply@dgr-academy.com",
+   189→  emailTemplateCertificate:
+   190→    "Dear {{name}},\n\nCongratulations! You have successfully completed {{course}} with a score of {{score}}%. Your certificate (#{{certificateNumber}}) is attached.\n\nBest regards,\nDGR Aviation Academy",
+   191→  emailTemplateEnrollment:
+   192→    "Dear {{name}},\n\nYou have been enrolled in {{course}}. You can access the course from your dashboard.\n\nBest regards,\nDGR Aviation Academy",
+   193→
+   194→  r2AccountId: "",
+   195→  r2AccessKeyId: "",
+   196→  r2SecretAccessKey: "",
+   197→  r2Bucket: "dgr-media",
+   198→  r2PublicUrl: "",
+   199→  externalApiKeyName: "",
+   200→  externalApiKeyValue: "",
+   201→
+   202→  defaultLanguage: "en",
+   203→  passMark: "70",
+   204→  certificateTemplate: "default",
+   205→  maintenanceMode: "false",
+   206→};
+   207→
+   208→function valueToString(v: unknown): string {
+   209→  if (v === null || v === undefined) return "";
+   210→  if (typeof v === "string") return v;
+   211→  if (typeof v === "boolean") return v ? "true" : "false";
+   212→  return String(v);
+   213→}
+   214→void valueToString; // kept for downstream compatibility
+   215→
+   216→export default function SettingsAdminPage() {
+   217→  const [activeSection, setActiveSection] = useState<SectionKey>("BRANDING");
+   218→  const [values, setValues] = useState<FormState>({ ...DEFAULTS });
+   219→  const [loading, setLoading] = useState(true);
+   220→  const [saving, setSaving] = useState(false);
+   221→  const [dirty, setDirty] = useState<Record<SectionKey, boolean>>({
+   222→    BRANDING: false,
+   223→    AI: false,
+   224→    EMAIL: false,
+   225→    INTEGRATION: false,
+   226→    GENERAL: false,
+   227→  });
+   228→
+   229→  const fetchSettings = useCallback(() => {
+   230→    setLoading(true);
+   231→    try {
+   232→      const stored = getSettings();
+   233→      const next: FormState = { ...DEFAULTS };
+   234→      for (const [key, value] of Object.entries(stored)) {
+   235→        next[key] = value;
+   236→      }
+   237→      setValues(next);
+   238→      setDirty({
+   239→        BRANDING: false,
+   240→        AI: false,
+   241→        EMAIL: false,
+   242→        INTEGRATION: false,
+   243→        GENERAL: false,
+   244→      });
+   245→    } catch (err) {
+   246→      toast.error("Failed to load settings", {
+   247→        description: err instanceof Error ? err.message : "Unknown error",
+   248→      });
+   249→    } finally {
+   250→      setLoading(false);
+   251→    }
+   252→  }, []);
+   253→
+   254→  useEffect(() => {
+   255→    fetchSettings();
+   256→  }, [fetchSettings]);
+   257→
+   258→  const updateField = (key: string, val: string) => {
+   259→    setValues((prev) => ({ ...prev, [key]: val }));
+   260→    // Mark the relevant section dirty
+   261→    for (const [sectionKey, keys] of Object.entries(SECTION_KEYS)) {
+   262→      if (keys.includes(key)) {
+   263→        setDirty((prev) => ({ ...prev, [sectionKey]: true }));
+   264→        break;
+   265→      }
+   266→    }
+   267→  };
+   268→
+   269→  const updateBool = (key: string, val: boolean) => {
+   270→    updateField(key, val ? "true" : "false");
+   271→  };
+   272→
+   273→  const handleSaveSection = (section: SectionKey) => {
+   274→    const keys = SECTION_KEYS[section];
+   275→    const settingsObj: Record<string, string> = {};
+   276→    for (const k of keys) {
+   277→      const raw = values[k] ?? "";
+   278→      if (BOOL_KEYS.has(k)) {
+   279→        settingsObj[k] = raw === "true" ? "true" : "false";
+   280→      } else {
+   281→        settingsObj[k] = raw;
+   282→      }
+   283→    }
+   284→
+   285→    setSaving(true);
+   286→    try {
+   287→      // Merge into existing localStorage settings and persist
+   288→      const current = getSettings();
+   289→      const merged = { ...current, ...settingsObj };
+   290→      saveSettings(merged);
+   291→      toast.success("Settings saved", {
+   292→        description: `${SECTIONS.find((s) => s.key === section)?.label} section updated.`,
+   293→      });
+   294→      setDirty((prev) => ({ ...prev, [section]: false }));
+   295→    } catch (err) {
+   296→      toast.error("Save failed", {
+   297→        description: err instanceof Error ? err.message : "Unknown error",
+   298→      });
+   299→    } finally {
+   300→      setSaving(false);
+   301→    }
+   302→  };
+   303→
+   304→  const activeMeta = SECTIONS.find((s) => s.key === activeSection)!;
+   305→
+   306→  return (
+   307→    <div className="space-y-6">
+   308→      {/* Header */}
+   309→      <div>
+   310→        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+   311→          Settings
+   312→        </h1>
+   313→        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+   314→          Configure academy branding, AI, email, integrations, and general
+   315→          options.
+   316→        </p>
+   317→      </div>
+   318→
+   319→      <div className="flex flex-col lg:flex-row gap-6">
+   320→        {/* Sidebar */}
+   321→        <Card className="lg:w-64 lg:flex-shrink-0 h-fit">
+   322→          <CardContent className="p-2">
+   323→            <nav className="space-y-1">
+   324→              {SECTIONS.map((section) => {
+   325→                const Icon = section.icon;
+   326→                const isActive = activeSection === section.key;
+   327→                const isDirty = dirty[section.key];
+   328→                return (
+   329→                  <button
+   330→                    key={section.key}
+   331→                    onClick={() => setActiveSection(section.key)}
+   332→                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left ${
+   333→                      isActive
+   334→                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+   335→                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+   336→                    }`}
+   337→                  >
+   338→                    <Icon className="h-4 w-4 shrink-0" />
+   339→                    <span className="flex-1 font-medium">{section.label}</span>
+   340→                    {isDirty && (
+   341→                      <span
+   342→                        className={`h-2 w-2 rounded-full ${
+   343→                          isActive ? "bg-white" : "bg-amber-500"
+   344→                        }`}
+   345→                        title="Unsaved changes"
+   346→                      />
+   347→                    )}
+   348→                  </button>
+   349→                );
+   350→              })}
+   351→            </nav>
+   352→          </CardContent>
+   353→        </Card>
+   354→
+   355→        {/* Content area */}
+   356→        <div className="flex-1 min-w-0">
+   357→          {loading ? (
+   358→            <Card>
+   359→              <CardContent className="p-6 space-y-4">
+   360→                <Skeleton className="h-7 w-48" />
+   361→                <Skeleton className="h-4 w-72" />
+   362→                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+   363→                  {Array.from({ length: 6 }).map((_, i) => (
+   364→                    <Skeleton key={i} className="h-16 w-full" />
+   365→                  ))}
+   366→                </div>
+   367→              </CardContent>
+   368→            </Card>
+   369→          ) : (
+   370→            <Card>
+   371→              <CardHeader className="border-b border-slate-200 dark:border-slate-800">
+   372→                <div className="flex items-start justify-between gap-3">
+   373→                  <div>
+   374→                    <CardTitle className="flex items-center gap-2">
+   375→                      <activeMeta.icon className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+   376→                      {activeMeta.label}
+   377→                    </CardTitle>
+   378→                    <CardDescription className="mt-1">
+   379→                      {activeMeta.description}
+   380→                    </CardDescription>
+   381→                  </div>
+   382→                  {dirty[activeSection] && (
+   383→                    <Badge
+   384→                      variant="outline"
+   385→                      className="text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+   386→                    >
+   387→                      Unsaved changes
+   388→                    </Badge>
+   389→                  )}
+   390→                </div>
+   391→              </CardHeader>
+   392→              <CardContent className="p-6">
+   393→                <ScrollArea className="h-[calc(100vh-22rem)]">
+   394→                  <div className="pr-2">
+   395→                    {activeSection === "BRANDING" && (
+   396→                      <BrandingSection
+   397→                        values={values}
+   398→                        updateField={updateField}
+   399→                      />
+   400→                    )}
+   401→                    {activeSection === "AI" && (
+   402→                      <AISection
+   403→                        values={values}
+   404→                        updateField={updateField}
+   405→                        updateBool={updateBool}
+   406→                      />
+   407→                    )}
+   408→                    {activeSection === "EMAIL" && (
+   409→                      <EmailSection values={values} updateField={updateField} />
+   410→                    )}
+   411→                    {activeSection === "INTEGRATION" && (
+   412→                      <IntegrationSection
+   413→                        values={values}
+   414→                        updateField={updateField}
+   415→                      />
+   416→                    )}
+   417→                    {activeSection === "GENERAL" && (
+   418→                      <GeneralSection
+   419→                        values={values}
+   420→                        updateField={updateField}
+   421→                        updateBool={updateBool}
+   422→                      />
+   423→                    )}
+   424→
+   425→                    {/* Save button */}
+   426→                    <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
+   427→                      <Button
+   428→                        variant="outline"
+   429→                        onClick={fetchSettings}
+   430→                        disabled={saving}
+   431→                      >
+   432→                        Reset
+   433→                      </Button>
+   434→                      <Button
+   435→                        onClick={() => handleSaveSection(activeSection)}
+   436→                        disabled={saving || !dirty[activeSection]}
+   437→                        className="gap-2"
+   438→                      >
+   439→                        {saving ? (
+   440→                          <Loader2 className="h-4 w-4 animate-spin" />
+   441→                        ) : (
+   442→                          <Save className="h-4 w-4" />
+   443→                        )}
+   444→                        Save Changes
+   445→                      </Button>
+   446→                    </div>
+   447→                  </div>
+   448→                </ScrollArea>
+   449→              </CardContent>
+   450→            </Card>
+   451→          )}
+   452→        </div>
+   453→      </div>
+   454→    </div>
+   455→  );
+   456→}
+   457→
+   458→// ============================================================
+   459→// Reusable field components
+   460→// ============================================================
+   461→
+   462→function FieldShell({
+   463→  label,
+   464→  htmlFor,
+   465→  hint,
+   466→  children,
+   467→  className,
+   468→}: {
+   469→  label: string;
+   470→  htmlFor?: string;
+   471→  hint?: string;
+   472→  children: React.ReactNode;
+   473→  className?: string;
+   474→}) {
+   475→  return (
+   476→    <div className={`space-y-2 ${className || ""}`}>
+   477→      <Label htmlFor={htmlFor} className="text-sm font-medium">
+   478→        {label}
+   479→      </Label>
+   480→      {children}
+   481→      {hint && (
+   482→        <p className="text-xs text-slate-500 dark:text-slate-400">{hint}</p>
+   483→      )}
+   484→    </div>
+   485→  );
+   486→}
+   487→
+   488→function ColorField({
+   489→  label,
+   490→  value,
+   491→  onChange,
+   492→  hint,
+   493→}: {
+   494→  label: string;
+   495→  value: string;
+   496→  onChange: (v: string) => void;
+   497→  hint?: string;
+   498→}) {
+   499→  return (
+   500→    <FieldShell label={label} hint={hint}>
+   501→      <div className="flex items-center gap-2">
+   502→        <input
+   503→          type="color"
+   504→          value={value || "#000000"}
+   505→          onChange={(e) => onChange(e.target.value)}
+   506→          className="h-9 w-12 rounded border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer"
+   507→        />
+   508→        <Input
+   509→          value={value}
+   510→          onChange={(e) => onChange(e.target.value)}
+   511→          placeholder="#0ea5e9"
+   512→          className="flex-1"
+   513→        />
+   514→      </div>
+   515→    </FieldShell>
+   516→  );
+   517→}
+   518→
+   519→function CheckboxField({
+   520→  label,
+   521→  description,
+   522→  checked,
+   523→  onChange,
+   524→}: {
+   525→  label: string;
+   526→  description?: string;
+   527→  checked: boolean;
+   528→  onChange: (v: boolean) => void;
+   529→}) {
+   530→  return (
+   531→    <div className="flex items-start gap-3 rounded-lg border border-slate-200 dark:border-slate-800 p-3">
+   532→      <Checkbox
+   533→        checked={checked}
+   534→        onCheckedChange={(v) => onChange(Boolean(v))}
+   535→        className="mt-0.5"
+   536→      />
+   537→      <div>
+   538→        <Label className="cursor-pointer font-medium text-sm">{label}</Label>
+   539→        {description && (
+   540→          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+   541→            {description}
+   542→          </p>
+   543→        )}
+   544→      </div>
+   545→    </div>
+   546→  );
+   547→}
+   548→
+   549→function SwitchField({
+   550→  label,
+   551→  description,
+   552→  checked,
+   553→  onChange,
+   554→  icon: Icon,
+   555→}: {
+   556→  label: string;
+   557→  description?: string;
+   558→  checked: boolean;
+   559→  onChange: (v: boolean) => void;
+   560→  icon?: React.ComponentType<{ className?: string }>;
+   561→}) {
+   562→  return (
+   563→    <div className="flex items-start justify-between gap-3 rounded-lg border border-slate-200 dark:border-slate-800 p-3">
+   564→      <div className="flex items-start gap-3">
+   565→        {Icon && (
+   566→          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+   567→            <Icon className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+   568→          </div>
+   569→        )}
+   570→        <div>
+   571→          <Label className="cursor-pointer font-medium text-sm">{label}</Label>
+   572→          {description && (
+   573→            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+   574→              {description}
+   575→            </p>
+   576→          )}
+   577→        </div>
+   578→      </div>
+   579→      <Switch checked={checked} onCheckedChange={(v) => onChange(Boolean(v))} />
+   580→    </div>
+   581→  );
+   582→}
+   583→
+   584→// ============================================================
+   585→// Sections
+   586→// ============================================================
+   587→
+   588→function BrandingSection({
+   589→  values,
+   590→  updateField,
+   591→}: {
+   592→  values: FormState;
+   593→  updateField: (k: string, v: string) => void;
+   594→}) {
+   595→  return (
+   596→    <div className="space-y-6">
+   597→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   598→        <FieldShell
+   599→          label="Academy Name"
+   600→          htmlFor="academyName"
+   601→          hint="Displayed across the academy site and certificates."
+   602→        >
+   603→          <Input
+   604→            id="academyName"
+   605→            value={values.academyName}
+   606→            onChange={(e) => updateField("academyName", e.target.value)}
+   607→            placeholder="DGR Aviation Academy"
+   608→          />
+   609→        </FieldShell>
+   610→
+   611→        <FieldShell
+   612→          label="Support Email"
+   613→          htmlFor="supportEmail"
+   614→          hint="Receives student inquiries."
+   615→        >
+   616→          <Input
+   617→            id="supportEmail"
+   618→            type="email"
+   619→            value={values.supportEmail}
+   620→            onChange={(e) => updateField("supportEmail", e.target.value)}
+   621→            placeholder="support@dgr-academy.com"
+   622→          />
+   623→        </FieldShell>
+   624→      </div>
+   625→
+   626→      <FieldShell
+   627→        label="Logo URL"
+   628→        htmlFor="logoUrl"
+   629→        hint="Public URL of the academy logo (SVG or PNG recommended)."
+   630→      >
+   631→        <Input
+   632→          id="logoUrl"
+   633→          value={values.logoUrl}
+   634→          onChange={(e) => updateField("logoUrl", e.target.value)}
+   635→          placeholder="https://..."
+   636→        />
+   637→        {values.logoUrl && (
+   638→          <div className="h-16 w-32 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-white flex items-center justify-center p-2">
+   639→            <img
+   640→              src={values.logoUrl}
+   641→              alt="Logo preview"
+   642→              className="max-h-full max-w-full object-contain"
+   643→              onError={(e) =>
+   644→                ((e.target as HTMLImageElement).style.opacity = "0.2")
+   645→              }
+   646→            />
+   647→          </div>
+   648→        )}
+   649→      </FieldShell>
+   650→
+   651→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   652→        <ColorField
+   653→          label="Primary Color"
+   654→          value={values.primaryColor}
+   655→          onChange={(v) => updateField("primaryColor", v)}
+   656→          hint="Main brand color used for buttons and accents."
+   657→        />
+   658→        <ColorField
+   659→          label="Accent Color"
+   660→          value={values.accentColor}
+   661→          onChange={(v) => updateField("accentColor", v)}
+   662→          hint="Secondary brand color for highlights."
+   663→        />
+   664→      </div>
+   665→
+   666→      <FieldShell
+   667→        label="Favicon URL"
+   668→        htmlFor="faviconUrl"
+   669→        hint="Small icon shown in browser tabs."
+   670→      >
+   671→        <Input
+   672→          id="faviconUrl"
+   673→          value={values.faviconUrl}
+   674→          onChange={(e) => updateField("faviconUrl", e.target.value)}
+   675→          placeholder="https://..."
+   676→        />
+   677→      </FieldShell>
+   678→
+   679→      <FieldShell
+   680→        label="Footer Text"
+   681→        htmlFor="footerText"
+   682→        hint="Shown at the bottom of public pages."
+   683→      >
+   684→        <Textarea
+   685→          id="footerText"
+   686→          rows={3}
+   687→          value={values.footerText}
+   688→          onChange={(e) => updateField("footerText", e.target.value)}
+   689→          placeholder="© 2024 DGR Aviation Academy..."
+   690→        />
+   691→      </FieldShell>
+   692→
+   693→      <div>
+   694→        <Label className="text-sm font-medium mb-2 block">Social Links</Label>
+   695→        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+   696→          <FieldShell label="Twitter / X" htmlFor="socialTwitter">
+   697→            <div className="relative">
+   698→              <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   699→              <Input
+   700→                id="socialTwitter"
+   701→                value={values.socialTwitter}
+   702→                onChange={(e) => updateField("socialTwitter", e.target.value)}
+   703→                className="pl-9"
+   704→                placeholder="https://twitter.com/..."
+   705→              />
+   706→            </div>
+   707→          </FieldShell>
+   708→          <FieldShell label="LinkedIn" htmlFor="socialLinkedin">
+   709→            <div className="relative">
+   710→              <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   711→              <Input
+   712→                id="socialLinkedin"
+   713→                value={values.socialLinkedin}
+   714→                onChange={(e) => updateField("socialLinkedin", e.target.value)}
+   715→                className="pl-9"
+   716→                placeholder="https://linkedin.com/..."
+   717→              />
+   718→            </div>
+   719→          </FieldShell>
+   720→          <FieldShell label="Facebook" htmlFor="socialFacebook">
+   721→            <div className="relative">
+   722→              <ThumbsUp className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   723→              <Input
+   724→                id="socialFacebook"
+   725→                value={values.socialFacebook}
+   726→                onChange={(e) => updateField("socialFacebook", e.target.value)}
+   727→                className="pl-9"
+   728→                placeholder="https://facebook.com/..."
+   729→              />
+   730→            </div>
+   731→          </FieldShell>
+   732→        </div>
+   733→      </div>
+   734→    </div>
+   735→  );
+   736→}
+   737→
+   738→function AISection({
+   739→  values,
+   740→  updateField,
+   741→  updateBool,
+   742→}: {
+   743→  values: FormState;
+   744→  updateField: (k: string, v: string) => void;
+   745→  updateBool: (k: string, v: boolean) => void;
+   746→}) {
+   747→  return (
+   748→    <div className="space-y-6">
+   749→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   750→        <FieldShell
+   751→          label="AI Provider"
+   752→          hint="Select the LLM provider for the AI tutor."
+   753→        >
+   754→          <Select
+   755→            value={values.aiProvider}
+   756→            onValueChange={(v) => updateField("aiProvider", v)}
+   757→          >
+   758→            <SelectTrigger className="w-full">
+   759→              <SelectValue placeholder="Select provider" />
+   760→            </SelectTrigger>
+   761→            <SelectContent>
+   762→              <SelectItem value="openai">OpenAI</SelectItem>
+   763→              <SelectItem value="anthropic">Anthropic</SelectItem>
+   764→              <SelectItem value="google">Google Gemini</SelectItem>
+   765→              <SelectItem value="azure">Azure OpenAI</SelectItem>
+   766→              <SelectItem value="zai">ZAI</SelectItem>
+   767→            </SelectContent>
+   768→          </Select>
+   769→        </FieldShell>
+   770→
+   771→        <FieldShell
+   772→          label="AI Model"
+   773→          htmlFor="aiModel"
+   774→          hint="Model identifier used by the tutor."
+   775→        >
+   776→          <Input
+   777→            id="aiModel"
+   778→            value={values.aiModel}
+   779→            onChange={(e) => updateField("aiModel", e.target.value)}
+   780→            placeholder="gpt-4o, claude-3-opus, gemini-1.5-pro"
+   781→          />
+   782→        </FieldShell>
+   783→      </div>
+   784→
+   785→      <FieldShell
+   786→        label="Voice Provider"
+   787→        hint="Text-to-speech provider for narration."
+   788→      >
+   789→        <Select
+   790→          value={values.voiceProvider}
+   791→          onValueChange={(v) => updateField("voiceProvider", v)}
+   792→        >
+   793→          <SelectTrigger className="w-full">
+   794→            <SelectValue placeholder="Select voice provider" />
+   795→          </SelectTrigger>
+   796→          <SelectContent>
+   797→            <SelectItem value="openai">OpenAI TTS</SelectItem>
+   798→            <SelectItem value="elevenlabs">ElevenLabs</SelectItem>
+   799→            <SelectItem value="azure">Azure Speech</SelectItem>
+   800→            <SelectItem value="google">Google Cloud TTS</SelectItem>
+   801→            <SelectItem value="browser">Browser Native</SelectItem>
+   802→          </SelectContent>
+   803→        </Select>
+   804→      </FieldShell>
+   805→
+   806→      <div className="space-y-3">
+   807→        <SwitchField
+   808→          label="AI Tutor Enabled"
+   809→          description="Allow students to ask questions to the AI tutor during lessons."
+   810→          checked={values.aiTutorEnabled === "true"}
+   811→          onChange={(v) => updateBool("aiTutorEnabled", v)}
+   812→          icon={Brain}
+   813→        />
+   814→        <SwitchField
+   815→          label="Quiz Generation Enabled"
+   816→          description="Let instructors auto-generate quizzes from lesson content."
+   817→          checked={values.quizGenerationEnabled === "true"}
+   818→          onChange={(v) => updateBool("quizGenerationEnabled", v)}
+   819→          icon={GraduationCap}
+   820→        />
+   821→      </div>
+   822→
+   823→      <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+   824→        <Label className="text-sm font-medium mb-3 block">
+   825→          Quiz Generation Defaults
+   826→        </Label>
+   827→        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   828→          <FieldShell
+   829→            label="Default Question Count"
+   830→            htmlFor="quizDefaultCount"
+   831→            hint="Number of questions generated per lesson."
+   832→          >
+   833→            <Input
+   834→              id="quizDefaultCount"
+   835→              type="number"
+   836→              min={1}
+   837→              max={50}
+   838→              value={values.quizDefaultCount}
+   839→              onChange={(e) => updateField("quizDefaultCount", e.target.value)}
+   840→            />
+   841→          </FieldShell>
+   842→          <FieldShell
+   843→            label="Default Difficulty"
+   844→            hint="Difficulty applied to generated quizzes."
+   845→          >
+   846→            <Select
+   847→              value={values.quizDefaultDifficulty}
+   848→              onValueChange={(v) => updateField("quizDefaultDifficulty", v)}
+   849→            >
+   850→              <SelectTrigger className="w-full">
+   851→                <SelectValue placeholder="Select difficulty" />
+   852→              </SelectTrigger>
+   853→              <SelectContent>
+   854→                <SelectItem value="Beginner">Beginner</SelectItem>
+   855→                <SelectItem value="Intermediate">Intermediate</SelectItem>
+   856→                <SelectItem value="Professional">Professional</SelectItem>
+   857→              </SelectContent>
+   858→            </Select>
+   859→          </FieldShell>
+   860→        </div>
+   861→      </div>
+   862→    </div>
+   863→  );
+   864→}
+   865→
+   866→function EmailSection({
+   867→  values,
+   868→  updateField,
+   869→}: {
+   870→  values: FormState;
+   871→  updateField: (k: string, v: string) => void;
+   872→}) {
+   873→  return (
+   874→    <div className="space-y-6">
+   875→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   876→        <FieldShell label="SMTP Host" htmlFor="smtpHost">
+   877→          <Input
+   878→            id="smtpHost"
+   879→            value={values.smtpHost}
+   880→            onChange={(e) => updateField("smtpHost", e.target.value)}
+   881→            placeholder="smtp.gmail.com"
+   882→          />
+   883→        </FieldShell>
+   884→        <FieldShell label="SMTP Port" htmlFor="smtpPort">
+   885→          <Input
+   886→            id="smtpPort"
+   887→            type="number"
+   888→            min={1}
+   889→            max={65535}
+   890→            value={values.smtpPort}
+   891→            onChange={(e) => updateField("smtpPort", e.target.value)}
+   892→            placeholder="587"
+   893→          />
+   894→        </FieldShell>
+   895→        <FieldShell label="SMTP Username" htmlFor="smtpUsername">
+   896→          <Input
+   897→            id="smtpUsername"
+   898→            value={values.smtpUsername}
+   899→            onChange={(e) => updateField("smtpUsername", e.target.value)}
+   900→            placeholder="user@example.com"
+   901→          />
+   902→        </FieldShell>
+   903→        <FieldShell
+   904→          label="SMTP Password"
+   905→          htmlFor="smtpPassword"
+   906→          hint="Stored as a setting. Use an app password for Gmail."
+   907→        >
+   908→          <Input
+   909→            id="smtpPassword"
+   910→            type="password"
+   911→            value={values.smtpPassword}
+   912→            onChange={(e) => updateField("smtpPassword", e.target.value)}
+   913→            placeholder="••••••••"
+   914→          />
+   915→        </FieldShell>
+   916→      </div>
+   917→
+   918→      <FieldShell
+   919→        label="From Email"
+   920→        htmlFor="fromEmail"
+   921→        hint="Sender address for all outgoing emails."
+   922→      >
+   923→        <Input
+   924→          id="fromEmail"
+   925→          type="email"
+   926→          value={values.fromEmail}
+   927→          onChange={(e) => updateField("fromEmail", e.target.value)}
+   928→          placeholder="no-reply@dgr-academy.com"
+   929→        />
+   930→      </FieldShell>
+   931→
+   932→      <div className="space-y-4">
+   933→        <Label className="text-sm font-medium">Email Templates</Label>
+   934→        <FieldShell
+   935→          label="Certificate Email"
+   936→          htmlFor="emailTemplateCertificate"
+   937→          hint="Use {{name}}, {{course}}, {{score}}, {{certificateNumber}} placeholders."
+   938→        >
+   939→          <Textarea
+   940→            id="emailTemplateCertificate"
+   941→            rows={5}
+   942→            value={values.emailTemplateCertificate}
+   943→            onChange={(e) =>
+   944→              updateField("emailTemplateCertificate", e.target.value)
+   945→            }
+   946→            className="font-mono text-xs"
+   947→          />
+   948→        </FieldShell>
+   949→        <FieldShell
+   950→          label="Enrollment Email"
+   951→          htmlFor="emailTemplateEnrollment"
+   952→          hint="Use {{name}}, {{course}} placeholders."
+   953→        >
+   954→          <Textarea
+   955→            id="emailTemplateEnrollment"
+   956→            rows={5}
+   957→            value={values.emailTemplateEnrollment}
+   958→            onChange={(e) =>
+   959→              updateField("emailTemplateEnrollment", e.target.value)
+   960→            }
+   961→            className="font-mono text-xs"
+   962→          />
+   963→        </FieldShell>
+   964→      </div>
+   965→    </div>
+   966→  );
+   967→}
+   968→
+   969→function IntegrationSection({
+   970→  values,
+   971→  updateField,
+   972→}: {
+   973→  values: FormState;
+   974→  updateField: (k: string, v: string) => void;
+   975→}) {
+   976→  return (
+   977→    <div className="space-y-6">
+   978→      <div className="rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30 p-3 flex items-start gap-2">
+   979→        <ShieldCheck className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" />
+   980→        <p className="text-xs text-orange-800 dark:text-orange-300">
+   981→          Secrets are stored as plain settings in this environment. In
+   982→          production, route these through a secrets manager or environment
+   983→          variables instead.
+   984→        </p>
+   985→      </div>
+   986→
+   987→      <div>
+   988→        <div className="flex items-center gap-2 mb-3">
+   989→          <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center">
+   990→            <Wrench className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+   991→          </div>
+   992→          <div>
+   993→            <h3 className="text-sm font-semibold">Cloudflare R2</h3>
+   994→            <p className="text-xs text-slate-500">
+   995→              Object storage for media uploads.
+   996→            </p>
+   997→          </div>
+   998→        </div>
+   999→        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  1000→          <FieldShell label="Account ID" htmlFor="r2AccountId">
+  1001→            <Input
+  1002→              id="r2AccountId"
+  1003→              value={values.r2AccountId}
+  1004→              onChange={(e) => updateField("r2AccountId", e.target.value)}
+  1005→              placeholder="a1b2c3d4..."
+  1006→            />
+  1007→          </FieldShell>
+  1008→          <FieldShell label="Bucket Name" htmlFor="r2Bucket">
+  1009→            <Input
+  1010→              id="r2Bucket"
+  1011→              value={values.r2Bucket}
+  1012→              onChange={(e) => updateField("r2Bucket", e.target.value)}
+  1013→              placeholder="dgr-media"
+  1014→            />
+  1015→          </FieldShell>
+  1016→          <FieldShell label="Access Key ID" htmlFor="r2AccessKeyId">
+  1017→            <Input
+  1018→              id="r2AccessKeyId"
+  1019→              value={values.r2AccessKeyId}
+  1020→              onChange={(e) => updateField("r2AccessKeyId", e.target.value)}
+  1021→              placeholder="..."
+  1022→            />
+  1023→          </FieldShell>
+  1024→          <FieldShell label="Secret Access Key" htmlFor="r2SecretAccessKey">
+  1025→            <Input
+  1026→              id="r2SecretAccessKey"
+  1027→              type="password"
+  1028→              value={values.r2SecretAccessKey}
+  1029→              onChange={(e) => updateField("r2SecretAccessKey", e.target.value)}
+  1030→              placeholder="••••••••"
+  1031→            />
+  1032→          </FieldShell>
+  1033→          <FieldShell
+  1034→            label="Public URL"
+  1035→            htmlFor="r2PublicUrl"
+  1036→            hint="Base URL for serving media publicly."
+  1037→            className="sm:col-span-2"
+  1038→          >
+  1039→            <Input
+  1040→              id="r2PublicUrl"
+  1041→              value={values.r2PublicUrl}
+  1042→              onChange={(e) => updateField("r2PublicUrl", e.target.value)}
+  1043→              placeholder="https://media.dgr-academy.com"
+  1044→            />
+  1045→          </FieldShell>
+  1046→        </div>
+  1047→      </div>
+  1048→
+  1049→      <div>
+  1050→        <div className="flex items-center gap-2 mb-3">
+  1051→          <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
+  1052→            <Plug className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+  1053→          </div>
+  1054→          <div>
+  1055→            <h3 className="text-sm font-semibold">External API Keys</h3>
+  1056→            <p className="text-xs text-slate-500">
+  1057→              Generic key/value pairs for third-party services.
+  1058→            </p>
+  1059→          </div>
+  1060→        </div>
+  1061→        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  1062→          <FieldShell label="Key Name" htmlFor="externalApiKeyName">
+  1063→            <Input
+  1064→              id="externalApiKeyName"
+  1065→              value={values.externalApiKeyName}
+  1066→              onChange={(e) => updateField("externalApiKeyName", e.target.value)}
+  1067→              placeholder="STRIPE_SECRET_KEY"
+  1068→            />
+  1069→          </FieldShell>
+  1070→          <FieldShell label="Key Value" htmlFor="externalApiKeyValue">
+  1071→            <Input
+  1072→              id="externalApiKeyValue"
+  1073→              type="password"
+  1074→              value={values.externalApiKeyValue}
+  1075→              onChange={(e) => updateField("externalApiKeyValue", e.target.value)}
+  1076→              placeholder="sk_live_..."
+  1077→            />
+  1078→          </FieldShell>
+  1079→        </div>
+  1080→      </div>
+  1081→    </div>
+  1082→  );
+  1083→}
+  1084→
+  1085→function GeneralSection({
+  1086→  values,
+  1087→  updateField,
+  1088→  updateBool,
+  1089→}: {
+  1090→  values: FormState;
+  1091→  updateField: (k: string, v: string) => void;
+  1092→  updateBool: (k: string, v: boolean) => void;
+  1093→}) {
+  1094→  return (
+  1095→    <div className="space-y-6">
+  1096→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  1097→        <FieldShell
+  1098→          label="Default Language"
+  1099→          hint="Interface language for new students."
+  1100→        >
+  1101→          <Select
+  1102→            value={values.defaultLanguage}
+  1103→            onValueChange={(v) => updateField("defaultLanguage", v)}
+  1104→          >
+  1105→            <SelectTrigger className="w-full">
+  1106→              <SelectValue placeholder="Select language" />
+  1107→            </SelectTrigger>
+  1108→            <SelectContent>
+  1109→              <SelectItem value="en">English</SelectItem>
+  1110→              <SelectItem value="es">Spanish</SelectItem>
+  1111→              <SelectItem value="fr">French</SelectItem>
+  1112→              <SelectItem value="ar">Arabic</SelectItem>
+  1113→              <SelectItem value="zh">Chinese</SelectItem>
+  1114→              <SelectItem value="de">German</SelectItem>
+  1115→            </SelectContent>
+  1116→          </Select>
+  1117→        </FieldShell>
+  1118→
+  1119→        <FieldShell
+  1120→          label="Pass Mark (%)"
+  1121→          htmlFor="passMark"
+  1122→          hint="Minimum score required to pass quizzes and exams."
+  1123→        >
+  1124→          <div className="relative">
+  1125→            <Award className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+  1126→            <Input
+  1127→              id="passMark"
+  1128→              type="number"
+  1129→              min={0}
+  1130→              max={100}
+  1131→              value={values.passMark}
+  1132→              onChange={(e) => updateField("passMark", e.target.value)}
+  1133→              className="pl-9"
+  1134→            />
+  1135→          </div>
+  1136→        </FieldShell>
+  1137→      </div>
+  1138→
+  1139→      <FieldShell
+  1140→        label="Certificate Template"
+  1141→        htmlFor="certificateTemplate"
+  1142→        hint="Identifier of the certificate design template."
+  1143→      >
+  1144→        <Select
+  1145→          value={values.certificateTemplate}
+  1146→          onValueChange={(v) => updateField("certificateTemplate", v)}
+  1147→        >
+  1148→          <SelectTrigger className="w-full">
+  1149→            <SelectValue placeholder="Select template" />
+  1150→          </SelectTrigger>
+  1151→          <SelectContent>
+  1152→            <SelectItem value="default">Default</SelectItem>
+  1153→            <SelectItem value="classic">Classic</SelectItem>
+  1154→            <SelectItem value="modern">Modern</SelectItem>
+  1155→            <SelectItem value="aviation">Aviation</SelectItem>
+  1156→          </SelectContent>
+  1157→        </Select>
+  1158→      </FieldShell>
+  1159→
+  1160→      <SwitchField
+  1161→        label="Maintenance Mode"
+  1162→        description="When enabled, students see a maintenance page instead of the academy."
+  1163→        checked={values.maintenanceMode === "true"}
+  1164→        onChange={(v) => updateBool("maintenanceMode", v)}
+  1165→        icon={Wrench}
+  1166→      />
+  1167→
+  1168→      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-2">
+  1169→        <Globe className="h-3.5 w-3.5" />
+  1170→        <span>
+  1171→          Tip: settings are stored as key-value pairs and versioned with audit
+  1172→          logs.
+  1173→        </span>
+  1174→      </div>
+  1175→    </div>
+  1176→  );
+  1177→}
+  1178→

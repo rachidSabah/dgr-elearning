@@ -34,6 +34,7 @@ import {
   NotebookPen,
   ZoomIn,
   Plane,
+  Printer,
   GraduationCap,
   ClipboardList,
   CheckCheck,
@@ -71,6 +72,8 @@ import {
   AnimatedEvacuationFlow,
   AnimatedFireFighting,
 } from "./animated-procedures";
+import { LessonDiscussion } from "./lesson-discussion";
+import { generateStudyGuide } from "@/lib/study-guide";
 
 const calloutStyles = {
   info: { icon: Info, className: "border-blue-500/30 bg-blue-500/5 text-blue-900 dark:text-blue-100", iconClass: "text-blue-500" },
@@ -326,7 +329,7 @@ export function LessonView() {
     : enhancedContent;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-5xl">
+    <div className="container mx-auto px-4 py-6 max-w-5xl print-area">
       {/* Lesson header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -362,9 +365,12 @@ export function LessonView() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 no-print">
             <Button variant="ghost" size="icon" onClick={() => setShowSearch(!showSearch)}>
               <Search className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => window.print()} title="Print lesson" aria-label="Print lesson">
+              <Printer className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="icon" onClick={handleBookmark}>
               {isBookmarked ? (
@@ -381,7 +387,7 @@ export function LessonView() {
       </motion.div>
 
       {/* Professional Voice Narration */}
-      <div className="mb-6">
+      <div className="mb-6 no-print">
         <ProfessionalNarrator
           text={textBlocks.map((b) => b.text).join(" ")}
           lessonId={lesson.id}
@@ -637,6 +643,16 @@ export function LessonView() {
               {t(lang, "previousLesson")}
             </Button>
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => generateStudyGuide(useAppStore.getState().selectedCourseId)}
+              className="gap-1.5"
+              title="Open a printable study guide for this course"
+            >
+              <Printer className="h-4 w-4" />
+              Study Guide
+            </Button>
+            <Button
               variant="ghost"
               disabled={!nextLesson}
               onClick={() => nextLesson && setSelectedLesson(nextLesson.lesson.id)}
@@ -645,6 +661,11 @@ export function LessonView() {
               {t(lang, "nextLesson")}
               <ChevronRight className="h-4 w-4" />
             </Button>
+          </div>
+
+          {/* Discussion Forum */}
+          <div className="mt-8">
+            <LessonDiscussion lessonId={lesson.id} />
           </div>
         </div>
 
@@ -886,6 +907,9 @@ function ContentBlockRenderer({
         </figure>
       );
 
+    case "video":
+      return <VideoBlock src={block.src} caption={block.caption} />;
+
     case "keyTerms":
       return (
         <Card className="my-4">
@@ -966,6 +990,73 @@ function ContentBlockRenderer({
     default:
       return null;
   }
+}
+
+// ---------- Video Block Renderer ----------
+function VideoBlock({ src, caption }: { src: string; caption?: string }) {
+  const youtubeMatch = src.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  const vimeoMatch = src.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  const isMP4 = /\.mp4(\?.*)?$/i.test(src);
+  const isWebM = /\.webm(\?.*)?$/i.test(src);
+  const isDirectVideo = isMP4 || isWebM;
+
+  let embed: React.ReactNode = null;
+  if (youtubeMatch) {
+    const id = youtubeMatch[1];
+    embed = (
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${id}`}
+        title={caption || "YouTube video"}
+        className="w-full h-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    );
+  } else if (vimeoMatch) {
+    const id = vimeoMatch[1];
+    embed = (
+      <iframe
+        src={`https://player.vimeo.com/video/${id}`}
+        title={caption || "Vimeo video"}
+        className="w-full h-full"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  } else if (isDirectVideo) {
+    embed = (
+      <video
+        src={src}
+        controls
+        className="w-full h-full"
+        preload="metadata"
+      >
+        Your browser does not support the video tag.
+      </video>
+    );
+  } else {
+    embed = (
+      <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
+        <AlertCircle className="h-8 w-8 mb-2" />
+        <p className="text-sm font-medium">Unsupported video URL</p>
+        <p className="text-xs mt-1 break-all">{src}</p>
+        <p className="text-xs mt-2">Supports YouTube, Vimeo, MP4 and WebM.</p>
+      </div>
+    );
+  }
+
+  return (
+    <figure className="my-4">
+      <div className="rounded-xl overflow-hidden border bg-card aspect-video">
+        {embed}
+      </div>
+      {caption && (
+        <figcaption className="text-xs text-muted-foreground mt-2 text-center italic">
+          {caption}
+        </figcaption>
+      )}
+    </figure>
+  );
 }
 
 // Renderer for special interactive components

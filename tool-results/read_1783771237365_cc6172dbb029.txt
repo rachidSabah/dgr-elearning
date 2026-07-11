@@ -1,0 +1,542 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useCallback } from "react";
+     4→import { toast } from "sonner";
+     5→import {
+     6→  FileEdit, BookOpen, FolderTree, Save, Plus, Trash2,
+     7→  ChevronUp, ChevronDown, Type, Image as ImageIcon, AlertTriangle,
+     8→  Lightbulb, List, Table, HelpCircle, FileText, GripVertical, X
+     9→} from "lucide-react";
+    10→import { Button } from "@/components/ui/button";
+    11→import { Input } from "@/components/ui/input";
+    12→import { Textarea } from "@/components/ui/textarea";
+    13→import { Label } from "@/components/ui/label";
+    14→import { Badge } from "@/components/ui/badge";
+    15→import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+    16→import {
+    17→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    18→} from "@/components/ui/select";
+    19→import {
+    20→  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+    21→} from "@/components/ui/dropdown-menu";
+    22→import { initializeAuth } from "@/lib/client-auth";
+    23→import { getAllCoursesFromStore, saveAllCoursesToStore, slugify } from "@/lib/course-store";
+    24→import type { CourseData, ContentBlock, Lesson, Module } from "@/lib/types";
+    25→
+    26→export default function ContentEditorPage() {
+    27→  const [courses, setCourses] = useState<CourseData[]>([]);
+    28→  const [selectedCourseIdx, setSelectedCourseIdx] = useState(0);
+    29→  const [selectedModuleIdx, setSelectedModuleIdx] = useState(0);
+    30→  const [selectedLessonIdx, setSelectedLessonIdx] = useState(0);
+    31→  const [lesson, setLesson] = useState<Lesson | null>(null);
+    32→  const [hasChanges, setHasChanges] = useState(false);
+    33→
+    34→  useEffect(() => {
+    35→    initializeAuth();
+    36→    const c = getAllCoursesFromStore();
+    37→    setCourses(c);
+    38→  }, []);
+    39→
+    40→  // Get current course/module/lesson
+    41→  const currentCourse = courses[selectedCourseIdx];
+    42→  const currentModule = currentCourse?.modules[selectedModuleIdx];
+    43→  const currentLessonData = currentModule?.lessons[selectedLessonIdx];
+    44→
+    45→  // Load lesson into editor when selection changes
+    46→  useEffect(() => {
+    47→    if (currentLessonData) {
+    48→      setLesson(JSON.parse(JSON.stringify(currentLessonData)));
+    49→      setHasChanges(false);
+    50→    } else {
+    51→      setLesson(null);
+    52→    }
+    53→  }, [selectedCourseIdx, selectedModuleIdx, selectedLessonIdx, currentLessonData?.id]);
+    54→
+    55→  const persistChanges = useCallback((updatedLesson: Lesson) => {
+    56→    if (!currentCourse || !currentModule) return;
+    57→
+    58→    const updatedCourses = [...courses];
+    59→    updatedCourses[selectedCourseIdx].modules[selectedModuleIdx].lessons[selectedLessonIdx] = updatedLesson;
+    60→    saveAllCoursesToStore(updatedCourses);
+    61→    setCourses(updatedCourses);
+    62→    setHasChanges(false);
+    63→    toast.success("Lesson saved! Changes are live on the student site.");
+    64→  }, [courses, selectedCourseIdx, selectedModuleIdx, selectedLessonIdx, currentCourse, currentModule]);
+    65→
+    66→  const handleSave = () => {
+    67→    if (!lesson) return;
+    68→    persistChanges(lesson);
+    69→  };
+    70→
+    71→  // === LESSON METADATA EDITING ===
+    72→  const updateLessonMeta = (field: string, value: any) => {
+    73→    if (!lesson) return;
+    74→    setLesson({ ...lesson, [field]: value });
+    75→    setHasChanges(true);
+    76→  };
+    77→
+    78→  // === CONTENT BLOCK OPERATIONS ===
+    79→  const updateContent = (newContent: ContentBlock[]) => {
+    80→    if (!lesson) return;
+    81→    setLesson({ ...lesson, content: newContent });
+    82→    setHasChanges(true);
+    83→  };
+    84→
+    85→  const addBlock = (type: ContentBlock["type"]) => {
+    86→    if (!lesson) return;
+    87→    const newBlock = createDefaultBlock(type);
+    88→    updateContent([...lesson.content, newBlock]);
+    89→    toast.info(`${getBlockLabel(type)} block added`);
+    90→  };
+    91→
+    92→  const updateBlock = (idx: number, updates: Partial<ContentBlock>) => {
+    93→    if (!lesson) return;
+    94→    const newContent = [...lesson.content];
+    95→    newContent[idx] = { ...newContent[idx], ...updates } as ContentBlock;
+    96→    updateContent(newContent);
+    97→  };
+    98→
+    99→  const deleteBlock = (idx: number) => {
+   100→    if (!lesson) return;
+   101→    updateContent(lesson.content.filter((_, i) => i !== idx));
+   102→    toast.info("Block deleted");
+   103→  };
+   104→
+   105→  const moveBlock = (idx: number, direction: "up" | "down") => {
+   106→    if (!lesson) return;
+   107→    const newIdx = direction === "up" ? idx - 1 : idx + 1;
+   108→    if (newIdx < 0 || newIdx >= lesson.content.length) return;
+   109→    const newContent = [...lesson.content];
+   110→    [newContent[idx], newContent[newIdx]] = [newContent[newIdx], newContent[idx]];
+   111→    updateContent(newContent);
+   112→  };
+   113→
+   114→  // === ADD NEW LESSON ===
+   115→  const addNewLesson = () => {
+   116→    if (!currentModule) return;
+   117→    const newLesson: Lesson = {
+   118→      id: `lesson-${Date.now()}`,
+   119→      moduleId: currentModule.id,
+   120→      code: `${currentModule.code}.${currentModule.lessons.length + 1}`,
+   121→      title: "New Lesson",
+   122→      duration: 15,
+   123→      objectives: ["New learning objective"],
+   124→      content: [
+   125→        { type: "paragraph", text: "Click here to edit this paragraph. You can add more content blocks using the Add Block button." }
+   126→      ],
+   127→      summary: ["Lesson summary point"],
+   128→      reviewQuestions: ["Review question?"],
+   129→    };
+   130→
+   131→    const updatedCourses = [...courses];
+   132→    updatedCourses[selectedCourseIdx].modules[selectedModuleIdx].lessons.push(newLesson);
+   133→    saveAllCoursesToStore(updatedCourses);
+   134→    setCourses(updatedCourses);
+   135→    setSelectedLessonIdx(currentModule.lessons.length);
+   136→    toast.success("New lesson created! Start editing below.");
+   137→  };
+   138→
+   139→  // === ADD NEW MODULE ===
+   140→  const addNewModule = () => {
+   141→    if (!currentCourse) return;
+   142→    const newModule: Module = {
+   143→      id: `mod-${Date.now()}`,
+   144→      code: `${currentCourse.modules.length + 1}`,
+   145→      title: "New Module",
+   146→      description: "Module description",
+   147→      icon: "BookOpen",
+   148→      color: "#0ea5e9",
+   149→      lessons: [],
+   150→    };
+   151→
+   152→    const updatedCourses = [...courses];
+   153→    updatedCourses[selectedCourseIdx].modules.push(newModule);
+   154→    saveAllCoursesToStore(updatedCourses);
+   155→    setCourses(updatedCourses);
+   156→    setSelectedModuleIdx(currentCourse.modules.length);
+   157→    toast.success("New module created!");
+   158→  };
+   159→
+   160→  if (courses.length === 0) {
+   161→    return <div className="flex items-center justify-center h-96"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+   162→  }
+   163→
+   164→  return (
+   165→    <div className="space-y-4">
+   166→      {/* Header */}
+   167→      <div className="flex items-center justify-between">
+   168→        <div>
+   169→          <h1 className="text-2xl font-bold">Content Editor</h1>
+   170→          <p className="text-sm text-slate-500 mt-1">
+   171→            Edit lesson content directly — changes appear <span className="text-green-600 font-medium">live</span> on the student site
+   172→          </p>
+   173→        </div>
+   174→        {hasChanges && (
+   175→          <div className="flex items-center gap-3">
+   176→            <Badge className="bg-amber-100 text-amber-700 border-amber-200">Unsaved changes</Badge>
+   177→            <Button onClick={handleSave} className="gap-1.5 bg-green-600 hover:bg-green-700">
+   178→              <Save className="h-4 w-4" /> Save Lesson
+   179→            </Button>
+   180→          </div>
+   181→        )}
+   182→      </div>
+   183→
+   184→      {/* Course/Module/Lesson Selectors */}
+   185→      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+   186→        <div className="space-y-1.5">
+   187→          <Label className="text-xs text-slate-500">Course</Label>
+   188→          <Select value={String(selectedCourseIdx)} onValueChange={(v) => { setSelectedCourseIdx(Number(v)); setSelectedModuleIdx(0); setSelectedLessonIdx(0); }}>
+   189→            <SelectTrigger><SelectValue /></SelectTrigger>
+   190→            <SelectContent>
+   191→              {courses.map((c, i) => <SelectItem key={i} value={String(i)}>{c.title}</SelectItem>)}
+   192→            </SelectContent>
+   193→          </Select>
+   194→        </div>
+   195→        <div className="space-y-1.5">
+   196→          <Label className="text-xs text-slate-500">Module</Label>
+   197→          <div className="flex gap-1">
+   198→            <Select value={String(selectedModuleIdx)} onValueChange={(v) => { setSelectedModuleIdx(Number(v)); setSelectedLessonIdx(0); }} className="flex-1">
+   199→              <SelectTrigger><SelectValue /></SelectTrigger>
+   200→              <SelectContent>
+   201→                {currentCourse?.modules.map((m, i) => <SelectItem key={i} value={String(i)}>{m.code} - {m.title}</SelectItem>)}
+   202→              </SelectContent>
+   203→            </Select>
+   204→            <Button variant="outline" size="icon" onClick={addNewModule} title="Add new module">
+   205→              <Plus className="h-4 w-4" />
+   206→            </Button>
+   207→          </div>
+   208→        </div>
+   209→        <div className="space-y-1.5">
+   210→          <Label className="text-xs text-slate-500">Lesson</Label>
+   211→          <div className="flex gap-1">
+   212→            <Select value={String(selectedLessonIdx)} onValueChange={(v) => setSelectedLessonIdx(Number(v))} className="flex-1">
+   213→              <SelectTrigger><SelectValue /></SelectTrigger>
+   214→              <SelectContent>
+   215→                {currentModule?.lessons.map((l, i) => <SelectItem key={i} value={String(i)}>{l.code} - {l.title}</SelectItem>)}
+   216→              </SelectContent>
+   217→            </Select>
+   218→            <Button variant="outline" size="icon" onClick={addNewLesson} title="Add new lesson">
+   219→              <Plus className="h-4 w-4" />
+   220→            </Button>
+   221→          </div>
+   222→        </div>
+   223→      </div>
+   224→
+   225→      {lesson ? (
+   226→        <>
+   227→          {/* Lesson Metadata */}
+   228→          <Card>
+   229→            <CardHeader><CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4" /> Lesson Details</CardTitle></CardHeader>
+   230→            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+   231→              <div className="space-y-1">
+   232→                <Label className="text-xs">Title</Label>
+   233→                <Input value={lesson.title} onChange={(e) => updateLessonMeta("title", e.target.value)} />
+   234→              </div>
+   235→              <div className="space-y-1">
+   236→                <Label className="text-xs">Code</Label>
+   237→                <Input value={lesson.code || ""} onChange={(e) => updateLessonMeta("code", e.target.value)} />
+   238→              </div>
+   239→              <div className="space-y-1">
+   240→                <Label className="text-xs">Duration (min)</Label>
+   241→                <Input type="number" value={lesson.duration} onChange={(e) => updateLessonMeta("duration", parseInt(e.target.value) || 15)} />
+   242→              </div>
+   243→              <div className="space-y-1">
+   244→                <Label className="text-xs">Description</Label>
+   245→                <Input value={lesson.description || ""} onChange={(e) => updateLessonMeta("description", e.target.value)} placeholder="Optional" />
+   246→              </div>
+   247→            </CardContent>
+   248→          </Card>
+   249→
+   250→          {/* Content Blocks */}
+   251→          <Card>
+   252→            <CardHeader>
+   253→              <div className="flex items-center justify-between">
+   254→                <CardTitle className="text-sm flex items-center gap-2"><FileEdit className="h-4 w-4" /> Content Blocks ({lesson.content.length})</CardTitle>
+   255→                <DropdownMenu>
+   256→                  <DropdownMenuTrigger asChild>
+   257→                    <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Add Block</Button>
+   258→                  </DropdownMenuTrigger>
+   259→                  <DropdownMenuContent align="end">
+   260→                    <DropdownMenuItem onClick={() => addBlock("paragraph")}><Type className="h-3.5 w-3.5 mr-2" /> Paragraph</DropdownMenuItem>
+   261→                    <DropdownMenuItem onClick={() => addBlock("heading")}><Type className="h-3.5 w-3.5 mr-2" /> Heading</DropdownMenuItem>
+   262→                    <DropdownMenuItem onClick={() => addBlock("callout")}><AlertTriangle className="h-3.5 w-3.5 mr-2" /> Callout (Info/Warning/Danger)</DropdownMenuItem>
+   263→                    <DropdownMenuItem onClick={() => addBlock("list")}><List className="h-3.5 w-3.5 mr-2" /> List</DropdownMenuItem>
+   264→                    <DropdownMenuItem onClick={() => addBlock("table")}><Table className="h-3.5 w-3.5 mr-2" /> Table</DropdownMenuItem>
+   265→                    <DropdownMenuItem onClick={() => addBlock("image")}><ImageIcon className="h-3.5 w-3.5 mr-2" /> Image</DropdownMenuItem>
+   266→                    <DropdownMenuItem onClick={() => addBlock("knowledgeCheck")}><HelpCircle className="h-3.5 w-3.5 mr-2" /> Knowledge Check</DropdownMenuItem>
+   267→                    <DropdownMenuItem onClick={() => addBlock("keyTerms")}><BookOpen className="h-3.5 w-3.5 mr-2" /> Key Terms</DropdownMenuItem>
+   268→                  </DropdownMenuContent>
+   269→                </DropdownMenu>
+   270→              </div>
+   271→            </CardHeader>
+   272→            <CardContent className="space-y-3">
+   273→              {lesson.content.length === 0 && (
+   274→                <div className="text-center py-12 text-slate-400">
+   275→                  <FileEdit className="h-12 w-12 mx-auto mb-2 opacity-30" />
+   276→                  <p>No content blocks yet. Click "Add Block" to start building this lesson.</p>
+   277→                </div>
+   278→              )}
+   279→              {lesson.content.map((block, idx) => (
+   280→                <BlockEditor
+   281→                  key={idx}
+   282→                  block={block}
+   283→                  index={idx}
+   284→                  total={lesson.content.length}
+   285→                  onChange={(updates) => updateBlock(idx, updates)}
+   286→                  onDelete={() => deleteBlock(idx)}
+   287→                  onMoveUp={() => moveBlock(idx, "up")}
+   288→                  onMoveDown={() => moveBlock(idx, "down")}
+   289→                />
+   290→              ))}
+   291→              {lesson.content.length > 0 && (
+   292→                <Button onClick={handleSave} className="w-full gap-1.5 bg-green-600 hover:bg-green-700" disabled={!hasChanges}>
+   293→                  <Save className="h-4 w-4" /> {hasChanges ? "Save Lesson (Live on Student Site)" : "All Changes Saved"}
+   294→                </Button>
+   295→              )}
+   296→            </CardContent>
+   297→          </Card>
+   298→
+   299→          {/* Summary & Review */}
+   300→          <Card>
+   301→            <CardHeader><CardTitle className="text-sm">Summary &amp; Review Questions</CardTitle></CardHeader>
+   302→            <CardContent className="space-y-3">
+   303→              <div className="space-y-1">
+   304→                <Label className="text-xs">Summary Points (one per line)</Label>
+   305→                <Textarea
+   306→                  value={lesson.summary.join("\n")}
+   307→                  onChange={(e) => { setLesson({ ...lesson, summary: e.target.value.split("\n").filter(Boolean) }); setHasChanges(true); }}
+   308→                  rows={3}
+   309→                />
+   310→              </div>
+   311→              <div className="space-y-1">
+   312→                <Label className="text-xs">Review Questions (one per line)</Label>
+   313→                <Textarea
+   314→                  value={lesson.reviewQuestions.join("\n")}
+   315→                  onChange={(e) => { setLesson({ ...lesson, reviewQuestions: e.target.value.split("\n").filter(Boolean) }); setHasChanges(true); }}
+   316→                  rows={3}
+   317→                />
+   318→              </div>
+   319→            </CardContent>
+   320→          </Card>
+   321→        </>
+   322→      ) : (
+   323→        <Card>
+   324→          <CardContent className="py-12 text-center text-slate-400">
+   325→            <FileEdit className="h-12 w-12 mx-auto mb-2 opacity-30" />
+   326→            <p>Select a lesson to edit, or create a new one.</p>
+   327→          </CardContent>
+   328→        </Card>
+   329→      )}
+   330→    </div>
+   331→  );
+   332→}
+   333→
+   334→// ============================================================
+   335→// BLOCK EDITOR COMPONENT
+   336→// ============================================================
+   337→function BlockEditor({ block, index, total, onChange, onDelete, onMoveUp, onMoveDown }: {
+   338→  block: ContentBlock;
+   339→  index: number;
+   340→  total: number;
+   341→  onChange: (updates: Partial<ContentBlock>) => void;
+   342→  onDelete: () => void;
+   343→  onMoveUp: () => void;
+   344→  onMoveDown: () => void;
+   345→}) {
+   346→  return (
+   347→    <div className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-900 space-y-2">
+   348→      <div className="flex items-center justify-between">
+   349→        <Badge variant="outline" className="gap-1 text-xs">
+   350→          <GripVertical className="h-3 w-3" /> Block {index + 1}: {getBlockLabel(block.type)}
+   351→        </Badge>
+   352→        <div className="flex items-center gap-1">
+   353→          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={index === 0} onClick={onMoveUp}><ChevronUp className="h-3.5 w-3.5" /></Button>
+   354→          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={index === total - 1} onClick={onMoveDown}><ChevronDown className="h-3.5 w-3.5" /></Button>
+   355→          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-600" onClick={onDelete}><Trash2 className="h-3.5 w-3.5" /></Button>
+   356→        </div>
+   357→      </div>
+   358→
+   359→      {/* Block-specific editors */}
+   360→      {(block.type === "paragraph") && (
+   361→        <Textarea value={block.text} onChange={(e) => onChange({ text: e.target.value } as any)} rows={3} placeholder="Enter paragraph text..." />
+   362→      )}
+   363→
+   364→      {(block.type === "heading") && (
+   365→        <div className="flex gap-2">
+   366→          <Select value={String(block.level || 3)} onValueChange={(v) => onChange({ level: Number(v) } as any)}>
+   367→            <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+   368→            <SelectContent><SelectItem value="2">H2</SelectItem><SelectItem value="3">H3</SelectItem><SelectItem value="4">H4</SelectItem></SelectContent>
+   369→          </Select>
+   370→          <Input value={block.text} onChange={(e) => onChange({ text: e.target.value } as any)} placeholder="Heading text..." className="flex-1" />
+   371→        </div>
+   372→      )}
+   373→
+   374→      {(block.type === "callout") && (
+   375→        <div className="space-y-2">
+   376→          <div className="flex gap-2">
+   377→            <Select value={block.variant} onValueChange={(v) => onChange({ variant: v as any } as any)}>
+   378→              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+   379→              <SelectContent>
+   380→                <SelectItem value="info">Info</SelectItem>
+   381→                <SelectItem value="warning">Warning</SelectItem>
+   382→                <SelectItem value="danger">Danger</SelectItem>
+   383→                <SelectItem value="tip">Tip</SelectItem>
+   384→                <SelectItem value="note">Note</SelectItem>
+   385→              </SelectContent>
+   386→            </Select>
+   387→            <Input value={block.title || ""} onChange={(e) => onChange({ title: e.target.value } as any)} placeholder="Title (optional)" className="flex-1" />
+   388→          </div>
+   389→          <Textarea value={block.text} onChange={(e) => onChange({ text: e.target.value } as any)} rows={2} placeholder="Callout content..." />
+   390→        </div>
+   391→      )}
+   392→
+   393→      {(block.type === "list") && (
+   394→        <div className="space-y-2">
+   395→          <Select value={block.ordered ? "ordered" : "unordered"} onValueChange={(v) => onChange({ ordered: v === "ordered" } as any)}>
+   396→            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+   397→            <SelectContent><SelectItem value="unordered">Bullet List</SelectItem><SelectItem value="ordered">Numbered List</SelectItem></SelectContent>
+   398→          </Select>
+   399→          <Textarea value={block.items.join("\n")} onChange={(e) => onChange({ items: e.target.value.split("\n").filter(Boolean) } as any)} rows={4} placeholder="One item per line..." />
+   400→        </div>
+   401→      )}
+   402→
+   403→      {(block.type === "table") && (
+   404→        <div className="space-y-2">
+   405→          <Input value={block.caption || ""} onChange={(e) => onChange({ caption: e.target.value } as any)} placeholder="Table caption (optional)" />
+   406→          <Label className="text-xs">Headers (comma-separated)</Label>
+   407→          <Input value={block.headers.join(", ")} onChange={(e) => onChange({ headers: e.target.value.split(",").map(s => s.trim()) } as any)} />
+   408→          <Label className="text-xs">Rows (pipe-separated columns, one row per line)</Label>
+   409→          <Textarea
+   410→            value={block.rows.map(r => r.join(" | ")).join("\n")}
+   411→            onChange={(e) => onChange({ rows: e.target.value.split("\n").filter(Boolean).map(r => r.split("|").map(s => s.trim())) } as any)}
+   412→            rows={4}
+   413→            placeholder="Cell 1 | Cell 2 | Cell 3"
+   414→          />
+   415→        </div>
+   416→      )}
+   417→
+   418→      {(block.type === "image") && (
+   419→        <div className="space-y-2">
+   420→          <Input value={block.src} onChange={(e) => onChange({ src: e.target.value } as any)} placeholder="Image URL (e.g. /images/first-aid/cpr-training.jpg)" />
+   421→          <Input value={block.caption || ""} onChange={(e) => onChange({ caption: e.target.value } as any)} placeholder="Caption (optional)" />
+   422→          <Input value={block.alt || ""} onChange={(e) => onChange({ alt: e.target.value } as any)} placeholder="Alt text for accessibility" />
+   423→          {block.src && <img src={block.src} alt={block.alt || ""} className="max-h-32 rounded border mt-1" />}
+   424→        </div>
+   425→      )}
+   426→
+   427→      {(block.type === "knowledgeCheck") && (
+   428→        <div className="space-y-2">
+   429→          <Input value={block.question} onChange={(e) => onChange({ question: e.target.value } as any)} placeholder="Question..." />
+   430→          <Label className="text-xs">Options (one per line, mark correct with *)</Label>
+   431→          <Textarea
+   432→            value={block.options.map((o, i) => `${i === block.correctAnswer ? "*" : ""}${o}`).join("\n")}
+   433→            onChange={(e) => {
+   434→              const lines = e.target.value.split("\n").filter(Boolean);
+   435→              const correctIdx = lines.findIndex(l => l.startsWith("*"));
+   436→              const options = lines.map(l => l.replace(/^\*/, ""));
+   437→              onChange({ options, correctAnswer: correctIdx >= 0 ? correctIdx : 0 } as any);
+   438→            }}
+   439→            rows={4}
+   440→            placeholder={"*Correct answer\nWrong answer 1\nWrong answer 2"}
+   441→          />
+   442→          <Textarea value={block.explanation} onChange={(e) => onChange({ explanation: e.target.value } as any)} rows={2} placeholder="Explanation (shown after answering)..." />
+   443→        </div>
+   444→      )}
+   445→
+   446→      {(block.type === "keyTerms") && (
+   447→        <div className="space-y-2">
+   448→          <Label className="text-xs">Terms (format: Term | Definition, one per line)</Label>
+   449→          <Textarea
+   450→            value={block.terms.map(t => `${t.term} | ${t.definition}`).join("\n")}
+   451→            onChange={(e) => {
+   452→              const terms = e.target.value.split("\n").filter(Boolean).map(line => {
+   453→                const [term, ...defParts] = line.split("|");
+   454→                return { term: term.trim(), definition: defParts.join("|").trim() };
+   455→              });
+   456→              onChange({ terms } as any);
+   457→            }}
+   458→            rows={4}
+   459→            placeholder={"UN Number | The four-digit number assigned by UN\nNOTOC | Notification to Commander"}
+   460→          />
+   461→        </div>
+   462→      )}
+   463→
+   464→      {(block.type === "svg") && (
+   465→        <div className="space-y-2">
+   466→          <Input value={block.src} onChange={(e) => onChange({ src: e.target.value } as any)} placeholder="SVG URL (e.g. /images/fa-svg/drabc-flowchart.svg)" />
+   467→          <Input value={block.caption || ""} onChange={(e) => onChange({ caption: e.target.value } as any)} placeholder="Caption (optional)" />
+   468→        </div>
+   469→      )}
+   470→
+   471→      {(block.type === "clickToReveal") && (
+   472→        <div className="space-y-2">
+   473→          <Select value={block.variant || "info"} onValueChange={(v) => onChange({ variant: v as any } as any)}>
+   474→            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+   475→            <SelectContent><SelectItem value="info">Info</SelectItem><SelectItem value="warning">Warning</SelectItem><SelectItem value="danger">Danger</SelectItem><SelectItem value="tip">Tip</SelectItem></SelectContent>
+   476→          </Select>
+   477→          <Input value={block.title} onChange={(e) => onChange({ title: e.target.value } as any)} placeholder="Title..." />
+   478→          <Textarea value={block.content} onChange={(e) => onChange({ content: e.target.value } as any)} rows={2} placeholder="Hidden content..." />
+   479→        </div>
+   480→      )}
+   481→
+   482→      {(block.type === "matching") && (
+   483→        <div className="space-y-2">
+   484→          <Input value={block.title} onChange={(e) => onChange({ title: e.target.value } as any)} placeholder="Matching title..." />
+   485→          <Label className="text-xs">Left items (one per line)</Label>
+   486→          <Textarea value={block.left.join("\n")} onChange={(e) => onChange({ left: e.target.value.split("\n").filter(Boolean) } as any)} rows={3} />
+   487→          <Label className="text-xs">Right items (one per line, matches left order)</Label>
+   488→          <Textarea value={block.right.join("\n")} onChange={(e) => onChange({ right: e.target.value.split("\n").filter(Boolean) } as any)} rows={3} />
+   489→        </div>
+   490→      )}
+   491→
+   492→      {(block.type === "sequence") && (
+   493→        <div className="space-y-2">
+   494→          <Input value={block.title} onChange={(e) => onChange({ title: e.target.value } as any)} placeholder="Sequence title..." />
+   495→          <Label className="text-xs">Steps in correct order (one per line)</Label>
+   496→          <Textarea
+   497→            value={block.steps.join("\n")}
+   498→            onChange={(e) => {
+   499→              const steps = e.target.value.split("\n").filter(Boolean);
+   500→              onChange({ steps, correctOrder: steps.map((_, i) => i) } as any);
+   501→            }}
+   502→            rows={4}
+   503→          />
+   504→        </div>
+   505→      )}
+   506→    </div>
+   507→  );
+   508→}
+   509→
+   510→// ============================================================
+   511→// HELPERS
+   512→// ============================================================
+   513→function createDefaultBlock(type: ContentBlock["type"]): ContentBlock {
+   514→  switch (type) {
+   515→    case "paragraph": return { type: "paragraph", text: "New paragraph. Click to edit." };
+   516→    case "heading": return { type: "heading", text: "New Heading", level: 3 };
+   517→    case "callout": return { type: "callout", variant: "info", title: "Important", text: "Callout content here." };
+   518→    case "list": return { type: "list", items: ["First item", "Second item", "Third item"] };
+   519→    case "table": return { type: "table", headers: ["Column 1", "Column 2"], rows: [["Row 1 Cell 1", "Row 1 Cell 2"]], caption: "" };
+   520→    case "image": return { type: "image", src: "", caption: "", alt: "" };
+   521→    case "knowledgeCheck": return { type: "knowledgeCheck", question: "New question?", options: ["*Correct answer", "Wrong answer 1", "Wrong answer 2"], correctAnswer: 0, explanation: "Explanation here." };
+   522→    case "keyTerms": return { type: "keyTerms", terms: [{ term: "Term", definition: "Definition" }] };
+   523→    case "svg": return { type: "svg", src: "", caption: "" };
+   524→    case "clickToReveal": return { type: "clickToReveal", title: "Click to reveal", content: "Hidden content", variant: "info" };
+   525→    case "matching": return { type: "matching", title: "Match the items", left: ["Item A", "Item B"], right: ["Match 1", "Match 2"] };
+   526→    case "sequence": return { type: "sequence", title: "Order the steps", steps: ["Step 1", "Step 2", "Step 3"], correctOrder: [0, 1, 2] };
+   527→    default: return { type: "paragraph", text: "" };
+   528→  }
+   529→}
+   530→
+   531→function getBlockLabel(type: string): string {
+   532→  const labels: Record<string, string> = {
+   533→    paragraph: "Paragraph", heading: "Heading", callout: "Callout",
+   534→    list: "List", table: "Table", image: "Image",
+   535→    knowledgeCheck: "Knowledge Check", keyTerms: "Key Terms",
+   536→    svg: "SVG Diagram", clickToReveal: "Click to Reveal",
+   537→    matching: "Matching", sequence: "Sequence",
+   538→    definition: "Definition", interactive: "Interactive",
+   539→  };
+   540→  return labels[type] || type;
+   541→}
+   542→

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { useCurrentCourse } from "@/lib/use-course";
 import { t } from "@/lib/i18n";
@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Trophy,
   Printer,
+  Database,
+  Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,26 +29,88 @@ import { cn } from "@/lib/utils";
 
 const EXAM_DURATION = 30 * 60; // 30 minutes in seconds
 
+// Fisher-Yates shuffle
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+interface ShuffledQuestion {
+  id: string;
+  type: "mcq" | "truefalse" | "multiple";
+  question: string;
+  options: { text: string; originalIdx: number }[];
+  correctAnswer: number | number[];
+  explanation: string;
+  difficulty: "easy" | "medium" | "hard";
+  topic: string;
+}
+
 export function ExamView() {
   const { recordExamScore, setView, language, progress } = useAppStore();
   const courseData = useCurrentCourse();
   const lang = language || "en";
+
+  // Pool of all available questions (final exam + module quizzes + lesson quizzes)
+  const questionPool = useMemo(() => {
+    const pool = [...courseData.finalExam];
+    for (const key of Object.keys(courseData.moduleQuizzes)) {
+      pool.push(...courseData.moduleQuizzes[key]);
+    }
+    for (const key of Object.keys(courseData.quizzes)) {
+      pool.push(...courseData.quizzes[key]);
+    }
+    // Deduplicate by id
+    const seen = new Set<string>();
+    return pool.filter((q) => {
+      if (seen.has(q.id)) return false;
+      seen.add(q.id);
+      return true;
+    });
+  }, [courseData]);
+
+  const poolSize = questionPool.length;
+  // Take a randomized subset of up to 30 questions (or pool size if smaller)
+  const examSize = Math.min(30, Math.max(courseData.finalExam.length, 1));
+
+  // Track session — questions asked in this session (avoid repeating across attempts in same session)
+  const sessionAskedRef = useRef<Set<string>>(new Set());
 
   const [examStarted, setExamStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showResults, setShowResults] = useState(false);
   const [timeLeft, setTimeLeft] = useState(EXAM_DURATION);
-  const [shuffledQuestions, setShuffledQuestions] = useState(() =>
-    [...courseData.finalExam].sort(() => Math.random() - 0.5).map((q) => ({
-      ...q,
-      options: [...q.options].sort(() => Math.random() - 0.5).map((opt, i) => {
-        // Need to track which option is correct after shuffle
-        const originalIdx = q.options.indexOf(opt);
-        return { text: opt, originalIdx };
-      }),
-    }))
-  );
+  const [shuffledQuestions, setShuffledQuestions] = useState<ShuffledQuestion[]>([]);
+
+  // Build the next exam attempt's questions
+  const buildExam = () => {
+    const available = questionPool.filter((q) => !sessionAskedRef.current.has(q.id));
+    // If we've used them all, reset the session asked list
+    const source = available.length >= examSize ? available : questionPool;
+    if (available.length < examSize) {
+      sessionAskedRef.current = new Set();
+    }
+    const picked = shuffle(source).slice(0, examSize);
+    // Shuffle answer options within each question
+    const withShuffledOptions: ShuffledQuestion[] = picked.map((q) => {
+      const indexedOptions = q.options.map((text, originalIdx) => ({ text, originalIdx }));
+      return {
+        ...q,
+        options: shuffle(indexedOptions),
+      };
+    });
+    return withShuffledOptions;
+  };
+
+  // Initialize first exam on mount
+  useEffect(() => {
+    setShuffledQuestions(buildExam());
+  }, [courseData]);
 
   // Timer
   useEffect(() => {
@@ -57,7 +121,6 @@ export function ExamView() {
     }
     const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examStarted, showResults, timeLeft]);
 
   const formatTime = (seconds: number) => {
@@ -67,6 +130,9 @@ export function ExamView() {
   };
 
   const handleStart = () => {
+    const fresh = buildExam();
+    fresh.forEach((q) => sessionAskedRef.current.add(q.id));
+    setShuffledQuestions(fresh);
     setExamStarted(true);
     setTimeLeft(EXAM_DURATION);
     setCurrentIdx(0);
@@ -119,10 +185,17 @@ export function ExamView() {
                 </div>
               )}
 
-              <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mb-6">
                 <div className="p-4 rounded-lg bg-card">
-                  <div className="text-2xl font-bold">{courseData.finalExam.length}</div>
+                  <div className="text-2xl font-bold">{examSize}</div>
                   <div className="text-xs text-muted-foreground">{t(lang, "questions")}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-card">
+                  <div className="text-2xl font-bold flex items-center justify-center gap-1.5">
+                    <Database className="h-5 w-5 text-primary" />
+                    {poolSize}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Question Pool</div>
                 </div>
                 <div className="p-4 rounded-lg bg-card">
                   <div className="text-2xl font-bold">30:00</div>
@@ -134,10 +207,17 @@ export function ExamView() {
                 </div>
               </div>
 
-              <Button size="lg" onClick={handleStart} className="gap-2">
-                <GraduationCap className="h-5 w-5" />
-                {t(lang, "startExam")}
-              </Button>
+              <div className="inline-flex items-center gap-2 text-xs text-muted-foreground mb-6 bg-card px-3 py-2 rounded-lg">
+                <Shuffle className="h-3.5 w-3.5 text-primary" />
+                Questions and answer options are randomized on each attempt
+              </div>
+
+              <div>
+                <Button size="lg" onClick={handleStart} className="gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  {t(lang, "startExam")}
+                </Button>
+              </div>
             </div>
           </Card>
         </motion.div>
@@ -182,6 +262,9 @@ export function ExamView() {
               <div className="text-6xl font-bold mb-2">{scorePct}%</div>
               <p className="text-white/90">
                 {correct} out of {shuffledQuestions.length} correct
+              </p>
+              <p className="text-white/70 text-xs mt-1">
+                From a pool of {poolSize} available questions
               </p>
             </div>
 
@@ -274,8 +357,9 @@ export function ExamView() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            {t(lang, "question")} {currentIdx + 1} {t(lang, "of")} {shuffledQuestions.length}
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {t(lang, "question")} {currentIdx + 1} {t(lang, "of")} {shuffledQuestions.length}{" "}
+            <span className="text-xs">(from pool of {poolSize})</span>
           </span>
           <Progress value={progressPct} className="h-2 flex-1" />
         </div>
@@ -294,6 +378,17 @@ export function ExamView() {
               <CardTitle className="text-lg leading-relaxed">
                 {currentQuestion.question}
               </CardTitle>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">{currentQuestion.topic}</Badge>
+                <Badge variant="outline" className={cn(
+                  "text-xs capitalize",
+                  currentQuestion.difficulty === "easy" && "text-green-600",
+                  currentQuestion.difficulty === "medium" && "text-yellow-600",
+                  currentQuestion.difficulty === "hard" && "text-red-600"
+                )}>
+                  {currentQuestion.difficulty}
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent>
               <RadioGroup

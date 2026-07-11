@@ -14,7 +14,11 @@ import { AnalyticsView } from "@/components/elearning/analytics-view";
 import { GlossaryView } from "@/components/elearning/glossary-view";
 import { SettingsView } from "@/components/elearning/settings-view";
 import { AITutorView } from "@/components/elearning/aitutor-view";
+import { LeaderboardView } from "@/components/elearning/leaderboard-view";
+import { ComplianceView } from "@/components/elearning/compliance-view";
 import { AppShell } from "@/components/elearning/app-shell";
+import { GlobalSearch } from "@/components/elearning/global-search";
+import { KeyboardShortcuts } from "@/components/elearning/keyboard-shortcuts";
 
 export default function Home() {
   const currentView = useAppStore((s) => s.currentView);
@@ -95,6 +99,10 @@ export default function Home() {
         return <SettingsView />;
       case "aitutor":
         return <AITutorView />;
+      case "leaderboard":
+        return <LeaderboardView />;
+      case "compliance":
+        return <ComplianceView />;
       default:
         return <LandingView />;
     }
@@ -102,7 +110,11 @@ export default function Home() {
 
   return (
     <AppShell>
-      <div className="min-h-screen flex flex-col">{renderView()}</div>
+      <div className="min-h-screen flex flex-col">
+        {renderView()}
+        <GlobalSearch />
+        <KeyboardShortcuts />
+      </div>
     </AppShell>
   );
 }

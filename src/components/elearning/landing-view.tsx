@@ -3,6 +3,7 @@
 import { useAppStore } from "@/lib/store";
 import { useCurrentCourse, useAllCourses } from "@/lib/use-course";
 import { slugify } from "@/lib/courses-registry";
+import { COURSE_PREREQUISITES } from "@/lib/types";
 import { t } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
@@ -26,6 +27,7 @@ import {
   Bot,
   GraduationCap,
   Library,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -299,6 +301,14 @@ export function LandingView() {
               const courseId = slugify(cd.title);
               const courseProgress = getCourseProgress(cd);
               const isCurrentCourse = cd.title === courseData.title;
+              const prereqs = COURSE_PREREQUISITES[courseId] || [];
+              const completedCourses = progress.completedCourses || [];
+              const missingPrereqs = prereqs.filter((p) => !completedCourses.includes(p));
+              const isLocked = missingPrereqs.length > 0;
+              const prereqTitles = missingPrereqs.map((pid) => {
+                const match = allCourses.find((c) => slugify(c.title) === pid);
+                return match ? match.title : pid;
+              });
               return (
                 <motion.div
                   key={courseId}
@@ -310,17 +320,26 @@ export function LandingView() {
                   <Card
                     className={cn(
                       "card-hover h-full cursor-pointer overflow-hidden flex flex-col",
-                      isCurrentCourse && "ring-2 ring-primary"
+                      isCurrentCourse && "ring-2 ring-primary",
+                      isLocked && "opacity-80"
                     )}
-                    onClick={() => handleSelectCourse(cd)}
+                    onClick={() => !isLocked && handleSelectCourse(cd)}
                   >
-                    <div className="h-2 bg-gradient-to-r from-primary to-chart-4" />
+                    <div className={cn("h-2", isLocked ? "bg-muted" : "bg-gradient-to-r from-primary to-chart-4")} />
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
-                        <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white bg-gradient-to-br from-primary to-chart-4">
-                          <GraduationCap className="h-6 w-6" />
+                        <div className={cn(
+                          "w-12 h-12 rounded-lg flex items-center justify-center text-white",
+                          isLocked ? "bg-muted-foreground/30" : "bg-gradient-to-br from-primary to-chart-4"
+                        )}>
+                          {isLocked ? <Lock className="h-6 w-6" /> : <GraduationCap className="h-6 w-6" />}
                         </div>
-                        {isCurrentCourse ? (
+                        {isLocked ? (
+                          <Badge variant="outline" className="gap-1 text-amber-700 border-amber-400 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300">
+                            <Lock className="h-3 w-3" />
+                            Locked
+                          </Badge>
+                        ) : isCurrentCourse ? (
                           <Badge>Current</Badge>
                         ) : courseProgress.hasStarted ? (
                           <Badge variant="secondary">In Progress</Badge>
@@ -328,13 +347,22 @@ export function LandingView() {
                           <Badge variant="outline">New</Badge>
                         )}
                       </div>
-                      <CardTitle className="mt-3">{cd.title}</CardTitle>
+                      <CardTitle className="mt-3 flex items-center gap-2">
+                        {cd.title}
+                        {isLocked && <Lock className="h-4 w-4 text-amber-500 shrink-0" />}
+                      </CardTitle>
                       <CardDescription>{cd.subtitle}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col">
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                         {cd.description}
                       </p>
+
+                      {isLocked && (
+                        <div className="mb-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-200">
+                          <strong>Prerequisite required:</strong> Complete {prereqTitles.join(", ")} first.
+                        </div>
+                      )}
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-4">
                         <span className="flex items-center gap-1">
@@ -361,13 +389,19 @@ export function LandingView() {
                         <Progress value={courseProgress.pct} className="h-1.5" />
                         <Button
                           className="w-full gap-2 mt-2"
-                          variant={isCurrentCourse ? "outline" : "default"}
+                          variant={isLocked ? "outline" : isCurrentCourse ? "outline" : "default"}
+                          disabled={isLocked}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSelectCourse(cd);
+                            if (!isLocked) handleSelectCourse(cd);
                           }}
                         >
-                          {courseProgress.hasStarted ? (
+                          {isLocked ? (
+                            <>
+                              <Lock className="h-4 w-4" />
+                              Locked
+                            </>
+                          ) : courseProgress.hasStarted ? (
                             <>
                               <Play className="h-4 w-4" />
                               Continue

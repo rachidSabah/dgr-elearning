@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ProgressState, ViewType } from "./types";
+import { COURSE_PREREQUISITES } from "./types";
 
 interface AppState {
   // Navigation
@@ -58,6 +59,11 @@ interface AppState {
   updateVoiceProgress: (lessonId: string, progress: number) => void;
   awardCertificate: (certificateNumber: string) => void;
   resetProgress: () => void;
+
+  // Course prerequisites / completion / daily goals
+  markCourseComplete: (courseId: string) => void;
+  checkPrerequisite: (courseId: string) => boolean;
+  setDailyGoal: (goal: number) => void;
 }
 
 const initialProgress: ProgressState = {
@@ -73,6 +79,8 @@ const initialProgress: ProgressState = {
   timeSpent: 0,
   voiceProgress: {},
   certificateEarned: false,
+  completedCourses: [],
+  activityDays: [],
 };
 
 export const useAppStore = create<AppState>()(
@@ -125,6 +133,10 @@ export const useAppStore = create<AppState>()(
             newAchievements.push("ten-lessons");
           if (completed.length >= 20 && !newAchievements.includes("scholar"))
             newAchievements.push("scholar");
+          const todayISO = new Date().toISOString().slice(0, 10);
+          const activityDays = state.progress.activityDays?.includes(todayISO)
+            ? state.progress.activityDays
+            : [...(state.progress.activityDays || []), todayISO];
           return {
             progress: {
               ...state.progress,
@@ -134,6 +146,7 @@ export const useAppStore = create<AppState>()(
               achievements: newAchievements,
               timeSpent: state.progress.timeSpent + duration,
               lastActivity: new Date().toDateString(),
+              activityDays,
             },
           };
         }),
@@ -175,6 +188,11 @@ export const useAppStore = create<AppState>()(
           const certNumber = passed
             ? `DGR-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
             : undefined;
+          // Auto-mark the current course as completed when the exam is passed
+          const completedCourses = [...(state.progress.completedCourses || [])];
+          if (passed && !completedCourses.includes(state.selectedCourseId)) {
+            completedCourses.push(state.selectedCourseId);
+          }
           return {
             progress: {
               ...state.progress,
@@ -184,6 +202,7 @@ export const useAppStore = create<AppState>()(
               certificateEarned: passed,
               certificateNumber: passed ? certNumber : state.progress.certificateNumber,
               lastActivity: new Date().toDateString(),
+              completedCourses,
             },
           };
         }),
@@ -277,6 +296,28 @@ export const useAppStore = create<AppState>()(
               : [...state.progress.achievements, "certified"],
           },
         })),
+
+      markCourseComplete: (courseId) =>
+        set((state) => {
+          if (state.progress.completedCourses?.includes(courseId)) return state;
+          return {
+            progress: {
+              ...state.progress,
+              completedCourses: [...(state.progress.completedCourses || []), courseId],
+              xp: state.progress.xp + 1000,
+            },
+          };
+        }),
+
+      checkPrerequisite: (courseId) => {
+        const prereqs = COURSE_PREREQUISITES[courseId] || [];
+        if (prereqs.length === 0) return true;
+        const completed = useAppStore.getState().progress.completedCourses || [];
+        return prereqs.every((p) => completed.includes(p));
+      },
+
+      setDailyGoal: (goal) =>
+        set((state) => ({ progress: { ...state.progress, dailyGoal: goal } })),
 
       resetProgress: () => set({ progress: initialProgress }),
     }),

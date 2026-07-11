@@ -1,0 +1,988 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useRef, useMemo } from "react";
+     4→import { useAppStore } from "@/lib/store";
+     5→import { useCurrentCourse } from "@/lib/use-course";
+     6→import { getEnhancedContent } from "@/lib/lesson-enhancements";
+     7→import { getFirstAidEnhancedContent } from "@/lib/first-aid-enhancements";
+     8→import { t } from "@/lib/i18n";
+     9→import { motion, AnimatePresence } from "framer-motion";
+    10→import {
+    11→  ChevronLeft,
+    12→  ChevronRight,
+    13→  Clock,
+    14→  CheckCircle2,
+    15→  Bookmark,
+    16→  BookmarkCheck,
+    17→  Play,
+    18→  Pause,
+    19→  Volume2,
+    20→  VolumeX,
+    21→  RotateCcw,
+    22→  FastForward,
+    23→  Rewind,
+    24→  BookOpen,
+    25→  Target,
+    26→  ListChecks,
+    27→  StickyNote,
+    28→  Search,
+    29→  X,
+    30→  Info,
+    31→  AlertTriangle,
+    32→  AlertCircle,
+    33→  Lightbulb,
+    34→  NotebookPen,
+    35→  ZoomIn,
+    36→  Plane,
+    37→  GraduationCap,
+    38→  ClipboardList,
+    39→  CheckCheck,
+    40→} from "lucide-react";
+    41→import { Button } from "@/components/ui/button";
+    42→import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+    43→import { Badge } from "@/components/ui/badge";
+    44→import { Progress } from "@/components/ui/progress";
+    45→import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+    46→import { Input } from "@/components/ui/input";
+    47→import { ScrollArea } from "@/components/ui/scroll-area";
+    48→import {
+    49→  Dialog,
+    50→  DialogContent,
+    51→  DialogHeader,
+    52→  DialogTitle,
+    53→  DialogTrigger,
+    54→} from "@/components/ui/dialog";
+    55→import { Textarea } from "@/components/ui/textarea";
+    56→import { cn } from "@/lib/utils";
+    57→import type { ContentBlock, CourseData, Lesson } from "@/lib/types";
+    58→import { ProfessionalNarrator } from "./professional-narrator";
+    59→import {
+    60→  ClickToReveal,
+    61→  KnowledgeCheck,
+    62→  DragDropMatching,
+    63→  SequenceOrdering,
+    64→  InlineFlashcard,
+    65→  InteractiveTimeline,
+    66→} from "./interactive-components";
+    67→import { HazardClassExplorer } from "./hazard-class-explorer";
+    68→import { CabinLayoutExplorer } from "./cabin-layout-explorer";
+    69→import {
+    70→  AnimatedDoorArming,
+    71→  AnimatedEvacuationFlow,
+    72→  AnimatedFireFighting,
+    73→} from "./animated-procedures";
+    74→
+    75→const calloutStyles = {
+    76→  info: { icon: Info, className: "border-blue-500/30 bg-blue-500/5 text-blue-900 dark:text-blue-100", iconClass: "text-blue-500" },
+    77→  warning: { icon: AlertTriangle, className: "border-yellow-500/30 bg-yellow-500/5 text-yellow-900 dark:text-yellow-100", iconClass: "text-yellow-500" },
+    78→  danger: { icon: AlertCircle, className: "border-red-500/30 bg-red-500/5 text-red-900 dark:text-red-100", iconClass: "text-red-500" },
+    79→  tip: { icon: Lightbulb, className: "border-green-500/30 bg-green-500/5 text-green-900 dark:text-green-100", iconClass: "text-green-500" },
+    80→  note: { icon: NotebookPen, className: "border-purple-500/30 bg-purple-500/5 text-purple-900 dark:text-purple-100", iconClass: "text-purple-500" },
+    81→};
+    82→
+    83→function findLesson(
+    84→  courseData: CourseData,
+    85→  lessonId: string | null
+    86→): { lesson: Lesson | null; moduleIndex: number; lessonIndex: number } {
+    87→  if (!lessonId) return { lesson: null, moduleIndex: 0, lessonIndex: 0 };
+    88→  for (let mi = 0; mi < courseData.modules.length; mi++) {
+    89→    for (let li = 0; li < courseData.modules[mi].lessons.length; li++) {
+    90→      if (courseData.modules[mi].lessons[li].id === lessonId) {
+    91→        return { lesson: courseData.modules[mi].lessons[li], moduleIndex: mi, lessonIndex: li };
+    92→      }
+    93→    }
+    94→  }
+    95→  return { lesson: null, moduleIndex: 0, lessonIndex: 0 };
+    96→}
+    97→
+    98→function getAllLessons(courseData: CourseData) {
+    99→  const all: { lesson: Lesson; moduleIndex: number; lessonIndex: number }[] = [];
+   100→  courseData.modules.forEach((m, mi) => {
+   101→    m.lessons.forEach((l, li) => {
+   102→      all.push({ lesson: l, moduleIndex: mi, lessonIndex: li });
+   103→    });
+   104→  });
+   105→  return all;
+   106→}
+   107→
+   108→export function LessonView() {
+   109→  const {
+   110→    selectedLessonId,
+   111→    setSelectedLesson,
+   112→    completeLesson,
+   113→    progress,
+   114→    addBookmark,
+   115→    removeBookmark,
+   116→    addNote,
+   117→    updateLessonProgress,
+   118→    updateVoiceProgress,
+   119→    startQuiz,
+   120→    language,
+   121→    updateStreak,
+   122→    addTimeSpent,
+   123→  } = useAppStore();
+   124→
+   125→  const courseData = useCurrentCourse();
+   126→
+   127→  const lang = language || "en";
+   128→  const { lesson, moduleIndex, lessonIndex } = findLesson(courseData, selectedLessonId);
+   129→  const allLessons = useMemo(() => getAllLessons(courseData), [courseData]);
+   130→  const currentGlobalIndex = allLessons.findIndex((l) => l.lesson.id === selectedLessonId);
+   131→
+   132→  const [readingProgress, setReadingProgress] = useState(0);
+   133→  const [showNotes, setShowNotes] = useState(false);
+   134→  const [noteText, setNoteText] = useState("");
+   135→  const [highlightText, setHighlightText] = useState("");
+   136→  const [showSearch, setShowSearch] = useState(false);
+   137→  const [searchQuery, setSearchQuery] = useState("");
+   138→  const [imageZoom, setImageZoom] = useState<string | null>(null);
+   139→
+   140→  // Voice narration state
+   141→  const [isNarrating, setIsNarrating] = useState(false);
+   142→  const [isPaused, setIsPaused] = useState(false);
+   143→  const [narrationRate, setNarrationRate] = useState(1);
+   144→  const [currentParagraphIdx, setCurrentParagraphIdx] = useState(-1);
+   145→  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+   146→
+   147→  // Auto-select first lesson if none selected (prevents crash on "Lessons" tab click)
+   148→  useEffect(() => {
+   149→    if (!selectedLessonId && courseData.modules.length > 0 && courseData.modules[0].lessons.length > 0) {
+   150→      setSelectedLesson(courseData.modules[0].lessons[0].id);
+   151→    }
+   152→  }, [selectedLessonId, setSelectedLesson]);
+   153→
+   154→  // Update streak on lesson view
+   155→  useEffect(() => {
+   156→    updateStreak();
+   157→  }, [updateStreak]);
+   158→
+   159→  // Track scroll progress
+   160→  useEffect(() => {
+   161→    const handleScroll = () => {
+   162→      const scrollTop = window.scrollY;
+   163→      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+   164→      if (docHeight > 0) {
+   165→        const pct = Math.min(100, Math.round((scrollTop / docHeight) * 100));
+   166→        setReadingProgress(pct);
+   167→        if (lesson) {
+   168→          updateLessonProgress(lesson.id, pct);
+   169→          addTimeSpent(1);
+   170→        }
+   171→      }
+   172→    };
+   173→    window.addEventListener("scroll", handleScroll);
+   174→    return () => window.removeEventListener("scroll", handleScroll);
+   175→  }, [lesson, updateLessonProgress, addTimeSpent]);
+   176→
+   177→  // Cleanup narration on lesson change
+   178→  useEffect(() => {
+   179→    // Inline cleanup to avoid referencing stopNarration before it's defined
+   180→    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   181→      window.speechSynthesis.cancel();
+   182→    }
+   183→    setIsNarrating(false);
+   184→    setIsPaused(false);
+   185→    setCurrentParagraphIdx(-1);
+   186→    // eslint-disable-next-line react-hooks/exhaustive-deps
+   187→  }, [selectedLessonId]);
+   188→
+   189→  // Cleanup on unmount
+   190→  useEffect(() => {
+   191→    return () => {
+   192→      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   193→        window.speechSynthesis.cancel();
+   194→      }
+   195→    };
+   196→  }, []);
+   197→
+   198→  if (!lesson) {
+   199→    return (
+   200→      <div className="container mx-auto px-4 py-16 text-center">
+   201→        <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+   202→        <h2 className="text-2xl font-bold mb-2">No lesson selected</h2>
+   203→        <p className="text-muted-foreground mb-6">Choose a lesson from the course modules to start learning</p>
+   204→        <Button onClick={() => setSelectedLesson(courseData.modules[0].lessons[0].id)}>
+   205→          Start First Lesson
+   206→        </Button>
+   207→      </div>
+   208→    );
+   209→  }
+   210→
+   211→  const isCompleted = progress.completedLessons.includes(lesson.id);
+   212→  const isBookmarked = progress.bookmarks.includes(lesson.id);
+   213→  const courseModule = courseData.modules[moduleIndex];
+   214→
+   215→  // Get all text blocks for narration
+   216→  const textBlocks = lesson.content.filter(
+   217→    (b): b is Extract<ContentBlock, { type: "paragraph" }> => b.type === "paragraph"
+   218→  );
+   219→
+   220→  const startNarration = () => {
+   221→    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+   222→      alert("Voice narration is not supported in your browser");
+   223→      return;
+   224→    }
+   225→    window.speechSynthesis.cancel();
+   226→
+   227→    let startIdx = 0;
+   228→    if (isPaused && currentParagraphIdx >= 0) {
+   229→      startIdx = currentParagraphIdx;
+   230→      setIsPaused(false);
+   231→    } else {
+   232→      setCurrentParagraphIdx(0);
+   233→    }
+   234→
+   235→    const speakNext = (idx: number) => {
+   236→      if (idx >= textBlocks.length) {
+   237→        setIsNarrating(false);
+   238→        setCurrentParagraphIdx(-1);
+   239→        if (lesson) updateVoiceProgress(lesson.id, 100);
+   240→        return;
+   241→      }
+   242→      setCurrentParagraphIdx(idx);
+   243→      const utterance = new SpeechSynthesisUtterance(textBlocks[idx].text);
+   244→      utterance.rate = narrationRate;
+   245→      utterance.lang = lang === "fr" ? "fr-FR" : lang === "ar" ? "ar-SA" : "en-US";
+   246→
+   247→      // Try to find a matching voice
+   248→      const voices = window.speechSynthesis.getVoices();
+   249→      const matchingVoice = voices.find((v) => v.lang.startsWith(lang === "fr" ? "fr" : lang === "ar" ? "ar" : "en"));
+   250→      if (matchingVoice) utterance.voice = matchingVoice;
+   251→
+   252→      utterance.onend = () => speakNext(idx + 1);
+   253→      utterance.onerror = () => {
+   254→        setIsNarrating(false);
+   255→        setCurrentParagraphIdx(-1);
+   256→      };
+   257→      utteranceRef.current = utterance;
+   258→      window.speechSynthesis.speak(utterance);
+   259→
+   260→      if (lesson) {
+   261→        updateVoiceProgress(lesson.id, Math.round(((idx + 1) / textBlocks.length) * 100));
+   262→      }
+   263→    };
+   264→
+   265→    setIsNarrating(true);
+   266→    speakNext(startIdx);
+   267→  };
+   268→
+   269→  const pauseNarration = () => {
+   270→    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   271→      window.speechSynthesis.cancel();
+   272→    }
+   273→    setIsPaused(true);
+   274→    setIsNarrating(false);
+   275→  };
+   276→
+   277→  const stopNarration = () => {
+   278→    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+   279→      window.speechSynthesis.cancel();
+   280→    }
+   281→    setIsNarrating(false);
+   282→    setIsPaused(false);
+   283→    setCurrentParagraphIdx(-1);
+   284→  };
+   285→
+   286→  const handleComplete = () => {
+   287→    completeLesson(lesson.id, lesson.duration * 60);
+   288→  };
+   289→
+   290→  const handleBookmark = () => {
+   291→    if (isBookmarked) {
+   292→      removeBookmark(lesson.id);
+   293→    } else {
+   294→      addBookmark(lesson.id);
+   295→    }
+   296→  };
+   297→
+   298→  const handleSaveNote = () => {
+   299→    if (noteText.trim()) {
+   300→      addNote(lesson.id, highlightText || "Manual note", noteText);
+   301→      setNoteText("");
+   302→      setHighlightText("");
+   303→      setShowNotes(false);
+   304→    }
+   305→  };
+   306→
+   307→  // Navigation
+   308→  const prevLesson = currentGlobalIndex > 0 ? allLessons[currentGlobalIndex - 1] : null;
+   309→  const nextLesson = currentGlobalIndex < allLessons.length - 1 ? allLessons[currentGlobalIndex + 1] : null;
+   310→
+   311→  const lessonNotes = progress.notes[lesson.id] || [];
+   312→
+   313→  // Merge enhanced interactive content with base lesson content
+   314→  // Check both DGR and First Aid enhancements based on lesson ID prefix
+   315→  const enhancements = lesson.id.startsWith("fa-")
+   316→    ? getFirstAidEnhancedContent(lesson.id)
+   317→    : getEnhancedContent(lesson.id);
+   318→  const enhancedContent = [...lesson.content, ...enhancements];
+   319→
+   320→  // Filter content for search
+   321→  const filteredContent = searchQuery
+   322→    ? enhancedContent.filter((block) => {
+   323→        if ("text" in block) return block.text.toLowerCase().includes(searchQuery.toLowerCase());
+   324→        return false;
+   325→      })
+   326→    : enhancedContent;
+   327→
+   328→  return (
+   329→    <div className="container mx-auto px-4 py-6 max-w-5xl">
+   330→      {/* Lesson header */}
+   331→      <motion.div
+   332→        initial={{ opacity: 0, y: -10 }}
+   333→        animate={{ opacity: 1, y: 0 }}
+   334→        className="mb-6"
+   335→      >
+   336→        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+   337→          <span className="font-medium" style={{ color: courseModule.color }}>
+   338→            {courseModule.code} {courseModule.title}
+   339→          </span>
+   340→          <ChevronRight className="h-3 w-3" />
+   341→          <span>{lesson.code}</span>
+   342→        </div>
+   343→        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+   344→          <div className="flex-1">
+   345→            <h1 className="text-2xl md:text-3xl font-bold mb-2">{lesson.title}</h1>
+   346→            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+   347→              <span className="flex items-center gap-1">
+   348→                <Clock className="h-4 w-4" />
+   349→                {lesson.duration} {t(lang, "minutes")}
+   350→              </span>
+   351→              {isCompleted && (
+   352→                <Badge variant="default" className="gap-1">
+   353→                  <CheckCircle2 className="h-3 w-3" />
+   354→                  {t(lang, "completed")}
+   355→                </Badge>
+   356→              )}
+   357→              {progress.voiceProgress[lesson.id] > 0 && (
+   358→                <Badge variant="secondary" className="gap-1">
+   359→                  <Volume2 className="h-3 w-3" />
+   360→                  {progress.voiceProgress[lesson.id]}% listened
+   361→                </Badge>
+   362→              )}
+   363→            </div>
+   364→          </div>
+   365→          <div className="flex items-center gap-2">
+   366→            <Button variant="ghost" size="icon" onClick={() => setShowSearch(!showSearch)}>
+   367→              <Search className="h-5 w-5" />
+   368→            </Button>
+   369→            <Button variant="ghost" size="icon" onClick={handleBookmark}>
+   370→              {isBookmarked ? (
+   371→                <BookmarkCheck className="h-5 w-5 text-primary" />
+   372→              ) : (
+   373→                <Bookmark className="h-5 w-5" />
+   374→              )}
+   375→            </Button>
+   376→            <Button variant="ghost" size="icon" onClick={() => setShowNotes(!showNotes)}>
+   377→              <StickyNote className="h-5 w-5" />
+   378→            </Button>
+   379→          </div>
+   380→        </div>
+   381→      </motion.div>
+   382→
+   383→      {/* Professional Voice Narration */}
+   384→      <div className="mb-6">
+   385→        <ProfessionalNarrator
+   386→          text={textBlocks.map((b) => b.text).join(" ")}
+   387→          lessonId={lesson.id}
+   388→          lang={lang}
+   389→          onProgress={(p) => updateVoiceProgress(lesson.id, p)}
+   390→          className="shadow-sm"
+   391→        />
+   392→      </div>
+   393→
+   394→      {/* Search bar */}
+   395→      <AnimatePresence>
+   396→        {showSearch && (
+   397→          <motion.div
+   398→            initial={{ opacity: 0, height: 0 }}
+   399→            animate={{ opacity: 1, height: "auto" }}
+   400→            exit={{ opacity: 0, height: 0 }}
+   401→            className="mb-4"
+   402→          >
+   403→            <div className="relative">
+   404→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   405→              <Input
+   406→                placeholder={t(lang, "search")}
+   407→                value={searchQuery}
+   408→                onChange={(e) => setSearchQuery(e.target.value)}
+   409→                className="pl-9 pr-9"
+   410→              />
+   411→              <Button
+   412→                size="sm"
+   413→                variant="ghost"
+   414→                className="absolute right-1 top-1/2 -translate-y-1/2 h-7"
+   415→                onClick={() => {
+   416→                  setShowSearch(false);
+   417→                  setSearchQuery("");
+   418→                }}
+   419→              >
+   420→                <X className="h-4 w-4" />
+   421→              </Button>
+   422→            </div>
+   423→          </motion.div>
+   424→        )}
+   425→      </AnimatePresence>
+   426→
+   427→      {/* Reading progress bar */}
+   428→      <div className="sticky top-16 z-30 -mx-4 px-4 py-2 glass mb-6">
+   429→        <div className="flex items-center gap-3">
+   430→          <span className="text-xs text-muted-foreground shrink-0">{t(lang, "lessonProgress")}</span>
+   431→          <Progress value={readingProgress} className="h-1.5 flex-1" />
+   432→          <span className="text-xs font-medium shrink-0">{readingProgress}%</span>
+   433→        </div>
+   434→      </div>
+   435→
+   436→      {/* Lesson content */}
+   437→      <div className="grid lg:grid-cols-[1fr_300px] gap-6">
+   438→        <div className="min-w-0">
+   439→          <Tabs defaultValue="content">
+   440→            <TabsList className="grid w-full grid-cols-3 mb-4">
+   441→              <TabsTrigger value="content">Content</TabsTrigger>
+   442→              <TabsTrigger value="summary">{t(lang, "summary")}</TabsTrigger>
+   443→              <TabsTrigger value="review">{t(lang, "reviewQuestions")}</TabsTrigger>
+   444→            </TabsList>
+   445→
+   446→            <TabsContent value="content" className="space-y-4">
+   447→              {/* Pre-Briefing Section */}
+   448→              <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+   449→                <CardContent className="pt-6">
+   450→                  <div className="flex items-center gap-2 mb-3">
+   451→                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+   452→                      <GraduationCap className="h-4 w-4 text-amber-600" />
+   453→                    </div>
+   454→                    <div>
+   455→                      <h3 className="font-semibold text-amber-700 dark:text-amber-400">Pre-Briefing</h3>
+   456→                      <p className="text-xs text-muted-foreground">Instructor introduction & lesson overview</p>
+   457→                    </div>
+   458→                  </div>
+   459→                  <div className="text-sm space-y-2">
+   460→                    <p className="font-medium">Welcome to {lesson.title}</p>
+   461→                    <p className="text-muted-foreground">
+   462→                      This lesson covers section <strong>{lesson.code}</strong> of the Dangerous Goods Regulations.
+   463→                      Duration: approximately {lesson.duration} minutes.
+   464→                    </p>
+   465→                    <div className="flex flex-wrap gap-2 mt-2">
+   466→                      <Badge variant="outline" className="text-xs gap-1">
+   467→                        <Clock className="h-3 w-3" />{lesson.duration} min
+   468→                      </Badge>
+   469→                      <Badge variant="outline" className="text-xs gap-1">
+   470→                        <Target className="h-3 w-3" />{lesson.objectives.length} objectives
+   471→                      </Badge>
+   472→                      <Badge variant="outline" className="text-xs gap-1">
+   473→                        <ClipboardList className="h-3 w-3" />{lesson.reviewQuestions.length} review questions
+   474→                      </Badge>
+   475→                    </div>
+   476→                  </div>
+   477→                </CardContent>
+   478→              </Card>
+   479→
+   480→              {/* Objectives */}
+   481→              <Card className="border-primary/20 bg-primary/5">
+   482→                <CardContent className="pt-6">
+   483→                  <div className="flex items-center gap-2 mb-3">
+   484→                    <Target className="h-5 w-5 text-primary" />
+   485→                    <h3 className="font-semibold">Learning Objectives</h3>
+   486→                  </div>
+   487→                  <ul className="space-y-2">
+   488→                    {lesson.objectives.map((obj, i) => (
+   489→                      <li key={i} className="flex items-start gap-2 text-sm">
+   490→                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+   491→                        <span>{obj}</span>
+   492→                      </li>
+   493→                    ))}
+   494→                  </ul>
+   495→                </CardContent>
+   496→              </Card>
+   497→
+   498→              {/* Content blocks */}
+   499→              {filteredContent.map((block, idx) => (
+   500→                <ContentBlockRenderer
+   501→                  key={idx}
+   502→                  block={block}
+   503→                  isSpeaking={block.type === "paragraph" && textBlocks.indexOf(block as any) === currentParagraphIdx}
+   504→                  onImageClick={(src) => setImageZoom(src)}
+   505→                />
+   506→              ))}
+   507→
+   508→              {/* Key terms */}
+   509→              {lesson.keyTerms && lesson.keyTerms.length > 0 && (
+   510→                <Card>
+   511→                  <CardHeader>
+   512→                    <CardTitle className="flex items-center gap-2 text-lg">
+   513→                      <BookOpen className="h-5 w-5 text-primary" />
+   514→                      {t(lang, "keyTerms")}
+   515→                    </CardTitle>
+   516→                  </CardHeader>
+   517→                  <CardContent className="space-y-3">
+   518→                    {lesson.keyTerms.map((kt, i) => (
+   519→                      <div key={i} className="border-l-2 border-primary pl-3">
+   520→                        <div className="font-semibold text-sm">{kt.term}</div>
+   521→                        <div className="text-sm text-muted-foreground">{kt.definition}</div>
+   522→                      </div>
+   523→                    ))}
+   524→                  </CardContent>
+   525→                </Card>
+   526→              )}
+   527→
+   528→              {/* Debriefing Section */}
+   529→              <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+   530→                <CardContent className="pt-6">
+   531→                  <div className="flex items-center gap-2 mb-3">
+   532→                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+   533→                      <CheckCheck className="h-4 w-4 text-green-600" />
+   534→                    </div>
+   535→                    <div>
+   536→                      <h3 className="font-semibold text-green-700 dark:text-green-400">Debriefing</h3>
+   537→                      <p className="text-xs text-muted-foreground">Key takeaways & competency check</p>
+   538→                    </div>
+   539→                  </div>
+   540→                  <div className="text-sm space-y-2">
+   541→                    <p className="font-medium">Lesson Complete - Key Takeaways:</p>
+   542→                    <ul className="space-y-1">
+   543→                      {lesson.summary.slice(0, 3).map((point, i) => (
+   544→                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+   545→                          <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+   546→                          <span>{point}</span>
+   547→                        </li>
+   548→                      ))}
+   549→                    </ul>
+   550→                    <div className="mt-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+   551→                      <p className="text-xs">
+   552→                        <strong>Competency Validation:</strong> Complete the quiz to verify your understanding of this lesson.
+   553→                        Score 70% or higher to demonstrate competency.
+   554→                      </p>
+   555→                    </div>
+   556→                  </div>
+   557→                </CardContent>
+   558→              </Card>
+   559→            </TabsContent>
+   560→
+   561→            <TabsContent value="summary" className="space-y-4">
+   562→              <Card>
+   563→                <CardHeader>
+   564→                  <CardTitle className="flex items-center gap-2">
+   565→                    <ListChecks className="h-5 w-5 text-primary" />
+   566→                    {t(lang, "summary")}
+   567→                  </CardTitle>
+   568→                </CardHeader>
+   569→                <CardContent>
+   570→                  <ul className="space-y-2">
+   571→                    {lesson.summary.map((point, i) => (
+   572→                      <li key={i} className="flex items-start gap-2 text-sm">
+   573→                        <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center shrink-0 mt-0.5">
+   574→                          {i + 1}
+   575→                        </span>
+   576→                        <span>{point}</span>
+   577→                      </li>
+   578→                    ))}
+   579→                  </ul>
+   580→                </CardContent>
+   581→              </Card>
+   582→            </TabsContent>
+   583→
+   584→            <TabsContent value="review" className="space-y-4">
+   585→              <Card>
+   586→                <CardHeader>
+   587→                  <CardTitle className="flex items-center gap-2">
+   588→                    <Target className="h-5 w-5 text-primary" />
+   589→                    {t(lang, "reviewQuestions")}
+   590→                  </CardTitle>
+   591→                </CardHeader>
+   592→                <CardContent className="space-y-3">
+   593→                  {lesson.reviewQuestions.map((q, i) => (
+   594→                    <div key={i} className="p-3 rounded-lg bg-accent/30">
+   595→                      <div className="flex items-start gap-2">
+   596→                        <span className="text-primary font-bold">{i + 1}.</span>
+   597→                        <span className="text-sm">{q}</span>
+   598→                      </div>
+   599→                    </div>
+   600→                  ))}
+   601→                </CardContent>
+   602→              </Card>
+   603→            </TabsContent>
+   604→          </Tabs>
+   605→
+   606→          {/* Action buttons */}
+   607→          <div className="flex flex-wrap items-center justify-between gap-3 mt-6 pt-6 border-t">
+   608→            <Button
+   609→              variant={isCompleted ? "outline" : "default"}
+   610→              onClick={handleComplete}
+   611→              className="gap-2"
+   612→            >
+   613→              <CheckCircle2 className="h-5 w-5" />
+   614→              {isCompleted ? t(lang, "completed") : t(lang, "markComplete")}
+   615→            </Button>
+   616→            {courseData.quizzes[lesson.id] && (
+   617→              <Button
+   618→                variant="secondary"
+   619→                onClick={() => startQuiz("lesson", lesson.id)}
+   620→                className="gap-2"
+   621→              >
+   622→                <Target className="h-5 w-5" />
+   623→                {t(lang, "takeQuiz")}
+   624→              </Button>
+   625→            )}
+   626→          </div>
+   627→
+   628→          {/* Navigation */}
+   629→          <div className="flex items-center justify-between mt-6 gap-3">
+   630→            <Button
+   631→              variant="ghost"
+   632→              disabled={!prevLesson}
+   633→              onClick={() => prevLesson && setSelectedLesson(prevLesson.lesson.id)}
+   634→              className="gap-1"
+   635→            >
+   636→              <ChevronLeft className="h-4 w-4" />
+   637→              {t(lang, "previousLesson")}
+   638→            </Button>
+   639→            <Button
+   640→              variant="ghost"
+   641→              disabled={!nextLesson}
+   642→              onClick={() => nextLesson && setSelectedLesson(nextLesson.lesson.id)}
+   643→              className="gap-1"
+   644→            >
+   645→              {t(lang, "nextLesson")}
+   646→              <ChevronRight className="h-4 w-4" />
+   647→            </Button>
+   648→          </div>
+   649→        </div>
+   650→
+   651→        {/* Sidebar */}
+   652→        <div className="hidden lg:block">
+   653→          <Card className="sticky top-32">
+   654→            <CardHeader>
+   655→              <CardTitle className="text-sm">Lesson Navigation</CardTitle>
+   656→            </CardHeader>
+   657→            <CardContent>
+   658→              <ScrollArea className="h-[400px] pr-3">
+   659→                <div className="space-y-1">
+   660→                  {allLessons.map((l, i) => (
+   661→                    <button
+   662→                      key={l.lesson.id}
+   663→                      onClick={() => setSelectedLesson(l.lesson.id)}
+   664→                      className={cn(
+   665→                        "w-full text-left p-2 rounded-lg text-xs transition-colors",
+   666→                        l.lesson.id === lesson.id
+   667→                          ? "bg-primary/10 text-primary font-medium"
+   668→                          : "hover:bg-accent"
+   669→                      )}
+   670→                    >
+   671→                      <div className="flex items-center gap-2">
+   672→                        {progress.completedLessons.includes(l.lesson.id) ? (
+   673→                          <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+   674→                        ) : (
+   675→                          <span className="w-3 h-3 rounded-full border border-muted-foreground/30 shrink-0" />
+   676→                        )}
+   677→                        <span className="truncate">
+   678→                          <span className="text-muted-foreground">{l.lesson.code}</span>
+   679→                          {" - "}
+   680→                          {l.lesson.title}
+   681→                        </span>
+   682→                      </div>
+   683→                    </button>
+   684→                  ))}
+   685→                </div>
+   686→              </ScrollArea>
+   687→            </CardContent>
+   688→          </Card>
+   689→        </div>
+   690→      </div>
+   691→
+   692→      {/* Notes dialog */}
+   693→      <Dialog open={showNotes} onOpenChange={setShowNotes}>
+   694→        <DialogContent>
+   695→          <DialogHeader>
+   696→            <DialogTitle>Lesson Notes</DialogTitle>
+   697→          </DialogHeader>
+   698→          <div className="space-y-4">
+   699→            <div>
+   700→              <label className="text-sm font-medium mb-1 block">Add a new note</label>
+   701→              <Textarea
+   702→                placeholder="Write your note here..."
+   703→                value={noteText}
+   704→                onChange={(e) => setNoteText(e.target.value)}
+   705→                rows={3}
+   706→              />
+   707→              <Button size="sm" className="mt-2" onClick={handleSaveNote}>
+   708→                Save Note
+   709→              </Button>
+   710→            </div>
+   711→            <div className="border-t pt-4">
+   712→              <h4 className="text-sm font-medium mb-2">Your notes for this lesson</h4>
+   713→              {lessonNotes.length === 0 ? (
+   714→                <p className="text-sm text-muted-foreground">No notes yet. Start taking notes to track your learning.</p>
+   715→              ) : (
+   716→                <div className="space-y-2 max-h-60 overflow-y-auto">
+   717→                  {lessonNotes.map((note, i) => (
+   718→                    <div key={i} className="p-2 rounded bg-accent/30 text-sm">
+   719→                      <div className="text-xs text-muted-foreground mb-1">
+   720→                        {new Date(note.date).toLocaleDateString()}
+   721→                      </div>
+   722→                      <div>{note.note}</div>
+   723→                    </div>
+   724→                  ))}
+   725→                </div>
+   726→              )}
+   727→            </div>
+   728→          </div>
+   729→        </DialogContent>
+   730→      </Dialog>
+   731→
+   732→      {/* Image zoom dialog */}
+   733→      <Dialog open={!!imageZoom} onOpenChange={() => setImageZoom(null)}>
+   734→        <DialogContent className="max-w-3xl">
+   735→          <DialogHeader>
+   736→            <DialogTitle>Image View</DialogTitle>
+   737→          </DialogHeader>
+   738→          {imageZoom && (
+   739→            <div className="space-y-3">
+   740→              {/* eslint-disable-next-line @next/next/no-img-element */}
+   741→              <img
+   742→                src={imageZoom}
+   743→                alt="Zoomed view"
+   744→                className="w-full h-auto rounded-lg"
+   745→              />
+   746→              <div className="flex gap-2 justify-end">
+   747→                <a href={imageZoom} download className="inline-flex">
+   748→                  <Button variant="outline" size="sm">Download</Button>
+   749→                </a>
+   750→              </div>
+   751→            </div>
+   752→          )}
+   753→        </DialogContent>
+   754→      </Dialog>
+   755→    </div>
+   756→  );
+   757→}
+   758→
+   759→function ContentBlockRenderer({
+   760→  block,
+   761→  isSpeaking,
+   762→  onImageClick,
+   763→}: {
+   764→  block: ContentBlock;
+   765→  isSpeaking?: boolean;
+   766→  onImageClick?: (src: string) => void;
+   767→}) {
+   768→  switch (block.type) {
+   769→    case "paragraph":
+   770→      return (
+   771→        <p className={cn("text-base leading-relaxed", isSpeaking && "speaking")}>
+   772→          {block.text}
+   773→        </p>
+   774→      );
+   775→
+   776→    case "heading": {
+   777→      const level = block.level || 3;
+   778→      const className =
+   779→        level === 2
+   780→          ? "text-2xl font-bold mt-6 mb-3"
+   781→          : level === 3
+   782→          ? "text-xl font-semibold mt-5 mb-2"
+   783→          : "text-lg font-semibold mt-4 mb-2";
+   784→      return <h3 className={className}>{block.text}</h3>;
+   785→    }
+   786→
+   787→    case "callout": {
+   788→      const style = calloutStyles[block.variant];
+   789→      const Icon = style.icon;
+   790→      return (
+   791→        <div className={cn("rounded-lg border p-4 my-4", style.className)}>
+   792→          <div className="flex items-start gap-3">
+   793→            <Icon className={cn("h-5 w-5 mt-0.5 shrink-0", style.iconClass)} />
+   794→            <div className="flex-1">
+   795→              {block.title && <div className="font-semibold mb-1">{block.title}</div>}
+   796→              <div className="text-sm">{block.text}</div>
+   797→            </div>
+   798→          </div>
+   799→        </div>
+   800→      );
+   801→    }
+   802→
+   803→    case "list":
+   804→      return block.ordered ? (
+   805→        <ol className="list-decimal list-inside space-y-1.5 my-3">
+   806→          {block.items.map((item, i) => (
+   807→            <li key={i} className="text-sm leading-relaxed">{item}</li>
+   808→          ))}
+   809→        </ol>
+   810→      ) : (
+   811→        <ul className="space-y-1.5 my-3">
+   812→          {block.items.map((item, i) => (
+   813→            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed">
+   814→              <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+   815→              <span>{item}</span>
+   816→            </li>
+   817→          ))}
+   818→        </ul>
+   819→      );
+   820→
+   821→    case "table":
+   822→      return (
+   823→        <Card className="my-4 overflow-hidden">
+   824→          {block.caption && (
+   825→            <div className="px-4 py-2 bg-muted/30 text-sm font-medium border-b">
+   826→              {block.caption}
+   827→            </div>
+   828→          )}
+   829→          <div className="overflow-x-auto">
+   830→            <table className="w-full text-sm">
+   831→              <thead className="bg-muted/50">
+   832→                <tr>
+   833→                  {block.headers.map((h, i) => (
+   834→                    <th key={i} className="text-left p-3 font-semibold border-b">
+   835→                      {h}
+   836→                    </th>
+   837→                  ))}
+   838→                </tr>
+   839→              </thead>
+   840→              <tbody>
+   841→                {block.rows.map((row, ri) => (
+   842→                  <tr key={ri} className="hover:bg-accent/30 transition-colors">
+   843→                    {row.map((cell, ci) => (
+   844→                      <td key={ci} className="p-3 border-b border-border/50">
+   845→                        {cell}
+   846→                      </td>
+   847→                    ))}
+   848→                  </tr>
+   849→                ))}
+   850→              </tbody>
+   851→            </table>
+   852→          </div>
+   853→        </Card>
+   854→      );
+   855→
+   856→    case "definition":
+   857→      return (
+   858→        <div className="border-l-4 border-primary pl-4 my-3">
+   859→          <div className="font-semibold">{block.term}</div>
+   860→          <div className="text-sm text-muted-foreground">{block.definition}</div>
+   861→        </div>
+   862→      );
+   863→
+   864→    case "image":
+   865→      return (
+   866→        <figure className="my-4">
+   867→          <div
+   868→            className="relative rounded-lg overflow-hidden cursor-pointer group bg-muted/30"
+   869→            onClick={() => onImageClick?.(block.src)}
+   870→          >
+   871→            {/* eslint-disable-next-line @next/next/no-img-element */}
+   872→            <img
+   873→              src={block.src}
+   874→              alt={block.alt || block.caption || "Course image"}
+   875→              className="w-full h-auto"
+   876→            />
+   877→            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+   878→              <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+   879→            </div>
+   880→          </div>
+   881→          {block.caption && (
+   882→            <figcaption className="text-xs text-muted-foreground mt-2 text-center italic">
+   883→              {block.caption}
+   884→            </figcaption>
+   885→          )}
+   886→        </figure>
+   887→      );
+   888→
+   889→    case "keyTerms":
+   890→      return (
+   891→        <Card className="my-4">
+   892→          <CardHeader>
+   893→            <CardTitle className="text-base flex items-center gap-2">
+   894→              <BookOpen className="h-4 w-4 text-primary" />
+   895→              Key Terms
+   896→            </CardTitle>
+   897→          </CardHeader>
+   898→          <CardContent className="space-y-2">
+   899→            {block.terms.map((kt, i) => (
+   900→              <div key={i} className="border-l-2 border-primary/50 pl-3 py-1">
+   901→                <div className="font-semibold text-sm">{kt.term}</div>
+   902→                <div className="text-sm text-muted-foreground">{kt.definition}</div>
+   903→              </div>
+   904→            ))}
+   905→          </CardContent>
+   906→        </Card>
+   907→      );
+   908→
+   909→    case "svg":
+   910→      return (
+   911→        <figure className="my-4">
+   912→          <div className="rounded-xl overflow-hidden border bg-card p-4">
+   913→            <div className="flex items-center justify-center">
+   914→              <embed src={block.src} type="image/svg+xml" className="w-full max-w-3xl" />
+   915→            </div>
+   916→          </div>
+   917→          {block.caption && (
+   918→            <figcaption className="text-xs text-muted-foreground mt-2 text-center italic">
+   919→              {block.caption}
+   920→            </figcaption>
+   921→          )}
+   922→        </figure>
+   923→      );
+   924→
+   925→    case "interactive":
+   926→      return <InteractiveComponentRenderer component={block.component} />;
+   927→
+   928→    case "knowledgeCheck":
+   929→      return (
+   930→        <KnowledgeCheck
+   931→          question={block.question}
+   932→          options={block.options}
+   933→          correctAnswer={block.correctAnswer}
+   934→          explanation={block.explanation}
+   935→          questionId={`kc-${block.question.substring(0, 20)}`}
+   936→        />
+   937→      );
+   938→
+   939→    case "clickToReveal":
+   940→      return (
+   941→        <ClickToReveal
+   942→          title={block.title}
+   943→          variant={block.variant || "info"}
+   944→        >
+   945→          {block.content}
+   946→        </ClickToReveal>
+   947→      );
+   948→
+   949→    case "matching":
+   950→      return (
+   951→        <DragDropMatching
+   952→          title={block.title}
+   953→          pairs={{ left: block.left, right: block.right }}
+   954→        />
+   955→      );
+   956→
+   957→    case "sequence":
+   958→      return (
+   959→        <SequenceOrdering
+   960→          title={block.title}
+   961→          steps={block.steps}
+   962→          correctOrder={block.correctOrder}
+   963→        />
+   964→      );
+   965→
+   966→    default:
+   967→      return null;
+   968→  }
+   969→}
+   970→
+   971→// Renderer for special interactive components
+   972→function InteractiveComponentRenderer({ component }: { component: string }) {
+   973→  switch (component) {
+   974→    case "hazardExplorer":
+   975→      return <HazardClassExplorer />;
+   976→    case "cabinExplorer":
+   977→      return <CabinLayoutExplorer />;
+   978→    case "animatedDoorArming":
+   979→      return <AnimatedDoorArming />;
+   980→    case "animatedEvacuation":
+   981→      return <AnimatedEvacuationFlow />;
+   982→    case "animatedFireFighting":
+   983→      return <AnimatedFireFighting />;
+   984→    default:
+   985→      return null;
+   986→  }
+   987→}
+   988→

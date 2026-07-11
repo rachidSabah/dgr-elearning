@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   FileEdit, BookOpen, FolderTree, Save, Plus, Trash2,
   ChevronUp, ChevronDown, Type, Image as ImageIcon, AlertTriangle,
-  Lightbulb, List, Table, HelpCircle, FileText, GripVertical, X
+  Lightbulb, List, Table, HelpCircle, FileText, GripVertical, X, Video
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -263,6 +263,7 @@ export default function ContentEditorPage() {
                     <DropdownMenuItem onClick={() => addBlock("list")}><List className="h-3.5 w-3.5 mr-2" /> List</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => addBlock("table")}><Table className="h-3.5 w-3.5 mr-2" /> Table</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => addBlock("image")}><ImageIcon className="h-3.5 w-3.5 mr-2" /> Image</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => addBlock("video")}><Video className="h-3.5 w-3.5 mr-2" /> Video</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => addBlock("knowledgeCheck")}><HelpCircle className="h-3.5 w-3.5 mr-2" /> Knowledge Check</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => addBlock("keyTerms")}><BookOpen className="h-3.5 w-3.5 mr-2" /> Key Terms</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -424,6 +425,16 @@ function BlockEditor({ block, index, total, onChange, onDelete, onMoveUp, onMove
         </div>
       )}
 
+      {(block.type === "video") && (
+        <div className="space-y-2">
+          <Input value={block.src} onChange={(e) => onChange({ src: e.target.value } as any)} placeholder="Video URL (YouTube, Vimeo, or .mp4/.webm)" />
+          <Input value={block.caption || ""} onChange={(e) => onChange({ caption: e.target.value } as any)} placeholder="Caption (optional)" />
+          <p className="text-xs text-slate-500">
+            Tip: paste a YouTube watch URL, a Vimeo URL, or a direct link to an .mp4/.webm file.
+          </p>
+        </div>
+      )}
+
       {(block.type === "knowledgeCheck") && (
         <div className="space-y-2">
           <Input value={block.question} onChange={(e) => onChange({ question: e.target.value } as any)} placeholder="Question..." />
@@ -518,6 +529,7 @@ function createDefaultBlock(type: ContentBlock["type"]): ContentBlock {
     case "list": return { type: "list", items: ["First item", "Second item", "Third item"] };
     case "table": return { type: "table", headers: ["Column 1", "Column 2"], rows: [["Row 1 Cell 1", "Row 1 Cell 2"]], caption: "" };
     case "image": return { type: "image", src: "", caption: "", alt: "" };
+    case "video": return { type: "video", src: "", caption: "" };
     case "knowledgeCheck": return { type: "knowledgeCheck", question: "New question?", options: ["*Correct answer", "Wrong answer 1", "Wrong answer 2"], correctAnswer: 0, explanation: "Explanation here." };
     case "keyTerms": return { type: "keyTerms", terms: [{ term: "Term", definition: "Definition" }] };
     case "svg": return { type: "svg", src: "", caption: "" };
@@ -531,7 +543,7 @@ function createDefaultBlock(type: ContentBlock["type"]): ContentBlock {
 function getBlockLabel(type: string): string {
   const labels: Record<string, string> = {
     paragraph: "Paragraph", heading: "Heading", callout: "Callout",
-    list: "List", table: "Table", image: "Image",
+    list: "List", table: "Table", image: "Image", video: "Video",
     knowledgeCheck: "Knowledge Check", keyTerms: "Key Terms",
     svg: "SVG Diagram", clickToReveal: "Click to Reveal",
     matching: "Matching", sequence: "Sequence",

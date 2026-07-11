@@ -15,6 +15,8 @@ export const translations = {
     glossary: "Glossary",
     settings: "Settings",
     aitutor: "AI Tutor",
+    leaderboard: "Leaderboard",
+    compliance: "Compliance",
 
     // Landing
     heroBadge: "Professional Aviation Training",
@@ -187,6 +189,8 @@ export const translations = {
     glossary: "Glossaire",
     settings: "Paramètres",
     aitutor: "Tuteur IA",
+    leaderboard: "Classement",
+    compliance: "Conformité",
 
     heroBadge: "Formation Aviation Professionnelle",
     heroCta: "Commencer l'apprentissage",
@@ -346,6 +350,8 @@ export const translations = {
     glossary: "المسرد",
     settings: "الإعدادات",
     aitutor: "المعلم الذكي",
+    leaderboard: "المتصدرون",
+    compliance: "الامتثال",
 
     heroBadge: "تدريب طيران احترافي",
     heroCta: "ابدأ التعلم",

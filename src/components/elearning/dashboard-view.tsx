@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
 import { useCurrentCourse, useAllCourses } from "@/lib/use-course";
 import { slugify } from "@/lib/courses-registry";
+import { COURSE_PREREQUISITES } from "@/lib/types";
 import { t } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
@@ -23,6 +25,11 @@ import {
   GraduationCap,
   Library,
   ChevronDown,
+  Lock,
+  AlertCircle,
+  Calendar,
+  Target as TargetIcon,
+  Edit3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,6 +41,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 const achievementInfo: Record<string, { icon: typeof Star; label: string; color: string }> = {
@@ -47,10 +63,13 @@ const achievementInfo: Record<string, { icon: typeof Star; label: string; color:
 };
 
 export function DashboardView() {
-  const { setView, setSelectedLesson, setSelectedCourse, selectedCourseId, progress, studentName, language, startQuiz } = useAppStore();
+  const { setView, setSelectedLesson, setSelectedCourse, selectedCourseId, progress, studentName, language, startQuiz, setDailyGoal, checkPrerequisite } = useAppStore();
   const courseData = useCurrentCourse();
   const allCourses = useAllCourses();
   const lang = language || "en";
+
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+  const [goalInput, setGoalInput] = useState(String(progress.dailyGoal || 2));
 
   const totalLessons = courseData.modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const completionPct = Math.round((progress.completedLessons.length / totalLessons) * 100);
@@ -67,6 +86,39 @@ export function DashboardView() {
 
   const timeSpentHours = Math.floor(progress.timeSpent / 3600);
   const timeSpentMinutes = Math.floor((progress.timeSpent % 3600) / 60);
+
+  // ---- Days since last activity ----
+  const daysSinceActivity = useMemo(() => {
+    if (!progress.lastActivity) return 0;
+    const last = new Date(progress.lastActivity);
+    if (isNaN(last.getTime())) return 0;
+    const now = new Date();
+    // Normalize both to midnight
+    const lastMid = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
+    const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return Math.floor((nowMid - lastMid) / (1000 * 60 * 60 * 24));
+  }, [progress.lastActivity]);
+
+  const showReminder = daysSinceActivity > 3;
+
+  // ---- Streak calendar (last 30 days) ----
+  const streakCalendar = useMemo(() => {
+    const days: { date: Date; iso: string; active: boolean }[] = [];
+    const activitySet = new Set(progress.activityDays || []);
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      days.push({ date: d, iso, active: activitySet.has(iso) });
+    }
+    return days;
+  }, [progress.activityDays]);
+
+  const activeDaysInLast30 = streakCalendar.filter((d) => d.active).length;
+  const todayGoal = progress.dailyGoal || 0;
+  // Count today's completed lessons: not perfectly tracked per day; approximate via activityDays including today + already-completed count delta
+  const studiedToday = (progress.activityDays || []).includes(new Date().toISOString().slice(0, 10));
 
   // Find next lesson to continue
   const findNextLesson = () => {
@@ -156,19 +208,34 @@ export function DashboardView() {
                   const courseCompleted = cd.modules
                     .flatMap((m) => m.lessons)
                     .filter((l) => progress.completedLessons.includes(l.id)).length;
+                  const prereqs = COURSE_PREREQUISITES[courseId] || [];
+                  const missingPrereqs = prereqs.filter((p) => !(progress.completedCourses || []).includes(p));
+                  const isLocked = missingPrereqs.length > 0;
                   return (
                     <DropdownMenuItem
                       key={courseId}
-                      onClick={() => setSelectedCourse(courseId)}
+                      onClick={() => !isLocked && setSelectedCourse(courseId)}
+                      disabled={isLocked}
                       className={cn(
-                        "flex flex-col items-start gap-1 py-2 cursor-pointer",
-                        isActive && "bg-accent"
+                        "flex flex-col items-start gap-1 py-2",
+                        isActive && !isLocked && "bg-accent",
+                        isLocked && "opacity-60 cursor-not-allowed"
                       )}
                     >
                       <div className="flex items-center gap-2 w-full">
-                        <GraduationCap className="h-4 w-4 text-primary shrink-0" />
+                        {isLocked ? (
+                          <Lock className="h-4 w-4 text-amber-500 shrink-0" />
+                        ) : (
+                          <GraduationCap className="h-4 w-4 text-primary shrink-0" />
+                        )}
                         <span className="font-medium text-sm truncate flex-1">{cd.title}</span>
                         {isActive && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
+                        {isLocked && (
+                          <Badge variant="outline" className="text-[10px] gap-0.5 px-1 py-0">
+                            <Lock className="h-2.5 w-2.5" />
+                            Locked
+                          </Badge>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground pl-6">
                         {cd.difficulty} • {courseCompleted}/{courseTotalLessons} lessons
@@ -181,6 +248,128 @@ export function DashboardView() {
           </div>
         </div>
       </motion.div>
+
+      {/* Daily reminder + streak calendar + daily goal */}
+      <div className="grid lg:grid-cols-3 gap-4 mb-8">
+        {/* Reminder banner */}
+        {showReminder ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-2"
+          >
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div className="font-semibold text-amber-900 dark:text-amber-200 text-sm">
+                  You haven&apos;t studied in {daysSinceActivity} day{daysSinceActivity === 1 ? "" : "s"}. Keep your streak going!
+                </div>
+                <div className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  Consistency is the key to mastery. Pick up where you left off below.
+                </div>
+              </div>
+              {nextLesson && (
+                <Button size="sm" variant="outline" onClick={() => setSelectedLesson(nextLesson.id)} className="shrink-0 gap-1.5">
+                  <Play className="h-3.5 w-3.5" />
+                  Resume
+                </Button>
+              )}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-2"
+          >
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/30">
+              <Flame className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div className="font-semibold text-sm">
+                  {progress.streak > 0
+                    ? `${progress.streak}-day streak — keep it up!`
+                    : "Welcome back — ready to start a new streak?"}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {studiedToday
+                    ? "Great work studying today. Come back tomorrow to extend your streak."
+                    : "Complete a lesson today to maintain your streak."}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Daily goal widget */}
+        <Card className="lg:col-span-1">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <TargetIcon className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Daily Goal</span>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setGoalInput(String(progress.dailyGoal || 2)); setGoalDialogOpen(true); }}>
+                <Edit3 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            {todayGoal > 0 ? (
+              <>
+                <div className="text-2xl font-bold">{todayGoal} <span className="text-sm font-normal text-muted-foreground">lessons/day</span></div>
+                <Progress value={studiedToday ? 100 : 0} className="h-2 mt-2" />
+                <div className="text-xs text-muted-foreground mt-1">
+                  {studiedToday ? "Goal met for today ✓" : "0 lessons today"}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-sm text-muted-foreground">No daily goal set</div>
+                <Button size="sm" variant="outline" className="mt-2 w-full gap-1.5" onClick={() => { setGoalInput("2"); setGoalDialogOpen(true); }}>
+                  <TargetIcon className="h-3.5 w-3.5" />
+                  Set a goal
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Streak calendar */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-orange-500" />
+            Last 30 Days
+          </CardTitle>
+          <CardDescription>
+            {activeDaysInLast30} active day{activeDaysInLast30 === 1 ? "" : "s"} in the last 30 days
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-1.5">
+            {streakCalendar.map((d, i) => (
+              <div
+                key={i}
+                title={`${d.iso}${d.active ? " — Active" : ""}`}
+                className={cn(
+                  "w-6 h-6 rounded-md transition-all hover:scale-110",
+                  d.active
+                    ? "bg-gradient-to-br from-green-400 to-emerald-500 shadow-sm"
+                    : "bg-muted",
+                  i === streakCalendar.length - 1 && "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                )}
+              />
+            ))}
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
+            <span>30 days ago</span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-gradient-to-br from-green-400 to-emerald-500" />
+              = studied
+            </span>
+            <span>Today</span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -468,6 +657,37 @@ export function DashboardView() {
           Total learning time: {timeSpentHours > 0 && `${timeSpentHours}h `}{timeSpentMinutes}m
         </motion.div>
       )}
+
+      {/* Daily goal dialog */}
+      <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Daily Goal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label htmlFor="goal-input">Lessons per day</Label>
+            <Input
+              id="goal-input"
+              type="number"
+              min={1}
+              max={20}
+              value={goalInput}
+              onChange={(e) => setGoalInput(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              We&apos;ll celebrate when you reach your goal each day. Recommended: 1-3 lessons for steady progress.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGoalDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              const n = Math.max(1, Math.min(20, parseInt(goalInput) || 2));
+              setDailyGoal(n);
+              setGoalDialogOpen(false);
+            }}>Save Goal</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
