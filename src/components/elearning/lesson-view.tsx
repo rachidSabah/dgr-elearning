@@ -8,6 +8,7 @@ import { getFirstAidEnhancedContent } from "@/lib/first-aid-enhancements";
 import { getCRMEnhancedContent } from "@/lib/crm-enhancements";
 import { getCRMContentExpansion } from "@/lib/crm-content-expansion";
 import { getDGRContentExpansion } from "@/lib/dgr-content-expansion";
+import { getDGSlideshareImages } from "@/lib/dg-slideshare-images";
 import { getFirstAidContentExpansion } from "@/lib/first-aid-content-expansion";
 import { getMegaExpansion } from "@/lib/mega-content-expansion";
 import { t } from "@/lib/i18n";
@@ -319,13 +320,14 @@ export function LessonView() {
   const lessonNotes = progress.notes[lesson.id] || [];
 
   // Merge enhanced interactive content with base lesson content
-  // Check DGR, First Aid, and CRM enhancements + content expansions + mega expansion
+  // Check DGR, First Aid, and CRM enhancements + content expansions + mega expansion + SlideShare images
   const mega = getMegaExpansion(lesson.id);
+  const slideShareImgs = getDGSlideshareImages(lesson.id);
   const enhancements = lesson.id.startsWith("fa-")
     ? [...getFirstAidEnhancedContent(lesson.id), ...getFirstAidContentExpansion(lesson.id), ...mega]
     : lesson.id.startsWith("crm-")
     ? [...getCRMEnhancedContent(lesson.id), ...getCRMContentExpansion(lesson.id), ...mega]
-    : [...getEnhancedContent(lesson.id), ...getDGRContentExpansion(lesson.id), ...mega];
+    : [...getEnhancedContent(lesson.id), ...getDGRContentExpansion(lesson.id), ...slideShareImgs, ...mega];
   const enhancedContent = [...lesson.content, ...enhancements];
 
   // Filter content for search
