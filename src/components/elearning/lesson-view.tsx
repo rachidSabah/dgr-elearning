@@ -9,6 +9,8 @@ import { getCRMEnhancedContent } from "@/lib/crm-enhancements";
 import { getCRMContentExpansion } from "@/lib/crm-content-expansion";
 import { getDGRContentExpansion } from "@/lib/dgr-content-expansion";
 import { getDGSlideshareImages } from "@/lib/dg-slideshare-images";
+import { getDGRInfohasExpansion } from "@/lib/dgr-infohas-expansion";
+import { getDGRInfohasImages } from "@/lib/dgr-infohas-images";
 import { getFirstAidContentExpansion } from "@/lib/first-aid-content-expansion";
 import { getMegaExpansion } from "@/lib/mega-content-expansion";
 import { getCRMManualExpansion } from "@/lib/crm-manual-expansion";
@@ -322,16 +324,18 @@ export function LessonView() {
   const lessonNotes = progress.notes[lesson.id] || [];
 
   // Merge enhanced interactive content with base lesson content
-  // Check DGR, First Aid, and CRM enhancements + content expansions + mega expansion + SlideShare images + CRM manual
+  // Check DGR, First Aid, and CRM enhancements + all content expansions + mega expansion + SlideShare images + CRM manual + DGR INFOHAS
   const mega = getMegaExpansion(lesson.id);
   const slideShareImgs = getDGSlideshareImages(lesson.id);
   const crmManualExp = getCRMManualExpansion(lesson.id);
   const crmManualImgs = getCRMManualImages(lesson.id);
+  const dgrInfohasExp = getDGRInfohasExpansion(lesson.id);
+  const dgrInfohasImgs = getDGRInfohasImages(lesson.id);
   const enhancements = lesson.id.startsWith("fa-")
     ? [...getFirstAidEnhancedContent(lesson.id), ...getFirstAidContentExpansion(lesson.id), ...mega]
     : lesson.id.startsWith("crm-")
     ? [...getCRMEnhancedContent(lesson.id), ...getCRMContentExpansion(lesson.id), ...crmManualExp, ...crmManualImgs, ...mega]
-    : [...getEnhancedContent(lesson.id), ...getDGRContentExpansion(lesson.id), ...slideShareImgs, ...mega];
+    : [...getEnhancedContent(lesson.id), ...getDGRContentExpansion(lesson.id), ...dgrInfohasExp, ...slideShareImgs, ...dgrInfohasImgs, ...mega];
   const enhancedContent = [...lesson.content, ...enhancements];
 
   // Filter content for search
